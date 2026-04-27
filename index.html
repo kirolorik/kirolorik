@@ -357,7 +357,7 @@
   <div class="parrilla-wrap">
     <div class="parrilla">
 
-
+None
 
     </div>
   </div>
@@ -412,17 +412,25 @@
   updateTime();
   setInterval(updateTime, 30000);
 
-  // Fecha dinámica — semana actual
+  // Fecha dinámica — semana actual con selección
   function buildDateStrip() {
     const strip = document.getElementById('dateStrip');
     const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     const today = new Date();
+    window.fechaSeleccionada = null;
     for (let i = -1; i <= 4; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
+      const fechaISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       const chip = document.createElement('div');
       chip.className = 'date-chip' + (i === 0 ? ' today' : '');
       chip.innerHTML = `<span class="dn">${days[d.getDay()]}</span><span class="dd">${d.getDate()}</span>`;
+      chip.onclick = () => {
+        document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('today'));
+        chip.classList.add('today');
+        window.fechaSeleccionada = fechaISO;
+        cargarParrilla();
+      };
       strip.appendChild(chip);
     }
   }
@@ -446,169 +454,3 @@
     document.querySelectorAll('.lang-chip').forEach(c => c.classList.remove('selected'));
     chip.classList.add('selected');
   }
-
-  // Buscador demo
-  const demoData = [
-    { icon:'⚽', name:'SD Eibar B',         sub:'Fútbol · Eibar' },
-    { icon:'⚽', name:'Eibar KE',            sub:'Fútbol · Eibar' },
-    { icon:'🏀', name:'Eibar Saskibaloia',   sub:'Basket · Eibar' },
-    { icon:'🤾', name:'BM Eibar',            sub:'Balonmano · Eibar' },
-    { icon:'🏊', name:'CN Eibar',            sub:'Waterpolo · Eibar' },
-    { icon:'🥊', name:'Boxeo Eibar',         sub:'Boxeo · Eibar' },
-    { icon:'📍', name:'Ermua',               sub:'Municipio · Gipuzkoa' },
-    { icon:'📍', name:'Elgoibar',            sub:'Municipio · Gipuzkoa' },
-    { icon:'📍', name:'Arrasate',            sub:'Municipio · Gipuzkoa' },
-  ];
-
-  function doSearch(val) {
-    const results = document.getElementById('searchResults');
-    if (!val.trim()) { results.innerHTML = ''; return; }
-    const filtered = demoData.filter(d =>
-      d.name.toLowerCase().includes(val.toLowerCase()) ||
-      d.sub.toLowerCase().includes(val.toLowerCase())
-    ).slice(0, 3);
-    results.innerHTML = filtered.map(d => `
-      <div class="search-result-item" onclick="selectResult('${d.name}','${d.sub}')">
-        <span style="font-size:14px">${d.icon}</span>
-        <span class="sri-name">${d.name}</span>
-        <span class="sri-sub">${d.sub}</span>
-      </div>`).join('');
-  }
-
-  function selectResult(name, sub) {
-    document.getElementById('searchInput').value = name;
-    document.getElementById('searchResults').innerHTML = '';
-    if (sub.startsWith('Municipio')) {
-      document.getElementById('locText').textContent = name;
-    }
-  }
-
-  // ── SUPABASE ──
-  const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
-  const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
-
-  const SPORT_COLORS = {
-    futbol:'#4CAF50', basket:'#FF9800', balonmano:'#4a9eff',
-    waterpolo:'#00BCD4', boxeo:'#f44336', tenis:'#CDDC39',
-    atletismo:'#E91E63', ciclismo:'#9C27B0', otros:'#607D8B'
-  };
-
-  const SPORT_LABELS = {
-    futbol:'Fútbol', basket:'Basket', balonmano:'Balonmano',
-    waterpolo:'Waterpolo', boxeo:'Boxeo', tenis:'Tenis',
-    atletismo:'Atletismo', ciclismo:'Ciclismo', otros:'Otros'
-  };
-
-  function entryBadge(tipo) {
-    if (tipo === 'pago') return `<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">Entrada</div></div>`;
-    if (tipo === 'rifa') return `<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">Rifa</div></div>`;
-    if (tipo === 'gratis') return `<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">Gratis</div></div>`;
-    return `<div class="entry-badge"><div class="entry-none"></div></div>`;
-  }
-
-  function formatHora(h) {
-    if (!h) return '--:--';
-    return h.slice(0, 5);
-  }
-
-  function nombreEvento(e) {
-    if (e.nombre_evento) return e.nombre_evento;
-    const vis = e.equipo_visitante ? ` · ${e.equipo_visitante}` : '';
-    return (e.equipo_local || '—') + vis;
-  }
-
-  function nowInserted(parrilla) {
-    const now = new Date();
-    const h = now.getHours(), m = now.getMinutes();
-    const nowMin = h * 60 + m;
-    const rows = parrilla.querySelectorAll('.time-row');
-    let inserted = false;
-    for (let i = 0; i < rows.length; i++) {
-      const timeH = parseInt(rows[i].querySelector('.time-h')?.textContent || '99');
-      const timeM = parseInt(rows[i].querySelector('.time-m')?.textContent || '0');
-      const rowMin = timeH * 60 + timeM;
-      if (!inserted && rowMin > nowMin) {
-        const nowRow = document.createElement('div');
-        nowRow.className = 'now-row';
-        nowRow.innerHTML = `<div class="now-dot"></div><div class="now-label">Ahora</div><div class="now-time" id="nowTime">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</div>`;
-        parrilla.insertBefore(nowRow, rows[i]);
-        inserted = true;
-      }
-    }
-  }
-
-  async function cargarParrilla() {
-    const parrilla = document.querySelector('.parrilla');
-    if (!parrilla) { console.error('No se encuentra .parrilla'); return; }
-
-    parrilla.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px;">Conectando...</div>';
-
-    try {
-      const res = await fetch(
-        `${SB_URL}/rest/v1/eventos?select=*&activo=eq.true&order=hora.asc`,
-        { headers: SB_HEADERS }
-      );
-
-      if (!res.ok) {
-        parrilla.innerHTML = `<div style="padding:24px;text-align:center;color:#f44336;font-size:12px;">Error HTTP ${res.status}</div>`;
-        return;
-      }
-
-      const eventos = await res.json();
-      console.log('Eventos recibidos:', eventos.length, eventos);
-
-      if (!Array.isArray(eventos) || !eventos.length) {
-        parrilla.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Sin eventos</div>';
-        return;
-      }
-
-      const porHora = {};
-      eventos.forEach(e => {
-        const key = formatHora(e.hora);
-        if (!porHora[key]) porHora[key] = [];
-        porHora[key].push(e);
-      });
-
-      parrilla.innerHTML = '';
-
-      Object.entries(porHora).forEach(([hora, evs]) => {
-        const [hh, mm] = hora.split(':');
-        const row = document.createElement('div');
-        row.className = 'time-row';
-        const eventsHTML = evs.map(e => `
-          <div class="event">
-            <div class="event-bar" style="background:${SPORT_COLORS[e.deporte]||'#666'}"></div>
-            <div class="event-info">
-              <div class="event-teams">${nombreEvento(e)}</div>
-              <div class="event-meta">
-                <span class="event-sport" style="color:${SPORT_COLORS[e.deporte]||'#666'}">${SPORT_LABELS[e.deporte]||e.deporte}</span>
-                <span class="event-sep">·</span>
-                <span class="event-cat">${e.categoria||''}${e.genero && e.genero !== 'Sin especificar' ? ' · '+e.genero : ''}</span>
-              </div>
-            </div>
-            ${entryBadge(e.tipo_entrada)}
-          </div>`).join('');
-        row.innerHTML = `
-          <div class="time-col"><span class="time-h">${hh}</span><span class="time-m">${mm}</span></div>
-          <div class="events-col">${eventsHTML}</div>`;
-        parrilla.appendChild(row);
-      });
-
-      nowInserted(parrilla);
-
-    } catch(err) {
-      console.error('Error cargarParrilla:', err);
-      parrilla.innerHTML = `<div style="padding:24px;text-align:center;color:#f44336;font-size:12px;">Error: ${err.message}</div>`;
-    }
-  }
-
-  cargarParrilla();
-
-  // PWA — registrar service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
-</script>
-</body>
-</html>
