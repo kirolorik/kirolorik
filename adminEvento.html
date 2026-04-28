@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kirolorik ? Admin</title>
+<title>Kirolorik · Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -74,31 +74,31 @@
 <div class="header">
   <div>
     <div class="logo">KIROLORIK</div>
-    <div class="header-sub">Panel de administraci?n</div>
+    <div class="header-sub">Panel de administración</div>
   </div>
 </div>
 
 <!-- FORMULARIO NUEVO EVENTO -->
 <div class="section">
-  <div class="section-title">? Nuevo evento</div>
+  <div class="section-title">➕ Nuevo evento</div>
 
   <div class="row2">
     <div class="field">
       <label>Deporte</label>
       <select id="deporte">
-        <option value="futbol">? F?tbol</option>
-        <option value="basket">? Basket</option>
-        <option value="balonmano">? Balonmano</option>
-        <option value="waterpolo">? Waterpolo</option>
-        <option value="boxeo">? Boxeo</option>
-        <option value="tenis">? Tenis</option>
-        <option value="atletismo">? Atletismo</option>
-        <option value="ciclismo">? Ciclismo</option>
-        <option value="otros">? Otros</option>
+        <option value="futbol">⚽ Fútbol</option>
+        <option value="basket">🏀 Basket</option>
+        <option value="balonmano">🤾 Balonmano</option>
+        <option value="waterpolo">🏊 Waterpolo</option>
+        <option value="boxeo">🥊 Boxeo</option>
+        <option value="tenis">🎾 Tenis</option>
+        <option value="atletismo">🏃 Atletismo</option>
+        <option value="ciclismo">🚴 Ciclismo</option>
+        <option value="otros">🏅 Otros</option>
       </select>
     </div>
     <div class="field">
-      <label>G?nero</label>
+      <label>Género</label>
       <select id="genero">
         <option value="Sin especificar">Sin especificar</option>
         <option value="Masculino">Masculino</option>
@@ -110,22 +110,22 @@
 
   <div class="field">
     <label>Nombre del evento <span style="color:var(--muted);font-weight:400">(ciclismo, atletismo...)</span></label>
-    <input type="text" id="nombre_evento" placeholder="Ej: Gran Premio Eibar ? opcional si hay equipos">
+    <input type="text" id="nombre_evento" placeholder="Ej: Gran Premio Eibar · opcional si hay equipos">
   </div>
 
   <div class="row2">
     <div class="field">
-      <label>Categor?a</label>
+      <label>Categoría</label>
       <select id="categoria">
-        <option value="Benjam?n">Benjam?n</option>
-        <option value="Alev?n">Alev?n</option>
+        <option value="Benjamín">Benjamín</option>
+        <option value="Alevín">Alevín</option>
         <option value="Infantil">Infantil</option>
         <option value="Cadete">Cadete</option>
         <option value="Juvenil">Juvenil</option>
         <option value="Junior">Junior</option>
         <option value="Senior">Senior</option>
         <option value="Veteranos">Veteranos</option>
-        <option value="Todas">Todas las categor?as</option>
+        <option value="Todas">Todas las categorías</option>
       </select>
     </div>
   </div>
@@ -157,7 +157,7 @@
   </div>
 
   <div class="field">
-    <label>Instalaci?n</label>
+    <label>Instalación</label>
     <input type="text" id="instalacion" placeholder="Nombre del recinto o campo">
   </div>
 
@@ -165,20 +165,20 @@
     <div class="field">
       <label>Entrada</label>
       <select id="tipo_entrada">
-        <option value="gratis">? Gratis</option>
-        <option value="pago">? De pago</option>
-        <option value="rifa">? Rifa</option>
-        <option value="sin info">? Sin info</option>
+        <option value="gratis">🟢 Gratis</option>
+        <option value="pago">🟡 De pago</option>
+        <option value="rifa">🟠 Rifa</option>
+        <option value="sin info">⚪ Sin info</option>
       </select>
     </div>
     <div class="field">
-      <label>Competici?n</label>
+      <label>Competición</label>
       <select id="tipo_competicion">
-        <option value="Liga">? Liga</option>
-        <option value="Copa">? Copa</option>
-        <option value="Torneo">? Torneo</option>
-        <option value="Amistoso">? Amistoso</option>
-        <option value="Play-off">? Play-off</option>
+        <option value="Liga">🏆 Liga</option>
+        <option value="Copa">🥇 Copa</option>
+        <option value="Torneo">🎯 Torneo</option>
+        <option value="Amistoso">🤝 Amistoso</option>
+        <option value="Play-off">🏅 Play-off</option>
       </select>
     </div>
   </div>
@@ -188,7 +188,7 @@
 
 <!-- LISTA EVENTOS -->
 <div class="section">
-  <div class="section-title">? Eventos guardados</div>
+  <div class="section-title">📋 Eventos guardados</div>
   <div class="eventos-list" id="eventosList">
     <div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">Cargando...</div>
   </div>
@@ -254,14 +254,14 @@
         body: JSON.stringify(evento)
       });
       if (!res.ok) throw new Error();
-      showToast('? Evento guardado');
+      showToast('✅ Evento guardado');
       document.getElementById('equipo_local').value = '';
       document.getElementById('equipo_visitante').value = '';
       document.getElementById('instalacion').value = '';
       document.getElementById('hora').value = '';
       cargarEventos();
     } catch {
-      showToast('Error al guardar. Revisa la conexi?n.', true);
+      showToast('Error al guardar. Revisa la conexión.', true);
     }
 
     btn.disabled = false;
@@ -274,17 +274,17 @@
       const res = await fetch(`${URL}/rest/v1/eventos?select=*&order=fecha.asc,hora.asc&activo=eq.true`, { headers: HEADERS });
       const data = await res.json();
       if (!data.length) {
-        list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">Sin eventos todav?a</div>';
+        list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">Sin eventos todavía</div>';
         return;
       }
       list.innerHTML = data.map(e => `
         <div class="evento-card">
           <div class="evento-bar" style="background:${SPORT_COLORS[e.deporte] || '#666'}"></div>
           <div class="evento-info">
-            <div class="evento-teams">${e.equipo_local} ? ${e.equipo_visitante}</div>
-            <div class="evento-meta">${e.deporte} ? ${e.categoria} ? ${e.fecha} ${e.hora?.slice(0,5)} ? ${e.municipio}</div>
+            <div class="evento-teams">${e.equipo_local} · ${e.equipo_visitante}</div>
+            <div class="evento-meta">${e.deporte} · ${e.categoria} · ${e.fecha} ${e.hora?.slice(0,5)} · ${e.municipio}</div>
           </div>
-          <div class="evento-delete" onclick="borrarEvento(${e.id})">??</div>
+          <div class="evento-delete" onclick="borrarEvento(${e.id})">🗑️</div>
         </div>`).join('');
     } catch {
       list.innerHTML = '<div style="font-size:12px;color:#f44336;text-align:center;padding:20px;">Error al cargar eventos</div>';
@@ -292,7 +292,7 @@
   }
 
   async function borrarEvento(id) {
-    if (!confirm('?Borrar este evento?')) return;
+    if (!confirm('¿Borrar este evento?')) return;
     try {
       await fetch(`${URL}/rest/v1/eventos?id=eq.${id}`, { method: 'DELETE', headers: HEADERS });
       showToast('Evento eliminado');
