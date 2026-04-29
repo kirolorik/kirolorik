@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
+<title>Kirolorik · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <div>
+      <div class="admin-logo">Kirolorik</div>
+      <div class="admin-sub">Panel de eventos</div>
+    </div>
+  </div>
+
+  <!-- NUEVO EVENTO -->
+  <div class="admin-section">
+    <div class="admin-section-title">➕ Nuevo evento</div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Deporte</label>
+        <select id="deporte">
+          <option value="futbol">⚽ Fútbol</option>
+          <option value="basket">🏀 Basket</option>
+          <option value="balonmano">🤾 Balonmano</option>
+          <option value="waterpolo">🏊 Waterpolo</option>
+          <option value="boxeo">🥊 Boxeo</option>
+          <option value="tenis">🎾 Tenis</option>
+          <option value="atletismo">🏃 Atletismo</option>
+          <option value="ciclismo">🚴 Ciclismo</option>
+          <option value="otros">🏅 Otros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Género</label>
+        <select id="genero">
+          <option value="Sin especificar">Sin especificar</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Mixto">Mixto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(ciclismo, atletismo... opcional)</span></label>
+      <input type="text" id="nombre_evento" placeholder="Ej: Gran Premio Eibar">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Categoría</label>
+        <select id="categoria">
+          <option value="Benjamín">Benjamín</option>
+          <option value="Alevín">Alevín</option>
+          <option value="Infantil">Infantil</option>
+          <option value="Cadete">Cadete</option>
+          <option value="Juvenil">Juvenil</option>
+          <option value="Junior">Junior</option>
+          <option value="Senior">Senior</option>
+          <option value="Veteranos">Veteranos</option>
+          <option value="Todas">Todas las categorías</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Competición</label>
+        <select id="tipo_competicion">
+          <option value="Liga">🏆 Liga</option>
+          <option value="Copa">🥇 Copa</option>
+          <option value="Torneo">🎯 Torneo</option>
+          <option value="Amistoso">🤝 Amistoso</option>
+          <option value="Play-off">🏅 Play-off</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Equipo local</label>
+      <input type="text" id="equipo_local" placeholder="Nombre del equipo local">
+    </div>
+
+    <div class="field">
+      <label>Equipo visitante</label>
+      <input type="text" id="equipo_visitante" placeholder="Nombre del equipo visitante">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+      <div class="field">
+        <label>Hora</label>
+        <input type="time" id="hora">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Municipio</label>
+      <input type="text" id="municipio" placeholder="Eibar, Ermua, Elgoibar...">
+    </div>
+
+    <div class="field">
+      <label>Instalación</label>
+      <input type="text" id="instalacion" placeholder="Nombre del recinto o campo">
+    </div>
+
+    <div class="field">
+      <label>Entrada</label>
+      <select id="tipo_entrada">
+        <option value="gratis">🟢 Gratis</option>
+        <option value="pago">🟡 De pago</option>
+        <option value="rifa">🟠 Rifa</option>
+        <option value="sin info">⚪ Sin info</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" id="btnGuardar" onclick="guardar()">Guardar evento</button>
+  </div>
+
+  <!-- LISTA EVENTOS -->
+  <div class="admin-section">
+    <div class="admin-section-title">📋 Eventos guardados</div>
+    <div id="eventosList">
+      <div class="empty-slot">Cargando...</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+const H = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+
+const COLORES = {
+  futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',
+  waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',
+  atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b'
+};
+
+document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show'+(err?' error':'');
+  setTimeout(()=>t.className='toast', 3000);
+}
+
+async function guardar() {
+  const btn = document.getElementById('btnGuardar');
+  const fecha = document.getElementById('fecha').value;
+  const hora = document.getElementById('hora').value;
+  const municipio = document.getElementById('municipio').value.trim();
+  const local = document.getElementById('equipo_local').value.trim();
+  const visitante = document.getElementById('equipo_visitante').value.trim();
+  const nombreEvento = document.getElementById('nombre_evento').value.trim();
+
+  if(!fecha||!hora||!municipio) {
+    toast('Fecha, hora y municipio son obligatorios', true);
+    return;
+  }
+  if(!nombreEvento && !local) {
+    toast('Añade equipos o nombre del evento', true);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const ev = {
+    deporte: document.getElementById('deporte').value,
+    genero: document.getElementById('genero').value,
+    nombre_evento: nombreEvento || null,
+    categoria: document.getElementById('categoria').value,
+    tipo_competicion: document.getElementById('tipo_competicion').value,
+    equipo_local: local || null,
+    equipo_visitante: visitante || null,
+    fecha, hora, municipio,
+    instalacion: document.getElementById('instalacion').value.trim() || null,
+    tipo_entrada: document.getElementById('tipo_entrada').value,
+    activo: true
+  };
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/eventos`, {
+      method:'POST', headers:{...H,'Prefer':'return=minimal'}, body:JSON.stringify(ev)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    toast('✅ Evento guardado');
+    ['equipo_local','equipo_visitante','instalacion','hora','nombre_evento'].forEach(id=>document.getElementById(id).value='');
+    cargarLista();
+  } catch(e) {
+    toast('Error: '+e.message, true);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Guardar evento';
+}
+
+async function cargarLista() {
+  const list = document.getElementById('eventosList');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/eventos?select=*&order=fecha.asc,hora.asc`, {headers:H});
+    const data = await res.json();
+    if(!data.length) {
+      list.innerHTML = '<div class="empty-slot">Sin eventos todavía</div>';
+      return;
+    }
+    list.innerHTML = data.map(e => {
+      const titulo = e.nombre_evento || ((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
+      const color = COLORES[e.deporte] || '#64748b';
+      const estadoBadge = e.activo
+        ? `<span style="font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700">Activo</span>`
+        : `<span style="font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700">Inactivo</span>`;
+      return `<div class="evento-card">
+        <div class="evento-bar" style="background:${color}"></div>
+        <div class="evento-info">
+          <div class="evento-teams">${titulo}</div>
+          <div class="evento-meta">${e.deporte} · ${e.categoria} · ${e.fecha} ${(e.hora||'').slice(0,5)} · ${e.municipio||''}</div>
+          <div style="margin-top:4px">${estadoBadge}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <div class="evento-delete" onclick="toggleActivo(${e.id},${e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</div>
+          <div class="evento-delete" onclick="borrar(${e.id})">🗑️</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="empty-slot" style="color:#dc2626">Error al cargar</div>`;
+  }
+}
+
+async function toggleActivo(id, actual) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`, {
+      method:'PATCH', headers:{...H,'Prefer':'return=minimal'}, body:JSON.stringify({activo:!actual})
+    });
+    toast(actual ? 'Evento desactivado' : 'Evento activado');
+    cargarLista();
+  } catch { toast('Error', true); }
+}
+
+async function borrar(id) {
+  if(!confirm('¿Borrar este evento?')) return;
+  try {
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`, {method:'DELETE', headers:H});
+    toast('Evento eliminado');
+    cargarLista();
+  } catch { toast('Error al borrar', true); }
+}
+
+cargarLista();
+</script>
+</body>
+</html>
