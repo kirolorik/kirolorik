@@ -11,38 +11,107 @@
 <link rel="stylesheet" href="/style.css">
 <style>
 /* ── AJUSTES ADICIONALES ── */
-.settings-search-row{display:flex;gap:8px;align-items:center}
+.settings-search-row{display:flex;gap:8px;align-items:flex-start}
 .search-box{flex:1}
 .lang-select{
   background:var(--surface2);border:1px solid var(--border);
   border-radius:var(--radius-sm);padding:9px 8px;
   font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;
-  color:var(--text);outline:none;cursor:pointer;
-  min-width:62px;
+  color:var(--text);outline:none;cursor:pointer;min-width:62px;
 }
 .lang-select:focus{border-color:var(--accent)}
 
-.miclub-link{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 12px;background:var(--bg);
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  cursor:pointer;transition:border-color 0.15s;
+/* ── PANEL PERFIL (drawer derecha) ── */
+.profile-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.35);
+  z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s;
 }
-.miclub-link:hover{border-color:var(--accent)}
-.miclub-link-label{font-size:13px;font-weight:600;color:var(--text)}
-.miclub-link-arrow{font-size:16px;color:var(--muted)}
+.profile-overlay.open{opacity:1;pointer-events:all}
 
-.legal-footer{
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  gap:14px;flex-wrap:wrap;
-  padding:6px 16px;
-  border-top:1px solid var(--border);
+.profile-drawer{
+  position:fixed;top:0;right:-280px;width:280px;height:100vh;
+  background:var(--surface);border-left:1px solid var(--border);
+  z-index:201;transition:right 0.3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;padding:0;overflow:hidden;
+  box-shadow:-4px 0 24px rgba(0,0,0,0.12);
+}
+.profile-drawer.open{right:0}
+
+.drawer-header{
+  padding:20px 20px 16px;
+  border-bottom:1px solid var(--border);
   background:var(--surface);
 }
-.legal-footer a{
-  font-size:9px;color:var(--muted);text-decoration:none;
-  letter-spacing:0.3px;
+.drawer-avatar{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:#fff;
+  background:var(--accent);color:var(--accent-txt);
+  margin-bottom:10px;flex-shrink:0;
 }
+.drawer-avatar.guest{background:var(--surface2);color:var(--muted);font-size:22px}
+.drawer-hola{font-size:15px;font-weight:700;color:var(--text)}
+.drawer-club{font-size:12px;color:var(--muted);margin-top:2px}
+
+.drawer-body{flex:1;overflow-y:auto;padding:12px 0}
+.drawer-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 20px;font-size:13px;font-weight:600;
+  color:var(--text);cursor:pointer;transition:background 0.15s;
+  border:none;background:none;width:100%;text-align:left;
+  font-family:'DM Sans',sans-serif;
+}
+.drawer-item:hover{background:var(--surface2)}
+.drawer-item.danger{color:#dc2626}
+.drawer-item.accent{color:var(--accent);font-weight:700}
+.drawer-sep{height:1px;background:var(--border);margin:6px 0}
+
+/* Login dentro del drawer */
+.drawer-login{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.drawer-login .field{margin:0}
+.drawer-login .field label{font-size:10px}
+.btn-kick{
+  background:var(--accent);color:var(--accent-txt);
+  border:none;border-radius:var(--radius-sm);
+  padding:12px;font-size:13px;font-weight:800;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  letter-spacing:0.3px;transition:opacity 0.2s;
+}
+.btn-kick:disabled{opacity:0.5;cursor:not-allowed}
+.login-error{font-size:11px;color:#dc2626;min-height:14px}
+
+/* Icono perfil en top bar */
+.profile-btn{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;overflow:hidden;flex-shrink:0;
+  border:2px solid var(--border);transition:border-color 0.2s;
+  background:var(--surface2);
+}
+.profile-btn:hover,.profile-btn.open{border-color:var(--accent)}
+.profile-btn-inner{
+  width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;font-size:18px;color:var(--muted);
+}
+.profile-btn-initial{
+  width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:700;
+  color:#fff;background:var(--accent);color:var(--accent-txt);
+}
+
+/* Logo */
+.logo-wrap{display:flex;align-items:center;gap:8px}
+.logo-img{height:26px;width:auto;flex-shrink:0;display:block}
+.logo-img-error{display:none}
+
+/* Footer legal */
+.legal-footer{
+  flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;gap:14px;flex-wrap:wrap;
+  padding:6px 16px;border-top:1px solid var(--border);
+  background:var(--surface);
+}
+.legal-footer a{font-size:9px;color:var(--muted);text-decoration:none;letter-spacing:0.3px}
 .legal-footer a:hover{color:var(--accent)}
 </style>
 </head>
@@ -51,26 +120,8 @@
 
   <!-- TOP BAR -->
   <div class="top-bar">
-    <div class="logo" style="display:flex;align-items:center;gap:8px">
-      <svg viewBox="0 0 100 92" width="28" height="28" fill="#1565c0" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <!-- Pilar central + punta -->
-        <polygon points="50,0 43,16 57,16"/>
-        <rect x="43" y="16" width="14" height="56"/>
-        <!-- Pilar izquierdo -->
-        <rect x="24" y="27" width="12" height="45"/>
-        <!-- Rampa izquierda exterior -->
-        <polygon points="43,16 24,27 6,72 18,72"/>
-        <!-- Pilar derecho -->
-        <rect x="64" y="27" width="12" height="45"/>
-        <!-- Rampa derecha exterior -->
-        <polygon points="57,16 76,27 94,72 82,72"/>
-        <!-- k izquierda -->
-        <polygon points="6,72 18,72 6,92"/>
-        <polygon points="18,72 24,72 24,92 18,92"/>
-        <!-- k derecha (espejo) -->
-        <polygon points="94,72 82,72 94,92"/>
-        <polygon points="82,72 76,72 76,92 82,92"/>
-      </svg>
+    <div class="logo logo-wrap">
+      <img src="/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
       Kirolorik
     </div>
     <div class="top-actions">
@@ -79,19 +130,21 @@
         <span id="locText">Eibar</span>
       </div>
       <div class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</div>
+      <div class="profile-btn" id="profileBtn" onclick="toggleProfile()">
+        <div class="profile-btn-inner" id="profileBtnInner">👤</div>
+      </div>
     </div>
   </div>
 
   <!-- PANEL AJUSTES -->
   <div class="settings-panel" id="settingsPanel">
     <div class="settings-inner">
-
-      <!-- Búsqueda + idioma en la misma fila -->
       <div class="settings-search-row">
         <div class="search-box">
           <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px">
             <span style="font-size:14px;color:var(--muted)">🔍</span>
-            <input type="text" id="searchInput" placeholder="Club, kirola edo udalerria..." oninput="doSearch(this.value)" style="flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text)">
+            <input type="text" id="searchInput" placeholder="Club, kirola edo udalerria..." oninput="doSearch(this.value)"
+              style="flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text)">
           </div>
           <div class="search-results" id="searchResults"></div>
         </div>
@@ -100,13 +153,6 @@
           <option value="eus">EUS</option>
         </select>
       </div>
-
-      <!-- Mi Club -->
-      <div class="miclub-link" onclick="abrirMiClub()">
-        <span class="miclub-link-label" data-i18n="miclub">⭐ Mi club</span>
-        <span class="miclub-link-arrow">›</span>
-      </div>
-
     </div>
   </div>
 
@@ -116,7 +162,7 @@
   </div>
 
   <!-- SPORT FILTER -->
-  <div class="sport-filter" id="sportFilter">
+  <div class="sport-filter">
     <div class="sp active" onclick="filtrar(this,'todos')" data-i18n="todos">Todos</div>
     <div class="sp" onclick="filtrar(this,'futbol')">⚽ <span data-i18n="futbol">Fútbol</span></div>
     <div class="sp" onclick="filtrar(this,'basket')">🏀 <span data-i18n="basket">Basket</span></div>
@@ -131,7 +177,7 @@
   <!-- PARRILLA -->
   <div class="parrilla-wrap">
     <div class="parrilla" id="parrilla">
-      <div class="empty-slot" data-i18n="cargando">Cargando...</div>
+      <div class="empty-slot">Cargando...</div>
     </div>
   </div>
 
@@ -154,7 +200,7 @@
     </div>
   </div>
 
-  <!-- BANNER PUBLICIDAD -->
+  <!-- BANNER -->
   <div class="ad-fixed" onclick="window.location='mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik'">
     <div class="ad-tag" data-i18n="espacioPub">Espacio publicitario</div>
     <div class="ad-logo">📣</div>
@@ -175,39 +221,59 @@
 
 </div>
 
+<!-- OVERLAY + DRAWER PERFIL -->
+<div class="profile-overlay" id="profileOverlay" onclick="cerrarProfile()"></div>
+<div class="profile-drawer" id="profileDrawer">
+
+  <div class="drawer-header" id="drawerHeader">
+    <!-- Se rellena por JS -->
+  </div>
+
+  <div class="drawer-body" id="drawerBody">
+    <!-- Se rellena por JS -->
+  </div>
+
+</div>
+
 <script>
 const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 
+// ── ESTADO AUTH ──
+let authUser = null;
+let authToken = null;
+
 // ── TRADUCCIONES ──
 const T = {
-  cas: {
-    miclub:'⭐ Mi club', todos:'Todos',
-    futbol:'Fútbol', basket:'Basket', balonmano:'Balonmano',
-    waterpolo:'Waterpolo', boxeo:'Boxeo', tenis:'Tenis',
-    atletismo:'Atletismo', ciclismo:'Ciclismo',
+  cas:{
+    todos:'Todos', futbol:'Fútbol', basket:'Basket', balonmano:'Balonmano',
+    waterpolo:'Waterpolo', boxeo:'Boxeo', tenis:'Tenis', atletismo:'Atletismo', ciclismo:'Ciclismo',
     cargando:'Cargando...', sinEventos:'Sin eventos para este día',
     ahora:'Ahora', entrada:'Entrada', rifa:'Rifa', gratis:'Gratis',
     sinIcono:'Sin icono = libre', espacioPub:'Espacio publicitario',
     adNombre:'¿Tu negocio aquí?',
     adDesc:'Llega a las familias deportistas de Eibar · kirolorik.info@gmail.com',
     contactar:'Contactar', privacidad:'Privacidad', cookies:'Cookies',
-    rgpd:'RGPD', terminos:'Términos',
-    placeholder:'Club, kirola edo udalerria...'
+    rgpd:'RGPD', terminos:'Términos', placeholder:'Club, deporte o localidad...',
+    hola:'¡Hola', invitado:'Invitado',
+    loginBtn:'¡Al campo! ⚽', logoutBtn:'Al vestuario 🚿',
+    perfil:'Mi perfil', adminEventos:'Gestionar eventos',
+    emailPlaceholder:'correo@ejemplo.com'
   },
-  eus: {
-    miclub:'⭐ Nire kluba', todos:'Guztiak',
-    futbol:'Futbola', basket:'Saskibaloia', balonmano:'Eskubaloia',
-    waterpolo:'Waterpoloa', boxeo:'Boxeoa', tenis:'Tenisa',
-    atletismo:'Atletismoa', ciclismo:'Txirrindularitza',
+  eus:{
+    todos:'Guztiak', futbol:'Futbola', basket:'Saskibaloia', balonmano:'Eskubaloia',
+    waterpolo:'Waterpoloa', boxeo:'Boxeoa', tenis:'Tenisa', atletismo:'Atletismoa', ciclismo:'Txirrindularitza',
     cargando:'Kargatzen...', sinEventos:'Ez dago ekitaldirik egun honetarako',
     ahora:'Orain', entrada:'Sarrera', rifa:'Zozketa', gratis:'Doakoa',
     sinIcono:'Ikonorik gabe = libre', espacioPub:'Publizitate gunea',
     adNombre:'Zure negozioa hemen?',
     adDesc:'Eibarko kirol-familienengana iritsi · kirolorik.info@gmail.com',
     contactar:'Kontaktatu', privacidad:'Pribatutasuna', cookies:'Cookies',
-    rgpd:'DBEO', terminos:'Baldintzak',
-    placeholder:'Kluba, kirola edo udalerria...'
+    rgpd:'DBEO', terminos:'Baldintzak', placeholder:'Kluba, kirola edo udalerria...',
+    hola:'Kaixo', invitado:'Gonbidatua',
+    loginBtn:'Sartu zelaiara! ⚽', logoutBtn:'Aldagelara 🚿',
+    perfil:'Nire profila', adminEventos:'Ekitaldiak kudeatu',
+    emailPlaceholder:'posta@adibidea.com'
   }
 };
 
@@ -216,103 +282,95 @@ let fechaActiva = getFechaHoy();
 let deporteActivo = 'todos';
 
 const DEPORTES = {
-  futbol:    {label:'Fútbol',           color:'var(--c-futbol)'},
-  basket:    {label:'Basket',           color:'var(--c-basket)'},
-  balonmano: {label:'Balonmano',        color:'var(--c-balonmano)'},
-  waterpolo: {label:'Waterpolo',        color:'var(--c-waterpolo)'},
-  boxeo:     {label:'Boxeo',            color:'var(--c-boxeo)'},
-  tenis:     {label:'Tenis',            color:'var(--c-tenis)'},
-  atletismo: {label:'Atletismo',        color:'var(--c-atletismo)'},
-  ciclismo:  {label:'Ciclismo',         color:'var(--c-ciclismo)'},
-  otros:     {label:'Otros',            color:'var(--c-otros)'}
+  futbol:    {color:'var(--c-futbol)'},
+  basket:    {color:'var(--c-basket)'},
+  balonmano: {color:'var(--c-balonmano)'},
+  waterpolo: {color:'var(--c-waterpolo)'},
+  boxeo:     {color:'var(--c-boxeo)'},
+  tenis:     {color:'var(--c-tenis)'},
+  atletismo: {color:'var(--c-atletismo)'},
+  ciclismo:  {color:'var(--c-ciclismo)'},
+  otros:     {color:'var(--c-otros)'}
 };
 
-function t(key) { return T[lang][key] || key; }
+// Paleta de colores para avatares
+const AVATAR_COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 
-function aplicarTraducciones() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if(T[lang][key]) el.textContent = T[lang][key];
+function t(key){return T[lang][key]||key}
+
+function aplicarTraducciones(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;
+    if(T[lang][k]) el.textContent=T[lang][k];
   });
-  const si = document.getElementById('searchInput');
-  if(si) si.placeholder = t('placeholder');
-  // Actualizar labels de deporte en parrilla si está cargada
-  document.querySelectorAll('.event-sport[data-deporte]').forEach(el => {
-    const dep = el.dataset.deporte;
-    el.textContent = t(dep) || dep;
+  const si=document.getElementById('searchInput');
+  if(si) si.placeholder=t('placeholder');
+  document.querySelectorAll('.event-sport[data-deporte]').forEach(el=>{
+    el.textContent=t(el.dataset.deporte)||el.dataset.deporte;
   });
 }
 
-function setLang(l) {
-  lang = l;
-  aplicarTraducciones();
-}
+function setLang(l){lang=l;aplicarTraducciones();renderDrawer()}
 
-function getFechaHoy() {
-  const d = new Date();
+function getFechaHoy(){
+  const d=new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
-function getHoraActual() {
-  const d = new Date();
+function getHoraActual(){
+  const d=new Date();
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-function badge(tipo) {
+function badge(tipo){
   if(tipo==='pago')   return `<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">${t('entrada')}</div></div>`;
   if(tipo==='rifa')   return `<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">${t('rifa')}</div></div>`;
   if(tipo==='gratis') return `<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">${t('gratis')}</div></div>`;
   return '<div class="entry-badge"><div class="entry-none"></div></div>';
 }
 
-function nombre(e) {
+function nombre(e){
   if(e.nombre_evento) return e.nombre_evento;
-  return (e.equipo_local||'—') + (e.equipo_visitante ? ' · '+e.equipo_visitante : '');
+  return (e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'');
 }
 
-async function cargar() {
-  const parrilla = document.getElementById('parrilla');
-  parrilla.innerHTML = `<div class="empty-slot">${t('cargando')}</div>`;
-
-  let url = `${SB_URL}/rest/v1/eventos?select=*&activo=eq.true&order=fecha.asc,hora.asc`;
-  if(fechaActiva) url += `&fecha=eq.${fechaActiva}`;
-  if(deporteActivo !== 'todos') url += `&deporte=eq.${deporteActivo}`;
-
-  try {
-    const res = await fetch(url, {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const data = await res.json();
-
-    if(!Array.isArray(data)||!data.length) {
-      parrilla.innerHTML = `<div class="empty-slot">${t('sinEventos')}</div>`;
+// ── PARRILLA ──
+async function cargar(){
+  const parrilla=document.getElementById('parrilla');
+  parrilla.innerHTML=`<div class="empty-slot">${t('cargando')}</div>`;
+  let url=`${SB_URL}/rest/v1/eventos?select=*&activo=eq.true&order=fecha.asc,hora.asc`;
+  if(fechaActiva) url+=`&fecha=eq.${fechaActiva}`;
+  if(deporteActivo!=='todos') url+=`&deporte=eq.${deporteActivo}`;
+  try{
+    const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const data=await res.json();
+    if(!Array.isArray(data)||!data.length){
+      parrilla.innerHTML=`<div class="empty-slot">${t('sinEventos')}</div>`;
       return;
     }
-
-    const grupos = {};
-    data.forEach(e => {
-      const h = (e.hora||'00:00:00').slice(0,5);
+    const grupos={};
+    data.forEach(e=>{
+      const h=(e.hora||'00:00:00').slice(0,5);
       if(!grupos[h]) grupos[h]=[];
       grupos[h].push(e);
     });
-
-    const horaActual = getHoraActual();
-    let nowInserted = false;
-    parrilla.innerHTML = '';
-
-    Object.entries(grupos).forEach(([hora,evs]) => {
-      const [hh,mm] = hora.split(':');
-      if(!nowInserted && hora > horaActual) {
-        nowInserted = true;
-        const now = document.createElement('div');
-        now.className = 'now-row';
-        now.innerHTML = `<div class="now-dot"></div><div class="now-label">${t('ahora')}</div><div class="now-time">${horaActual}</div>`;
+    const horaActual=getHoraActual();
+    let nowInserted=false;
+    parrilla.innerHTML='';
+    Object.entries(grupos).forEach(([hora,evs])=>{
+      const [hh,mm]=hora.split(':');
+      if(!nowInserted&&hora>horaActual){
+        nowInserted=true;
+        const now=document.createElement('div');
+        now.className='now-row';
+        now.innerHTML=`<div class="now-dot"></div><div class="now-label">${t('ahora')}</div><div class="now-time">${horaActual}</div>`;
         parrilla.appendChild(now);
       }
-      const row = document.createElement('div');
-      row.className = 'time-row';
-      const evHTML = evs.map(e => {
-        const dep = DEPORTES[(e.deporte||'').toLowerCase()]||{label:e.deporte||'Otro',color:'var(--c-otros)'};
-        const gen = e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
-        const depLabel = t(e.deporte) || dep.label;
+      const row=document.createElement('div');
+      row.className='time-row';
+      const evHTML=evs.map(e=>{
+        const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)'};
+        const depLabel=t(e.deporte)||e.deporte||'Otro';
+        const gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
         return `<div class="event">
           <div class="event-bar" style="background:${dep.color}"></div>
           <div class="event-info">
@@ -326,39 +384,38 @@ async function cargar() {
           ${badge(e.tipo_entrada)}
         </div>`;
       }).join('');
-      row.innerHTML = `<div class="time-col"><span class="time-h">${hh}</span><span class="time-m">${mm}</span></div><div class="events-col">${evHTML}</div>`;
+      row.innerHTML=`<div class="time-col"><span class="time-h">${hh}</span><span class="time-m">${mm}</span></div><div class="events-col">${evHTML}</div>`;
       parrilla.appendChild(row);
     });
-
-  } catch(err) {
-    parrilla.innerHTML = `<div class="empty-slot" style="color:#dc2626">Error: ${err.message}</div>`;
+  }catch(err){
+    parrilla.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error: ${err.message}</div>`;
   }
 }
 
-function buildDates() {
-  const strip = document.getElementById('dateStrip');
-  const dias = {
-    cas:['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
-    eus:['Ig','Al','Ar','Az','Og','Or','La']
-  };
-  const hoy = new Date();
-  for(let i=0;i<=13;i++) {
-    const d = new Date(hoy);
+// ── DATE STRIP ──
+function buildDates(){
+  const strip=document.getElementById('dateStrip');
+  const diasCas=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const diasEus=['Ig','Al','Ar','Az','Og','Or','La'];
+  const hoy=new Date();
+  for(let i=0;i<=13;i++){
+    const d=new Date(hoy);
     d.setDate(hoy.getDate()+i);
-    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const chip = document.createElement('div');
-    chip.className = 'date-chip'+(i===0?' today':'');
-    chip.dataset.fecha = iso;
-    chip.dataset.dow = d.getDay();
-    chip.innerHTML = `<span class="dn">${dias.cas[d.getDay()]}</span><span class="dd">${d.getDate()}</span>`;
-    chip.onclick = () => {
-      if(chip.classList.contains('today') && fechaActiva===iso) {
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const chip=document.createElement('div');
+    chip.className='date-chip'+(i===0?' today':'');
+    chip.dataset.fecha=iso;
+    chip.dataset.dow=d.getDay();
+    chip.dataset.day=d.getDate();
+    chip.innerHTML=`<span class="dn">${diasCas[d.getDay()]}</span><span class="dd">${d.getDate()}</span>`;
+    chip.onclick=()=>{
+      if(chip.classList.contains('today')&&fechaActiva===iso){
         chip.classList.remove('today');
-        fechaActiva = null;
-      } else {
+        fechaActiva=null;
+      }else{
         document.querySelectorAll('.date-chip:not(.date-arrow)').forEach(c=>c.classList.remove('today'));
         chip.classList.add('today');
-        fechaActiva = iso;
+        fechaActiva=iso;
       }
       cargar();
     };
@@ -366,29 +423,143 @@ function buildDates() {
   }
 }
 
-function scrollAtras() {
+function scrollAtras(){
   document.getElementById('dateStrip').scrollBy({left:-80,behavior:'smooth'});
 }
 
-function filtrar(chip, dep) {
+function filtrar(chip,dep){
   document.querySelectorAll('.sp').forEach(s=>s.classList.remove('active'));
   chip.classList.add('active');
-  deporteActivo = dep;
+  deporteActivo=dep;
   cargar();
 }
 
-function toggleSettings() {
+// ── AJUSTES ──
+function toggleSettings(){
   document.getElementById('settingsPanel').classList.toggle('open');
   document.getElementById('settingsBtn').classList.toggle('open');
+  cerrarProfile();
 }
 
-function abrirMiClub() {
-  // Próximamente — pantalla Mi Club
-  alert('Mi club — próximamente');
+// ── PERFIL / DRAWER ──
+function toggleProfile(){
+  const drawer=document.getElementById('profileDrawer');
+  const overlay=document.getElementById('profileOverlay');
+  const isOpen=drawer.classList.contains('open');
+  if(isOpen){cerrarProfile();}
+  else{
+    renderDrawer();
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.getElementById('profileBtn').classList.add('open');
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('settingsBtn').classList.remove('open');
+  }
 }
 
-// Buscador
-const DEMO = [
+function cerrarProfile(){
+  document.getElementById('profileDrawer').classList.remove('open');
+  document.getElementById('profileOverlay').classList.remove('open');
+  document.getElementById('profileBtn').classList.remove('open');
+}
+
+function renderDrawer(){
+  const header=document.getElementById('drawerHeader');
+  const body=document.getElementById('drawerBody');
+
+  if(authUser){
+    // Usuario logueado
+    const email=authUser.email||'';
+    const initial=email.charAt(0).toUpperCase();
+    const colorIdx=email.charCodeAt(0)%AVATAR_COLORS.length;
+    const color=AVATAR_COLORS[colorIdx];
+
+    // Actualizar botón de perfil
+    document.getElementById('profileBtnInner').innerHTML=
+      `<div class="profile-btn-initial" style="background:${color}">${initial}</div>`;
+
+    header.innerHTML=`
+      <div class="drawer-avatar" style="background:${color}">${initial}</div>
+      <div class="drawer-hola">${t('hola')}, ${email.split('@')[0]}</div>
+      <div class="drawer-club" id="drawerClubName">—</div>`;
+
+    body.innerHTML=`
+      <button class="drawer-item" onclick="irPerfil()">👤 ${t('perfil')}</button>
+      <div class="drawer-sep"></div>
+      <button class="drawer-item accent" onclick="irAdminEventos()">📋 ${t('adminEventos')}</button>
+      <div class="drawer-sep"></div>
+      <button class="drawer-item danger" onclick="logout()">🚿 ${t('logoutBtn')}</button>`;
+
+  }else{
+    // No logueado
+    document.getElementById('profileBtnInner').innerHTML='👤';
+
+    header.innerHTML=`
+      <div class="drawer-avatar guest">👤</div>
+      <div class="drawer-hola">${t('invitado')}</div>`;
+
+    body.innerHTML=`
+      <div class="drawer-login">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="drawerEmail" placeholder="${t('emailPlaceholder')}">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="drawerPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+        </div>
+        <div class="login-error" id="drawerError"></div>
+        <button class="btn-kick" id="loginBtn" onclick="login()">${t('loginBtn')}</button>
+      </div>`;
+  }
+}
+
+// ── AUTH ──
+async function login(){
+  const email=document.getElementById('drawerEmail')?.value.trim();
+  const pass=document.getElementById('drawerPass')?.value;
+  const errEl=document.getElementById('drawerError');
+  const btn=document.getElementById('loginBtn');
+  if(!email||!pass){if(errEl)errEl.textContent='Rellena email y contraseña';return;}
+  if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error_description||'Error de acceso');
+    authToken=data.access_token;
+    authUser=data.user;
+    renderDrawer();
+  }catch(e){
+    if(errEl) errEl.textContent=e.message;
+    if(btn){btn.disabled=false;btn.textContent=t('loginBtn');}
+  }
+}
+
+async function logout(){
+  await fetch(`${SB_URL}/auth/v1/logout`,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken}
+  }).catch(()=>{});
+  authUser=null;authToken=null;
+  renderDrawer();
+}
+
+function irPerfil(){
+  cerrarProfile();
+  alert('Perfil — próximamente');
+}
+
+function irAdminEventos(){
+  cerrarProfile();
+  window.location.href='/adminEventos.html';
+}
+
+// ── BUSCADOR ──
+const DEMO=[
   {icon:'⚽',name:'SD Eibar B',sub:'Fútbol · Eibar'},
   {icon:'🏀',name:'Eibar Saskibaloia',sub:'Basket · Eibar'},
   {icon:'🤾',name:'BM Eibar',sub:'Balonmano · Eibar'},
@@ -397,24 +568,23 @@ const DEMO = [
   {icon:'📍',name:'Elgoibar',sub:'Udalerria · Gipuzkoa'},
   {icon:'📍',name:'Arrasate',sub:'Udalerria · Gipuzkoa'},
 ];
-
-function doSearch(v) {
-  const r = document.getElementById('searchResults');
+function doSearch(v){
+  const r=document.getElementById('searchResults');
   if(!v.trim()){r.innerHTML='';return;}
-  const f = DEMO.filter(d=>d.name.toLowerCase().includes(v.toLowerCase())||d.sub.toLowerCase().includes(v.toLowerCase())).slice(0,3);
-  r.innerHTML = f.map(d=>`<div class="sri" onclick="selectResult('${d.name}','${d.sub}')"><span>${d.icon}</span><span class="sri-name">${d.name}</span><span class="sri-sub">${d.sub}</span></div>`).join('');
+  const f=DEMO.filter(d=>d.name.toLowerCase().includes(v.toLowerCase())||d.sub.toLowerCase().includes(v.toLowerCase())).slice(0,3);
+  r.innerHTML=f.map(d=>`<div class="sri" onclick="selectResult('${d.name}','${d.sub}')"><span>${d.icon}</span><span class="sri-name">${d.name}</span><span class="sri-sub">${d.sub}</span></div>`).join('');
 }
-
-function selectResult(name,sub) {
+function selectResult(name,sub){
   document.getElementById('searchInput').value=name;
   document.getElementById('searchResults').innerHTML='';
   if(sub.includes('Udalerria')||sub.includes('Municipio')) document.getElementById('locText').textContent=name;
 }
 
-// Init
+// ── INIT ──
 buildDates();
 cargar();
 aplicarTraducciones();
+renderDrawer();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
