@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<title>Kirolorik · Eventos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-shrink:0}
+.tab{padding:10px 18px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── HOJA ── */
+.sheet-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{border-collapse:collapse;min-width:100%;font-size:11px}
+thead th{
+  background:var(--surface2);padding:8px 10px;
+  text-align:left;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+  border-bottom:2px solid var(--border);white-space:nowrap;
+  position:sticky;top:0;z-index:1;
+}
+tbody td{padding:4px 4px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+tbody td input,tbody td select{
+  width:100%;background:transparent;border:1px solid transparent;
+  border-radius:6px;padding:5px 6px;font-size:11px;
+  font-family:'DM Sans',sans-serif;color:var(--text);outline:none;
+  min-width:70px;
+}
+tbody td input:focus,tbody td select:focus{border-color:var(--accent);background:var(--bg)}
+tbody td select{cursor:pointer}
+.row-num{width:28px;text-align:center;font-size:10px;color:var(--muted);padding:0 6px}
+.row-del{width:28px;text-align:center;cursor:pointer;font-size:14px;opacity:0.3;transition:opacity 0.15s}
+.row-del:hover{opacity:1}
+
+.sheet-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn-add-row{
+  background:var(--surface);border:1px dashed var(--border);
+  border-radius:var(--radius-sm);padding:8px 14px;
+  font-size:12px;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;
+}
+.btn-add-row:hover{border-color:var(--accent);color:var(--accent)}
+
+.paste-hint{
+  font-size:10px;color:var(--muted);padding:10px 14px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.5;
+}
+.paste-hint strong{color:var(--text)}
+
+.col-order{
+  font-size:9px;color:var(--muted);padding:8px 14px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);margin-bottom:10px;
+  font-family:monospace;letter-spacing:0.3px;overflow-x:auto;white-space:nowrap;
+}
+
+/* Lista eventos */
+.evento-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.evento-bar{width:3px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.evento-info{flex:1;min-width:0}
+.evento-teams{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.evento-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.ev-actions{display:flex;gap:8px;flex-shrink:0}
+.ev-btn{font-size:14px;cursor:pointer;opacity:0.35;transition:opacity 0.15s;background:none;border:none;padding:2px}
+.ev-btn:hover{opacity:1}
+.badge-activo{font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700}
+.badge-inactivo{font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;padding:32px 16px">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)">KIROLORIK</div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-12px">Panel de eventos</div>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px">
+    <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@kirolorik.app"></div>
+    <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+    <div id="loginError" style="font-size:12px;color:#dc2626;min-height:16px"></div>
+    <button style="background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif" id="loginBtn" onclick="login()">¡Al campo! ⚽</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" style="display:none">
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <div>
+      <div class="admin-logo">Kirolorik</div>
+      <div class="admin-sub" id="adminSubtitle">Panel de eventos</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="irInicio()" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">← Inicio</button>
+      <button onclick="logout()" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">Al vestuario 🚿</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('form',this)">📝 Formulario</div>
+    <div class="tab" onclick="switchTab('sheet',this)">📊 Hoja de cálculo</div>
+    <div class="tab" onclick="switchTab('list',this)">📋 Lista</div>
+  </div>
+
+  <!-- TAB FORMULARIO -->
+  <div id="tabForm">
+    <div class="admin-section-title">Nuevo evento</div>
+    <div class="row2">
+      <div class="field"><label>Deporte</label><select id="f_deporte"><option value="futbol">⚽ Fútbol</option><option value="basket">🏀 Basket</option><option value="balonmano">🤾 Balonmano</option><option value="waterpolo">🏊 Waterpolo</option><option value="boxeo">🥊 Boxeo</option><option value="tenis">🎾 Tenis</option><option value="atletismo">🏃 Atletismo</option><option value="ciclismo">🚴 Ciclismo</option><option value="otros">🏅 Otros</option></select></div>
+      <div class="field"><label>Género</label><select id="f_genero"><option value="Sin especificar">Sin especificar</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Mixto">Mixto</option></select></div>
+    </div>
+    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
+    <div class="row2">
+      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Junior</option><option>Senior</option><option>Veteranos</option><option>Todas</option></select></div>
+      <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
+    </div>
+    <div class="field"><label>Equipo local</label><input type="text" id="f_local" placeholder="Nombre del equipo local"></div>
+    <div class="field"><label>Equipo visitante</label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="row2">
+      <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
+      <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
+    </div>
+    <div class="field"><label>Municipio</label><input type="text" id="f_municipio" placeholder="Eibar, Ermua..."></div>
+    <div class="field"><label>Instalación</label><input type="text" id="f_instalacion" placeholder="Nombre del recinto"></div>
+    <div class="row2">
+      <div class="field"><label>Entrada</label><select id="f_entrada"><option value="gratis">🟢 Gratis</option><option value="pago">🟡 De pago</option><option value="rifa">🟠 Rifa</option><option value="sin info">⚪ Sin info</option></select></div>
+      <div class="field">
+        <label>Duración (min)</label>
+        <select id="f_duracion">
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+          <option value="90" selected>90 min</option>
+          <option value="120">120 min</option>
+          <option value="180">180 min</option>
+          <option value="240">240 min</option>
+          <option value="360">Día completo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Cartel / Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · JPG, PNG, WebP)</span></label>
+      <input type="file" id="f_imagen" accept="image/*" style="padding:8px">
+      <div id="f_imagen_preview" style="margin-top:8px;display:none">
+        <img id="f_imagen_img" src="" alt="Preview" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="guardarForm()">Guardar evento ⚽</button>
+  </div>
+
+  <!-- TAB HOJA -->
+  <div id="tabSheet" style="display:none">
+    <div class="paste-hint">
+      💡 <strong>Pega desde Excel o Google Sheets</strong> — haz clic en cualquier celda de la tabla y pega con Ctrl+V (o ⌘+V). El orden de columnas debe ser:<br>
+      <div class="col-order">fecha · hora · deporte · género · categoría · competición · nombre evento · equipo local · equipo visitante · municipio · instalación · entrada</div>
+    </div>
+    <div class="sheet-wrap" id="sheetWrap">
+      <table id="sheetTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th><th>Hora</th><th>Deporte</th><th>Género</th>
+            <th>Categoría</th><th>Competición</th><th>Nombre evento</th>
+            <th>Equipo local</th><th>Equipo visitante</th>
+            <th>Municipio</th><th>Instalación</th><th>Entrada</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-add-row" onclick="addRow()">+ Añadir fila</button>
+      <button class="btn-primary" style="flex:1;max-width:200px" onclick="guardarHoja()">Guardar todo ⚽</button>
+    </div>
+    <div id="sheetStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+  </div>
+
+  <!-- TAB LISTA -->
+  <div id="tabList" style="display:none">
+    <div id="eventosList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+let authToken = null;
+let authUser  = null;
+
+const COLORES = {futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b'};
+
+function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(err?' error':'');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// ── AUTH ──
+function mostrarAdmin(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('adminScreen').style.display='block';
+  document.getElementById('adminSubtitle').textContent=authUser?.email||'Panel de eventos';
+  document.getElementById('f_fecha').value=new Date().toISOString().split('T')[0];
+  addRow(); addRow(); addRow(); // 3 filas vacías por defecto en la hoja
+}
+
+async function login(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginError');
+  const btn=document.getElementById('loginBtn');
+  err.textContent='';btn.disabled=true;btn.textContent='...';
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error_description||'Error');
+    authToken=data.access_token;
+    authUser=data.user;
+    sessionStorage.setItem('kb_token',authToken);
+    sessionStorage.setItem('kb_user',JSON.stringify(authUser));
+    mostrarAdmin();
+  }catch(e){
+    err.textContent=e.message;
+    btn.disabled=false;btn.textContent='¡Al campo! ⚽';
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('kb_token');
+  sessionStorage.removeItem('kb_user');
+  window.location.href='/';
+}
+
+function irInicio(){ window.location.href='/'; }
+
+// ── TABS ──
+function switchTab(name,el){
+  ['Form','Sheet','List'].forEach(t=>{
+    document.getElementById('tab'+t).style.display='none';
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).style.display='block';
+  el.classList.add('active');
+  if(name==='list') cargarLista();
+}
+
+// ── FORMULARIO ──
+function buildEvento(d){
+  return {
+    deporte:d.deporte||'otros', genero:d.genero||'Sin especificar',
+    nombre_evento:d.nombre||null, categoria:d.cat||'Senior',
+    tipo_competicion:d.comp||'Liga',
+    equipo_local:d.local||null, equipo_visitante:d.visitante||null,
+    fecha:d.fecha, hora:d.hora, municipio:d.municipio||null,
+    instalacion:d.instalacion||null, tipo_entrada:d.entrada||'sin info',
+    duracion_minutos:parseInt(d.duracion)||90,
+    imagen_url:d.imagen_url||null,
+    activo:true, user_id:authUser?.id||null
+  };
+}
+
+async function guardarForm(){
+  const fecha=document.getElementById('f_fecha').value;
+  const hora=document.getElementById('f_hora').value;
+  const municipio=document.getElementById('f_municipio').value.trim();
+  const local=document.getElementById('f_local').value.trim();
+  const nombre=document.getElementById('f_nombre').value.trim();
+  if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
+  if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
+  const ev=buildEvento({
+    deporte:document.getElementById('f_deporte').value,
+    genero:document.getElementById('f_genero').value,
+    nombre, cat:document.getElementById('f_cat').value,
+    comp:document.getElementById('f_comp').value,
+    local, visitante:document.getElementById('f_visitante').value.trim(),
+    fecha, hora, municipio,
+    instalacion:document.getElementById('f_instalacion').value.trim(),
+    entrada:document.getElementById('f_entrada').value,
+    duracion:document.getElementById('f_duracion').value,
+    imagen_url
+  });
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
+      method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(ev)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    toast('✅ Evento guardado');
+    ['f_local','f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+// ── HOJA DE CÁLCULO ──
+const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
+const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
+const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
+const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
+const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
+
+function sel(opts,val){
+  return `<select>${opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+}
+
+function addRow(d={}){
+  const body=document.getElementById('sheetBody');
+  const n=body.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="row-num">${n}</td>
+    <td><input type="date" value="${d.fecha||''}"></td>
+    <td><input type="time" value="${d.hora||''}"></td>
+    <td>${sel(DEPORTES_OPTS,d.deporte||'futbol')}</td>
+    <td>${sel(GENERO_OPTS,d.genero||'Sin especificar')}</td>
+    <td>${sel(CAT_OPTS,d.cat||'Senior')}</td>
+    <td>${sel(COMP_OPTS,d.comp||'Liga')}</td>
+    <td><input type="text" value="${d.nombre||''}" placeholder="Nombre evento"></td>
+    <td><input type="text" value="${d.local||''}" placeholder="Equipo local"></td>
+    <td><input type="text" value="${d.visitante||''}" placeholder="Visitante"></td>
+    <td><input type="text" value="${d.municipio||''}" placeholder="Municipio"></td>
+    <td><input type="text" value="${d.instalacion||''}" placeholder="Instalación"></td>
+    <td>${sel(ENTRADA_OPTS,d.entrada||'sin info')}</td>
+    <td class="row-del" onclick="this.closest('tr').remove();renumerar()">✕</td>`;
+  body.appendChild(tr);
+}
+
+function renumerar(){
+  document.querySelectorAll('#sheetBody .row-num').forEach((td,i)=>td.textContent=i+1);
+}
+
+function getRowData(tr){
+  const inputs=tr.querySelectorAll('input,select');
+  return {
+    fecha:inputs[0].value, hora:inputs[1].value,
+    deporte:inputs[2].value, genero:inputs[3].value,
+    cat:inputs[4].value, comp:inputs[5].value,
+    nombre:inputs[6].value, local:inputs[7].value,
+    visitante:inputs[8].value, municipio:inputs[9].value,
+    instalacion:inputs[10].value, entrada:inputs[11].value
+  };
+}
+
+async function guardarHoja(){
+  const rows=Array.from(document.getElementById('sheetBody').rows);
+  const eventos=rows.map(tr=>getRowData(tr))
+    .filter(d=>d.fecha&&d.hora&&d.municipio)
+    .map(d=>buildEvento(d));
+
+  if(!eventos.length){toast('Sin filas válidas — revisa fecha, hora y municipio',true);return;}
+  const status=document.getElementById('sheetStatus');
+  status.textContent='Guardando '+eventos.length+' eventos...';
+
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
+      method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(eventos)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    toast(`✅ ${eventos.length} eventos guardados`);
+    status.textContent='';
+    document.getElementById('sheetBody').innerHTML='';
+    addRow();addRow();addRow();
+  }catch(e){toast('Error: '+e.message,true);status.textContent='';}
+}
+
+// Preview imagen
+document.addEventListener('change', e => {
+  if(e.target.id !== 'f_imagen') return;
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('f_imagen_img').src = ev.target.result;
+    document.getElementById('f_imagen_preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function subirImagen(file) {
+  if(!file) return null;
+  const ext = file.name.split('.').pop();
+  const nombre = `evento_${Date.now()}.${ext}`;
+  const res = await fetch(`${SB_URL}/storage/v1/object/eventos/${nombre}`, {
+    method: 'POST',
+    headers: {'apikey': SB_KEY, 'Authorization': 'Bearer '+(authToken||SB_KEY), 'Content-Type': file.type},
+    body: file
+  });
+  if(!res.ok) throw new Error('Error al subir imagen');
+  return `${SB_URL}/storage/v1/object/public/eventos/${nombre}`;
+}
+document.addEventListener('paste',e=>{
+  const activeTab=document.getElementById('tabSheet');
+  if(activeTab.style.display==='none') return;
+  const text=e.clipboardData.getData('text/plain');
+  if(!text) return;
+  const lines=text.trim().split('\n').filter(l=>l.trim());
+  if(!lines.length) return;
+  e.preventDefault();
+  // Limpiar filas vacías antes de pegar
+  const body=document.getElementById('sheetBody');
+  Array.from(body.rows).forEach(tr=>{
+    const inputs=tr.querySelectorAll('input');
+    const empty=Array.from(inputs).every(i=>!i.value);
+    if(empty) tr.remove();
+  });
+  lines.forEach(line=>{
+    const cols=line.split('\t');
+    addRow({
+      fecha:cols[0]||'', hora:cols[1]||'',
+      deporte:cols[2]||'futbol', genero:cols[3]||'Sin especificar',
+      cat:cols[4]||'Senior', comp:cols[5]||'Liga',
+      nombre:cols[6]||'', local:cols[7]||'',
+      visitante:cols[8]||'', municipio:cols[9]||'',
+      instalacion:cols[10]||'', entrada:cols[11]||'sin info'
+    });
+  });
+  renumerar();
+  toast(`📋 ${lines.length} filas pegadas`);
+});
+
+// ── LISTA ──
+async function cargarLista(){
+  const list=document.getElementById('eventosList');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*&order=fecha.asc,hora.asc`,{headers:H()});
+    const data=await res.json();
+    if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
+    list.innerHTML=data.map(e=>{
+      const titulo=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
+      const color=COLORES[e.deporte]||'#64748b';
+      return `<div class="evento-card">
+        <div class="evento-bar" style="background:${color}"></div>
+        <div class="evento-info">
+          <div class="evento-teams">${titulo}</div>
+          <div class="evento-meta">${e.deporte} · ${e.categoria||''} · ${e.fecha} ${(e.hora||'').slice(0,5)} · ${e.municipio||''}</div>
+          <div style="margin-top:4px">
+            <span class="${e.activo?'badge-activo':'badge-inactivo'}">${e.activo?'Activo':'Inactivo'}</span>
+          </div>
+        </div>
+        <div class="ev-actions">
+          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${e.id},${e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
+          <button class="ev-btn" title="Borrar" onclick="borrar(${e.id})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar</div>`;}
+}
+
+async function toggleActivo(id,actual){
+  try{
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({activo:!actual})
+    });
+    toast(actual?'Evento desactivado':'Evento activado');
+    cargarLista();
+  }catch{toast('Error',true);}
+}
+
+async function borrar(id){
+  if(!confirm('¿Borrar este evento?')) return;
+  try{
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    toast('Evento eliminado');cargarLista();
+  }catch{toast('Error al borrar',true);}
+}
+
+// ── INIT ──
+const savedToken=sessionStorage.getItem('kb_token');
+const savedUser=sessionStorage.getItem('kb_user');
+if(savedToken&&savedUser){
+  authToken=savedToken;
+  authUser=JSON.parse(savedUser);
+  mostrarAdmin();
+}else{
+  document.getElementById('loginScreen').style.display='flex';
+}
+</script>
+</body>
+</html>
