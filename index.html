@@ -476,24 +476,24 @@ function abrirDetalle(e){
 
     <div class="detail-grid">
       <div class="detail-cell">
-        // <div class="detail-cell-icon">📅</div>
+        /* <div class="detail-cell-icon">📅</div> */
         <div class="detail-cell-label">Fecha</div>
         <div class="detail-cell-val">${formatFecha(e.fecha)}</div>
         <div class="detail-cell-sub">${(e.hora||'').slice(0,5)} h</div>
       </div>
       <div class="detail-cell clickable" onclick="window.open('${mapsURL}','_blank')">
-        // <div class="detail-cell-icon">📍</div>
+        /* <div class="detail-cell-icon">📍</div> */
         <div class="detail-cell-label">Instalación</div>
         <div class="detail-cell-val">${e.instalacion||'—'}</div>
         <div class="detail-cell-sub" style="color:var(--accent)">${t('verMapa')} →</div>
       </div>
       <div class="detail-cell">
-        // <div class="detail-cell-icon">🏙️</div>
+        /* <div class="detail-cell-icon">🏙️</div> */
         <div class="detail-cell-label">Municipio</div>
         <div class="detail-cell-val">${e.municipio||'—'}</div>
       </div>
       <div class="detail-cell">
-        // <div class="detail-cell-icon">⚙️</div>
+        /* <div class="detail-cell-icon">⚙️</div> */
         <div class="detail-cell-label">Deporte</div>
         <div class="detail-cell-val">${dep.emoji} ${depLabel}</div>
         <div class="detail-cell-sub">${e.tipo_competicion||''}</div>
