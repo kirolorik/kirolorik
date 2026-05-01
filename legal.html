@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<title>Kirolorik · Legal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+.legal-wrap{max-width:480px;margin:0 auto;padding:0 0 60px;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.legal-header{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--surface);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;
+}
+.legal-back{font-size:22px;cursor:pointer;color:var(--muted);text-decoration:none;line-height:1}
+.legal-header-title{font-size:14px;font-weight:700;color:var(--text)}
+
+/* Tabs de sección */
+.legal-tabs{
+  display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
+  background:var(--surface);border-bottom:2px solid var(--border);
+  flex-shrink:0;
+}
+.legal-tabs::-webkit-scrollbar{display:none}
+.legal-tab{
+  padding:10px 16px;font-size:11px;font-weight:700;
+  color:var(--muted);cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all 0.15s;flex-shrink:0;
+}
+.legal-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Contenido */
+.legal-content{flex:1;overflow-y:auto;padding:20px 16px}
+.legal-section{display:none}
+.legal-section.active{display:block}
+
+.legal-section h1{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;
+  letter-spacing:2px;color:var(--text);margin-bottom:6px;
+}
+.legal-section .subtitle{
+  font-size:12px;color:var(--muted);margin-bottom:20px;
+  padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.legal-section h2{
+  font-size:13px;font-weight:700;color:var(--text);
+  margin:20px 0 8px;text-transform:uppercase;letter-spacing:0.5px;
+}
+.legal-section p{
+  font-size:13px;color:var(--text);line-height:1.7;margin-bottom:10px;
+}
+.legal-section ul{
+  padding-left:16px;margin-bottom:10px;
+}
+.legal-section ul li{
+  font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px;
+}
+.legal-section a{color:var(--accent);text-decoration:none}
+.legal-section a:hover{text-decoration:underline}
+
+/* Card quiénes somos */
+.about-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:12px;
+}
+.about-card-icon{font-size:24px;margin-bottom:8px}
+.about-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.about-card-text{font-size:12px;color:var(--muted);line-height:1.6}
+
+.contact-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent-bg);border:1px solid var(--accent);
+  border-radius:20px;padding:8px 14px;margin-top:8px;
+  font-size:12px;font-weight:600;color:var(--accent);
+  text-decoration:none;
+}
+</style>
+</head>
+<body>
+<div class="legal-wrap">
+
+  <div class="legal-header">
+    <a class="legal-back" href="/" onclick="history.back();return false">←</a>
+    <div class="legal-header-title" id="headerTitle">Kirolorik</div>
+  </div>
+
+  <div class="legal-tabs">
+    <div class="legal-tab active" onclick="showTab('quienes')">Kirolorik</div>
+    <div class="legal-tab" onclick="showTab('privacidad')">Privacidad</div>
+    <div class="legal-tab" onclick="showTab('cookies')">Cookies</div>
+    <div class="legal-tab" onclick="showTab('rgpd')">RGPD</div>
+    <div class="legal-tab" onclick="showTab('terminos')">Términos</div>
+  </div>
+
+  <div class="legal-content">
+
+    <!-- QUIÉNES SOMOS -->
+    <div class="legal-section active" id="sec-quienes">
+      <h1>Kirolorik</h1>
+      <p class="subtitle">La agenda del deporte amateur local · Eibar</p>
+
+      <div class="about-card">
+        <div class="about-card-icon">🏟️</div>
+        <div class="about-card-title">¿Qué es Kirolorik?</div>
+        <div class="about-card-text">Kirolorik es una agenda digital de eventos deportivos locales. Nació con una idea simple: que cualquier vecino pueda saber qué partido, torneo o carrera hay en su ciudad este fin de semana, sin tener que buscar en grupos de WhatsApp ni en papeles pegados en el polideportivo.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">⚽</div>
+        <div class="about-card-title">Deporte base y amateur</div>
+        <div class="about-card-text">Nos enfocamos en el deporte que a menudo no tiene visibilidad mediática: fútbol infantil, basket cadete, balonmano femenino, ciclismo popular, atletismo, waterpolo... El deporte de barrio, el de las familias, el que llena los polideportivos los sábados por la mañana.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">📍</div>
+        <div class="about-card-title">Empezamos en Eibar</div>
+        <div class="about-card-text">Eibar es nuestra ciudad de lanzamiento. Una ciudad con una cultura deportiva profunda, con el SD Eibar como referente y una comunidad local comprometida con el deporte en todas sus formas. Desde aquí queremos crecer y llegar a más municipios de Euskal Herria y más allá.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">🤝</div>
+        <div class="about-card-title">Gratuito para clubs y usuarios</div>
+        <div class="about-card-text">Kirolorik es gratuito para los clubs que publican sus eventos y para los aficionados que los consultan. Nos sostenemos gracias a la publicidad de negocios locales que quieren llegar a las familias deportistas de la zona: fisioterapeutas, bares, tiendas de deporte...</div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <h2>Contacto</h2>
+        <p>¿Quieres publicar los eventos de tu club, anunciarte o simplemente decirnos algo?</p>
+        <a class="contact-pill" href="mailto:kirolorik.info@gmail.com">📧 kirolorik.info@gmail.com</a>
+      </div>
+    </div>
+
+    <!-- PRIVACIDAD -->
+    <div class="legal-section" id="sec-privacidad">
+      <h1>Privacidad</h1>
+      <p class="subtitle">Política de privacidad · Última actualización: mayo 2026</p>
+
+      <h2>Responsable del tratamiento</h2>
+      <p>Kirolorik es un proyecto personal con sede en Eibar, Gipuzkoa. Contacto: <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a></p>
+
+      <h2>Qué datos recogemos</h2>
+      <p>Kirolorik recoge únicamente los datos necesarios para el funcionamiento de la plataforma:</p>
+      <ul>
+        <li>Datos de registro de clubs y organizadores: email y contraseña (cifrada).</li>
+        <li>Datos de eventos publicados: nombre del evento, equipos, fecha, hora, lugar e instalación.</li>
+        <li>Datos de navegación anónimos: páginas visitadas y tiempo de uso, sin identificar al usuario.</li>
+      </ul>
+
+      <h2>Menores de edad</h2>
+      <p>Kirolorik no recoge ni publica datos personales de menores. Los eventos de categorías infantiles y juveniles muestran únicamente el nombre del equipo, deporte y horario. En ningún caso se publican nombres, apellidos ni fotografías de jugadores menores de edad.</p>
+
+      <h2>Con quién compartimos los datos</h2>
+      <p>No vendemos ni cedemos datos personales a terceros. Los datos se almacenan en Supabase (infraestructura en la Unión Europea) y están protegidos conforme al RGPD.</p>
+
+      <h2>Tus derechos</h2>
+      <p>Puedes ejercer tus derechos de acceso, rectificación, supresión y portabilidad escribiendo a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</p>
+    </div>
+
+    <!-- COOKIES -->
+    <div class="legal-section" id="sec-cookies">
+      <h1>Cookies</h1>
+      <p class="subtitle">Política de cookies · Última actualización: mayo 2026</p>
+
+      <h2>¿Qué son las cookies?</h2>
+      <p>Las cookies son pequeños archivos que se almacenan en tu dispositivo cuando visitas una web o usas una aplicación. Permiten recordar preferencias y mejorar la experiencia de uso.</p>
+
+      <h2>Cookies que usamos</h2>
+      <ul>
+        <li><strong>Sesión de usuario:</strong> almacenamos en sessionStorage el token de autenticación para que no tengas que iniciar sesión cada vez que cambias de pantalla. Se elimina al cerrar el navegador.</li>
+        <li><strong>Preferencias de idioma:</strong> guardamos tu elección de idioma (CAS/EUS) para mantenerla entre visitas.</li>
+      </ul>
+
+      <h2>Lo que no hacemos</h2>
+      <p>Kirolorik no utiliza cookies de seguimiento publicitario, ni cookies de terceros para construir perfiles de usuario. La publicidad que aparece en la app es contextual y no personalizada.</p>
+
+      <h2>Cómo gestionar las cookies</h2>
+      <p>Puedes eliminar los datos almacenados en tu dispositivo desde los ajustes de tu navegador o app en cualquier momento.</p>
+    </div>
+
+    <!-- RGPD -->
+    <div class="legal-section" id="sec-rgpd">
+      <h1>RGPD</h1>
+      <p class="subtitle">Reglamento General de Protección de Datos · Mayo 2026</p>
+
+      <h2>Base legal del tratamiento</h2>
+      <p>Kirolorik trata los datos personales de los usuarios registrados basándose en el consentimiento explícito otorgado en el momento del registro.</p>
+
+      <h2>Finalidad del tratamiento</h2>
+      <ul>
+        <li>Gestionar el acceso y uso de la plataforma por parte de clubs y organizadores.</li>
+        <li>Publicar y mostrar eventos deportivos locales.</li>
+        <li>Mejorar el funcionamiento de la aplicación mediante análisis anónimo de uso.</li>
+      </ul>
+
+      <h2>Plazo de conservación</h2>
+      <p>Los datos se conservan mientras la cuenta esté activa. Al solicitar la baja, los datos personales se eliminan en un plazo máximo de 30 días.</p>
+
+      <h2>Transferencias internacionales</h2>
+      <p>Los datos se almacenan en servidores dentro de la Unión Europea a través de Supabase, que cumple con el RGPD y las garantías adecuadas de transferencia.</p>
+
+      <h2>Ejercicio de derechos</h2>
+      <p>Para ejercer cualquier derecho reconocido en el RGPD (acceso, rectificación, supresión, portabilidad, limitación u oposición) escribe a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a> indicando tu solicitud y email de registro.</p>
+
+      <h2>Reclamaciones</h2>
+      <p>Si consideras que el tratamiento de tus datos no se ajusta a la normativa, puedes presentar una reclamación ante la Agencia Española de Protección de Datos en <a href="https://www.aepd.es" target="_blank">aepd.es</a>.</p>
+    </div>
+
+    <!-- TÉRMINOS -->
+    <div class="legal-section" id="sec-terminos">
+      <h1>Términos</h1>
+      <p class="subtitle">Condiciones de uso · Última actualización: mayo 2026</p>
+
+      <h2>Uso de la plataforma</h2>
+      <p>Kirolorik es una plataforma de información sobre eventos deportivos locales. El uso de la aplicación implica la aceptación de estas condiciones.</p>
+
+      <h2>Publicación de eventos</h2>
+      <ul>
+        <li>Los clubs y organizadores son responsables de la veracidad de los datos publicados.</li>
+        <li>Kirolorik se reserva el derecho de eliminar eventos incorrectos, fraudulentos o contrarios a estas condiciones.</li>
+        <li>Queda prohibida la publicación de eventos que promuevan la violencia, la discriminación o actividades ilegales.</li>
+      </ul>
+
+      <h2>Menores de edad</h2>
+      <p>Los organizadores se comprometen a no publicar datos personales de jugadores menores de edad. Solo se permite publicar el nombre del equipo y la categoría.</p>
+
+      <h2>Publicidad</h2>
+      <p>Los espacios publicitarios de Kirolorik están destinados a negocios locales relacionados con el entorno deportivo. Kirolorik no se responsabiliza de los productos o servicios de los anunciantes.</p>
+
+      <h2>Propiedad intelectual</h2>
+      <p>El diseño, código y contenidos propios de Kirolorik son propiedad del proyecto. Los logos e imágenes de los clubs pertenecen a sus respectivos propietarios.</p>
+
+      <h2>Limitación de responsabilidad</h2>
+      <p>Kirolorik no garantiza la exactitud de los horarios y lugares publicados por terceros. Recomendamos confirmar los detalles con el club organizador antes de desplazarse.</p>
+
+      <h2>Modificaciones</h2>
+      <p>Kirolorik puede actualizar estas condiciones en cualquier momento. Los cambios se comunicarán a través de la aplicación.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(id){
+  document.querySelectorAll('.legal-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.legal-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.target.classList.add('active');
+  const titles={quienes:'Kirolorik',privacidad:'Privacidad',cookies:'Cookies',rgpd:'RGPD',terminos:'Términos de uso'};
+  document.getElementById('headerTitle').textContent=titles[id]||'Legal';
+}
+
+// Abrir en la sección correcta si viene con hash
+const hash=window.location.hash.replace('#','');
+if(hash&&document.getElementById('sec-'+hash)){
+  document.querySelectorAll('.legal-tab').forEach(t=>{
+    if(t.textContent.toLowerCase().includes(hash)||t.onclick?.toString().includes(hash)){
+      t.click();
+    }
+  });
+  showTabByHash(hash);
+}
+function showTabByHash(id){
+  document.querySelectorAll('.legal-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.legal-tab').forEach(t=>t.classList.remove('active'));
+  const sec=document.getElementById('sec-'+id);
+  if(sec) sec.classList.add('active');
+  const titles={quienes:'Kirolorik',privacidad:'Privacidad',cookies:'Cookies',rgpd:'RGPD',terminos:'Términos de uso'};
+  document.getElementById('headerTitle').textContent=titles[id]||'Legal';
+}
+</script>
+</body>
+</html>
