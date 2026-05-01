@@ -6,7 +6,7 @@
 <meta name="description" content="Kirolorik — Agenda de eventos deportivos locales">
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik</title>
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -714,7 +714,7 @@ buildDates();
 cargar();
 aplicarTraducciones();
 renderDrawerPerfil();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>
