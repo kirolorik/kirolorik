@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<title>Kirolorik · Mi perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+body{background:var(--bg)}
+
+.perfil-wrap{
+  max-width:480px;margin:0 auto;
+  min-height:100dvh;display:flex;flex-direction:column;
+  padding-bottom:calc(32px + env(safe-area-inset-bottom));
+}
+@media(min-width:500px){.perfil-wrap{max-width:560px}}
+
+/* Header */
+.p-header{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:10;
+  flex-shrink:0;
+}
+.p-back{font-size:22px;cursor:pointer;color:var(--muted);text-decoration:none;line-height:1}
+.p-header-title{font-size:14px;font-weight:700;color:var(--text);flex:1}
+
+/* Avatar hero */
+.p-hero{
+  display:flex;flex-direction:column;align-items:center;
+  padding:24px 16px 20px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.p-avatar{
+  width:72px;height:72px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:#fff;
+  margin-bottom:10px;position:relative;cursor:pointer;
+  flex-shrink:0;
+}
+.p-avatar-badge{
+  position:absolute;bottom:0;right:0;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+}
+.p-email{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Secciones */
+.p-section{padding:16px 16px 0}
+.p-section-title{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:2px;color:var(--muted);margin-bottom:10px;
+}
+
+/* Cards de ajuste */
+.p-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:8px;overflow:hidden;
+}
+.p-row{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px;border-bottom:1px solid var(--border);
+}
+.p-row:last-child{border-bottom:none}
+.p-row-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.p-row-label{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.p-row-val{font-size:12px;color:var(--muted)}
+.p-row-arrow{font-size:16px;color:var(--muted)}
+.p-row.clickable{cursor:pointer;transition:background 0.15s}
+.p-row.clickable:hover{background:var(--surface2)}
+
+/* Equipos */
+.equipo-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;
+}
+.equipo-escudo{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;overflow:hidden;
+}
+.equipo-escudo img{width:100%;height:100%;object-fit:cover}
+.equipo-info{flex:1;min-width:0}
+.equipo-nombre{font-size:13px;font-weight:700;color:var(--text)}
+.equipo-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.equipo-actions{display:flex;gap:6px;flex-shrink:0}
+.equipo-btn{
+  font-size:14px;cursor:pointer;opacity:0.4;transition:opacity 0.15s;
+  background:none;border:none;padding:4px;
+}
+.equipo-btn:hover{opacity:1}
+
+/* Botón añadir equipo */
+.btn-add-equipo{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;background:var(--surface);
+  border:1px dashed var(--border);border-radius:var(--radius);
+  cursor:pointer;transition:all 0.15s;width:100%;
+  font-family:'DM Sans',sans-serif;margin-bottom:8px;
+}
+.btn-add-equipo:hover{border-color:var(--accent);color:var(--accent)}
+.btn-add-equipo-icon{font-size:20px;width:40px;text-align:center}
+.btn-add-equipo-text{font-size:13px;font-weight:600;color:inherit}
+
+/* Zona peligro */
+.danger-card{
+  background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);
+  border-radius:var(--radius);padding:14px;
+}
+.danger-title{font-size:13px;font-weight:700;color:#dc2626;margin-bottom:4px}
+.danger-text{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.btn-danger{
+  background:none;border:1px solid #dc2626;color:#dc2626;
+  border-radius:var(--radius-sm);padding:9px 16px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all 0.15s;
+}
+.btn-danger:hover{background:#dc2626;color:#fff}
+
+/* Modal bottom sheet */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:300;display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{
+  background:var(--bg);width:100%;max-width:480px;
+  max-height:90dvh;overflow-y:auto;
+  border-radius:20px 20px 0 0;padding:20px 16px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-handle{
+  width:36px;height:4px;border-radius:4px;
+  background:var(--border);margin:0 auto 16px;
+}
+.modal-title{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:1px;color:var(--text);margin-bottom:16px;
+}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);border-radius:var(--radius-sm);
+  padding:10px 20px;font-size:13px;font-weight:600;
+  opacity:0;transition:opacity 0.3s;pointer-events:none;
+  white-space:nowrap;z-index:400;
+}
+.toast.show{opacity:1}
+.toast.error{background:#dc2626;color:#fff}
+.toast.ok{background:#16a34a;color:#fff}
+
+/* Input rápido inline */
+.inline-edit{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 14px 10px;border-bottom:1px solid var(--border);
+}
+.inline-edit input{
+  flex:1;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:8px 10px;
+  font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);
+  outline:none;
+}
+.inline-edit input:focus{border-color:var(--accent)}
+.inline-edit button{
+  background:var(--accent);color:var(--accent-txt);
+  border:none;border-radius:var(--radius-sm);padding:8px 12px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;flex-shrink:0;
+}
+.inline-edit .btn-cancel{
+  background:none;color:var(--muted);border:1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<div class="perfil-wrap">
+
+  <div class="p-header">
+    <a class="p-back" href="/" onclick="history.back();return false">←</a>
+    <div class="p-header-title">Mi perfil</div>
+    <div id="saveIndicator" style="font-size:11px;color:var(--muted)"></div>
+  </div>
+
+  <!-- HERO AVATAR -->
+  <div class="p-hero" id="heroSection">
+    <div class="p-avatar" id="heroAvatar" style="background:#1a6bff">
+      <span id="heroInitial">?</span>
+      <div class="p-avatar-badge">✏️</div>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text)" id="heroAlias">—</div>
+    <div class="p-email" id="heroEmail">—</div>
+  </div>
+
+  <!-- DATOS PERSONALES -->
+  <div class="p-section">
+    <div class="p-section-title">Datos personales</div>
+    <div class="p-card" id="cardDatos">
+      <div class="p-row clickable" onclick="editarAlias()">
+        <div class="p-row-icon">✏️</div>
+        <div class="p-row-label">Alias</div>
+        <div class="p-row-val" id="valAlias">—</div>
+        <div class="p-row-arrow">›</div>
+      </div>
+      <div class="p-row clickable" onclick="editarIdioma()">
+        <div class="p-row-icon">🌐</div>
+        <div class="p-row-label">Idioma</div>
+        <div class="p-row-val" id="valIdioma">CAS</div>
+        <div class="p-row-arrow">›</div>
+      </div>
+      <div class="p-row">
+        <div class="p-row-icon">📧</div>
+        <div class="p-row-label">Email</div>
+        <div class="p-row-val" id="valEmail">—</div>
+      </div>
+      <div class="p-row clickable" onclick="cambiarPassword()">
+        <div class="p-row-icon">🔑</div>
+        <div class="p-row-label">Contraseña</div>
+        <div class="p-row-val">Cambiar</div>
+        <div class="p-row-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIS EQUIPOS -->
+  <div class="p-section">
+    <div class="p-section-title">Mis equipos</div>
+    <div id="equiposList">
+      <div style="font-size:12px;color:var(--muted);padding:8px 0">Cargando...</div>
+    </div>
+    <button class="btn-add-equipo" onclick="abrirModalEquipo()">
+      <div class="btn-add-equipo-icon">➕</div>
+      <div class="btn-add-equipo-text">Añadir equipo</div>
+    </button>
+  </div>
+
+  <!-- ZONA PELIGRO -->
+  <div class="p-section" style="margin-top:8px">
+    <div class="p-section-title">Zona de riesgo</div>
+    <div class="danger-card">
+      <div class="danger-title">Eliminar perfil</div>
+      <div class="danger-text">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Si en ese plazo no recuperas la cuenta, todos tus datos se borrarán permanentemente.</div>
+      <button class="btn-danger" onclick="solicitarBaja()">Solicitar eliminación de cuenta</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL EDITAR ALIAS -->
+<div class="modal-overlay" id="modalAlias">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cambiar alias</div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Alias visible en la app</label>
+      <input type="text" id="inputAlias" placeholder="Tu alias...">
+    </div>
+    <button class="btn-primary" onclick="guardarAlias()">Guardar ⚽</button>
+    <button onclick="cerrarModal('modalAlias')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL IDIOMA -->
+<div class="modal-overlay" id="modalIdioma">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Idioma</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="p-row clickable p-card" style="margin:0" onclick="guardarIdioma('cas')">
+        <div class="p-row-icon">🇪🇸</div>
+        <div class="p-row-label">Castellano</div>
+        <div id="checkCas" style="font-size:16px"></div>
+      </div>
+      <div class="p-row clickable p-card" style="margin:0" onclick="guardarIdioma('eus')">
+        <div class="p-row-icon">🏔️</div>
+        <div class="p-row-label">Euskera</div>
+        <div id="checkEus" style="font-size:16px"></div>
+      </div>
+    </div>
+    <button onclick="cerrarModal('modalIdioma')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CONTRASEÑA -->
+<div class="modal-overlay" id="modalPass">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cambiar contraseña</div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Nueva contraseña</label>
+      <input type="password" id="inputPass1" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Repetir contraseña</label>
+      <input type="password" id="inputPass2" placeholder="Repite la contraseña">
+    </div>
+    <div id="passError" style="font-size:11px;color:#dc2626;min-height:14px;margin-bottom:8px"></div>
+    <button class="btn-primary" onclick="guardarPassword()">Cambiar contraseña 🔑</button>
+    <button onclick="cerrarModal('modalPass')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR EQUIPO -->
+<div class="modal-overlay" id="modalEquipo">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalEquipoTitle">Añadir equipo</div>
+    <input type="hidden" id="equipoEditId">
+
+    <div class="field">
+      <label>Nombre del equipo</label>
+      <input type="text" id="eq_nombre" placeholder="Ej: Eibar Saskibaloia 2010">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Deporte</label>
+        <select id="eq_deporte">
+          <option value="futbol">⚽ Fútbol</option>
+          <option value="basket">🏀 Basket</option>
+          <option value="balonmano">🤾 Balonmano</option>
+          <option value="waterpolo">🏊 Waterpolo</option>
+          <option value="boxeo">🥊 Boxeo</option>
+          <option value="tenis">🎾 Tenis</option>
+          <option value="atletismo">🏃 Atletismo</option>
+          <option value="ciclismo">🚴 Ciclismo</option>
+          <option value="otros">🏅 Otros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Municipio</label>
+        <input type="text" id="eq_municipio" placeholder="Eibar...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Escudo del equipo <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · PNG, JPG)</span></label>
+      <input type="file" id="eq_escudo" accept="image/*" style="padding:8px">
+      <div id="eq_escudo_preview" style="margin-top:8px;display:none">
+        <img id="eq_escudo_img" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="guardarEquipo()">Guardar equipo ⚽</button>
+    <button onclick="cerrarModal('modalEquipo')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR BAJA -->
+<div class="modal-overlay" id="modalBaja">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:#dc2626">¿Eliminar tu cuenta?</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">
+      Tu perfil se desactivará durante <strong>30 días</strong>. Durante ese tiempo puedes volver a entrar para recuperarlo.<br><br>
+      Pasado ese plazo, todos tus datos se eliminarán de forma permanente. ¿Estás seguro?
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Escribe tu email para confirmar</label>
+      <input type="email" id="confirmEmail" placeholder="Tu email de acceso">
+    </div>
+    <button class="btn-danger" style="width:100%;padding:12px;font-size:13px" onclick="confirmarBaja()">Sí, eliminar mi cuenta</button>
+    <button onclick="cerrarModal('modalBaja')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/i18n.js"></script>
+<script>
+const SB_URL='https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
+const DEPORTES_EMOJI={futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',otros:'🏅'};
+
+let authToken=null, authUser=null, perfilData=null;
+
+function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+
+function toast(msg, tipo=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(tipo?' '+tipo:'');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// ── MODAL ──
+function abrirModal(id){ document.getElementById(id).classList.add('open'); }
+function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ── AVATAR COLOR ──
+function avatarColor(email){ return AVATAR_COLORS[(email||'').charCodeAt(0)%AVATAR_COLORS.length]; }
+
+// ── CARGAR PERFIL ──
+async function cargarPerfil(){
+  if(!authUser) return;
+  const email=authUser.email||'';
+  const initial=(email).charAt(0).toUpperCase();
+  const color=avatarColor(email);
+
+  document.getElementById('heroAvatar').style.background=color;
+  document.getElementById('heroInitial').textContent=initial;
+  document.getElementById('heroEmail').textContent=email;
+  document.getElementById('valEmail').textContent=email;
+
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}&select=*`,{headers:H()});
+    const data=await res.json();
+    if(data.length){
+      perfilData=data[0];
+      const alias=perfilData.alias||email.split('@')[0];
+      document.getElementById('heroAlias').textContent=alias;
+      document.getElementById('valAlias').textContent=alias;
+      document.getElementById('valIdioma').textContent=(perfilData.idioma||'cas').toUpperCase();
+    } else {
+      // Crear perfil si no existe
+      await fetch(`${SB_URL}/rest/v1/perfiles`,{
+        method:'POST',headers:{...H(),'Prefer':'return=minimal'},
+        body:JSON.stringify({id:authUser.id,idioma:'cas'})
+      });
+      document.getElementById('heroAlias').textContent=email.split('@')[0];
+      document.getElementById('valAlias').textContent=email.split('@')[0];
+    }
+  }catch(e){ console.error(e); }
+
+  cargarEquipos();
+}
+
+// ── ALIAS ──
+function editarAlias(){
+  document.getElementById('inputAlias').value=document.getElementById('valAlias').textContent;
+  abrirModal('modalAlias');
+  setTimeout(()=>document.getElementById('inputAlias').focus(),300);
+}
+
+async function guardarAlias(){
+  const alias=document.getElementById('inputAlias').value.trim();
+  if(!alias){toast('El alias no puede estar vacío','error');return;}
+  try{
+    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({alias})
+    });
+    document.getElementById('valAlias').textContent=alias;
+    document.getElementById('heroAlias').textContent=alias;
+    cerrarModal('modalAlias');
+    toast('Alias actualizado','ok');
+  }catch(e){toast('Error al guardar','error');}
+}
+
+// ── IDIOMA ──
+function editarIdioma(){
+  const actual=document.getElementById('valIdioma').textContent.toLowerCase();
+  document.getElementById('checkCas').textContent=actual==='cas'?'✅':'';
+  document.getElementById('checkEus').textContent=actual==='eus'?'✅':'';
+  abrirModal('modalIdioma');
+}
+
+async function guardarIdioma(lang){
+  try{
+    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({idioma:lang})
+    });
+    document.getElementById('valIdioma').textContent=lang.toUpperCase();
+    sessionStorage.setItem('kb_lang',lang);
+    cerrarModal('modalIdioma');
+    toast('Idioma guardado','ok');
+  }catch(e){toast('Error','error');}
+}
+
+// ── CONTRASEÑA ──
+function cambiarPassword(){ abrirModal('modalPass'); }
+
+async function guardarPassword(){
+  const p1=document.getElementById('inputPass1').value;
+  const p2=document.getElementById('inputPass2').value;
+  const err=document.getElementById('passError');
+  err.textContent='';
+  if(p1.length<8){err.textContent='La contraseña debe tener al menos 8 caracteres';return;}
+  if(p1!==p2){err.textContent='Las contraseñas no coinciden';return;}
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/user`,{
+      method:'PUT',headers:{...H()},
+      body:JSON.stringify({password:p1})
+    });
+    if(!res.ok) throw new Error();
+    cerrarModal('modalPass');
+    document.getElementById('inputPass1').value='';
+    document.getElementById('inputPass2').value='';
+    toast('Contraseña actualizada','ok');
+  }catch(e){err.textContent='Error al cambiar la contraseña';}
+}
+
+// ── EQUIPOS ──
+async function cargarEquipos(){
+  const list=document.getElementById('equiposList');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=created_at.asc`,{headers:H()});
+    const data=await res.json();
+    if(!data.length){
+      list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún equipo.</div>';
+      return;
+    }
+    list.innerHTML=data.map(eq=>`
+      <div class="equipo-card">
+        <div class="equipo-escudo">
+          ${eq.escudo_url?`<img src="${eq.escudo_url}" alt="">`:DEPORTES_EMOJI[eq.deporte]||'🏅'}
+        </div>
+        <div class="equipo-info">
+          <div class="equipo-nombre">${eq.nombre}</div>
+          <div class="equipo-meta">${eq.deporte} · ${eq.municipio||''}</div>
+        </div>
+        <div class="equipo-actions">
+          <button class="equipo-btn" title="Editar" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="equipo-btn" title="Eliminar" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML='<div style="font-size:12px;color:#dc2626">Error al cargar equipos</div>';}
+}
+
+function abrirModalEquipo(){
+  document.getElementById('equipoEditId').value='';
+  document.getElementById('modalEquipoTitle').textContent='Añadir equipo';
+  document.getElementById('eq_nombre').value='';
+  document.getElementById('eq_deporte').value='futbol';
+  document.getElementById('eq_municipio').value='';
+  document.getElementById('eq_escudo').value='';
+  document.getElementById('eq_escudo_preview').style.display='none';
+  abrirModal('modalEquipo');
+}
+
+function editarEquipo(eq){
+  document.getElementById('equipoEditId').value=eq.id;
+  document.getElementById('modalEquipoTitle').textContent='Editar equipo';
+  document.getElementById('eq_nombre').value=eq.nombre||'';
+  document.getElementById('eq_deporte').value=eq.deporte||'futbol';
+  document.getElementById('eq_municipio').value=eq.municipio||'';
+  document.getElementById('eq_escudo').value='';
+  if(eq.escudo_url){
+    document.getElementById('eq_escudo_img').src=eq.escudo_url;
+    document.getElementById('eq_escudo_preview').style.display='block';
+  } else {
+    document.getElementById('eq_escudo_preview').style.display='none';
+  }
+  abrirModal('modalEquipo');
+}
+
+document.getElementById('eq_escudo').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    document.getElementById('eq_escudo_img').src=ev.target.result;
+    document.getElementById('eq_escudo_preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function subirEscudo(file){
+  const ext=file.name.split('.').pop();
+  const nombre=`escudo_${authUser.id}_${Date.now()}.${ext}`;
+  const res=await fetch(`${SB_URL}/storage/v1/object/escudos/${nombre}`,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken,'Content-Type':file.type},
+    body:file
+  });
+  if(!res.ok) throw new Error('Error al subir escudo');
+  return `${SB_URL}/storage/v1/object/public/escudos/${nombre}`;
+}
+
+async function guardarEquipo(){
+  const nombre=document.getElementById('eq_nombre').value.trim();
+  const deporte=document.getElementById('eq_deporte').value;
+  const municipio=document.getElementById('eq_municipio').value.trim();
+  const editId=document.getElementById('equipoEditId').value;
+  if(!nombre){toast('El nombre es obligatorio','error');return;}
+
+  let escudo_url=null;
+  const file=document.getElementById('eq_escudo').files[0];
+  if(file){
+    try{escudo_url=await subirEscudo(file);}
+    catch(e){toast('Aviso: escudo no subido','error');}
+  }
+
+  const datos={nombre,deporte,municipio:municipio||null,user_id:authUser.id,activo:true};
+  if(escudo_url) datos.escudo_url=escudo_url;
+
+  try{
+    if(editId){
+      await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${editId}`,{
+        method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      });
+      toast('Equipo actualizado','ok');
+    } else {
+      await fetch(`${SB_URL}/rest/v1/mis_equipos`,{
+        method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      });
+      toast('Equipo añadido','ok');
+    }
+    cerrarModal('modalEquipo');
+    cargarEquipos();
+  }catch(e){toast('Error al guardar','error');}
+}
+
+async function borrarEquipo(id){
+  if(!confirm('¿Eliminar este equipo?')) return;
+  try{
+    await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({activo:false})
+    });
+    toast('Equipo eliminado','ok');
+    cargarEquipos();
+  }catch(e){toast('Error','error');}
+}
+
+// ── BAJA ──
+function solicitarBaja(){ abrirModal('modalBaja'); }
+
+async function confirmarBaja(){
+  const email=document.getElementById('confirmEmail').value.trim();
+  if(email!==authUser.email){toast('El email no coincide','error');return;}
+  try{
+    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({activo:false,baja_solicitada_at:new Date().toISOString()})
+    });
+    cerrarModal('modalBaja');
+    toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
+    setTimeout(()=>{
+      sessionStorage.removeItem('kb_token');
+      sessionStorage.removeItem('kb_user');
+      window.location.href='/';
+    },3000);
+  }catch(e){toast('Error al procesar la solicitud','error');}
+}
+
+// ── INIT ──
+const savedToken=sessionStorage.getItem('kb_token');
+const savedUser=sessionStorage.getItem('kb_user');
+if(!savedToken||!savedUser){
+  window.location.href='/';
+} else {
+  authToken=savedToken;
+  authUser=JSON.parse(savedUser);
+  cargarPerfil();
+}
+</script>
+</body>
+</html>
