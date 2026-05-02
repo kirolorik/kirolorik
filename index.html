@@ -119,15 +119,7 @@
   <div class="settings-panel" id="settingsPanel">
     <div class="settings-inner">
       <div class="settings-search-row">
-        <div class="search-box">
-          <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px">
-            <span style="font-size:14px;color:var(--muted)">🔍</span>
-            <input type="text" id="searchInput" placeholder="Club, deporte o localidad..."
-              oninput="doSearch(this.value)"
-              style="flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text)">
-          </div>
-          <div class="search-results" id="searchResults"></div>
-        </div>
+        <div style="flex:1"></div>
         <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
           <option value="cas">CAS</option>
           <option value="eus">EUS</option>
