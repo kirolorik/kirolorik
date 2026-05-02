@@ -1,20 +1,20 @@
-const CACHE = 'kirolorik-v3';
+const CACHE = 'kirolorik-v4';
 const ASSETS = [
   '/',
   '/index.html',
-  '/style.css',
-  '/i18n.js',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/logo.png'
+  '/assets/css/style.css',
+  '/assets/js/i18n.js',
+  '/assets/img/logo.png',
+  '/assets/img/icon-192.png',
+  '/assets/img/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(ASSETS.map(a => new Request(a, {cache: 'reload'}))))
-      .catch(() => {}) // No bloquear instalación si falla algún asset
+      .then(c => c.addAll(ASSETS.map(a => new Request(a, {cache:'reload'}))))
+      .catch(() => {})
   );
   self.skipWaiting();
 });
@@ -29,7 +29,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Nunca interceptar Supabase, APIs externas, ni peticiones POST
   if (
     e.request.url.includes('supabase.co') ||
     e.request.url.includes('googleapis.com') ||
