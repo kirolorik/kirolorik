@@ -1,18 +1,20 @@
-const CACHE = 'kirolorik-v1';
+const CACHE = 'kirolorik-v3';
 const ASSETS = [
-  './', // Mejor usar rutas relativas
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  '/',
+  '/index.html',
+  '/style.css',
+  '/i18n.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/logo.png'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => {
-      console.log('SW: Cacheando assets críticos');
-      return c.addAll(ASSETS);
-    })
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(a => new Request(a, {cache: 'reload'}))))
+      .catch(() => {}) // No bloquear instalación si falla algún asset
   );
   self.skipWaiting();
 });
@@ -27,25 +29,27 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // 1. Ignorar peticiones que no sean GET (como POST de formularios)
-  // 2. Solo manejar esquemas http o https
-  if (e.request.method !== 'GET' || !e.request.url.startsWith('http')) return;
+  // Nunca interceptar Supabase, APIs externas, ni peticiones POST
+  if (
+    e.request.url.includes('supabase.co') ||
+    e.request.url.includes('googleapis.com') ||
+    e.request.url.includes('google.com/maps') ||
+    e.request.url.includes('unsplash.com') ||
+    e.request.method !== 'GET'
+  ) return;
 
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const networkFetch = fetch(e.request).then(res => {
-        // Solo cacheamos si la respuesta es válida (status 200)
-        if (res && res.status === 200 && res.type === 'basic') {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => {
-        // Si falla la red, buscamos en el caché
-        return caches.match(e.request) || caches.match('./index.html');
-      });
-
-      return cached || networkFetch;
-    })
+    caches.match(e.request)
+      .then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, copy));
+          }
+          return res;
+        });
+      })
+      .catch(() => caches.match('/index.html'))
   );
 });
