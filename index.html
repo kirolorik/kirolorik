@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Kirolorik — Agenda de eventos deportivos locales">
+<meta name="theme-color" content="#1a6bff">
+<title>Kirolorik</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+.settings-search-row{display:flex;gap:8px;align-items:flex-start}
+.search-box{flex:1}
+.lang-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:var(--text);outline:none;cursor:pointer;min-width:62px}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.overlay.open{opacity:1;pointer-events:all}
+
+/* DRAWER PERFIL (derecha) */
+.profile-drawer{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,0.12)}
+.profile-drawer.open{right:0}
+.drawer-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.drawer-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;margin-bottom:10px}
+.drawer-avatar.guest{background:var(--surface2);color:var(--muted);font-size:22px}
+.drawer-hola{font-size:15px;font-weight:700;color:var(--text)}
+.drawer-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.drawer-body{flex:1;overflow-y:auto;padding:10px 0}
+.drawer-item{display:flex;align-items:center;gap:12px;padding:13px 20px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:background 0.15s;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
+.drawer-item:hover{background:var(--surface2)}
+.drawer-item.danger{color:#dc2626}
+.drawer-item.accent{color:var(--accent)}
+.drawer-sep{height:1px;background:var(--border);margin:6px 0}
+.drawer-login{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.drawer-login .field{margin:0}
+.btn-kick{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;transition:opacity 0.2s}
+.btn-kick:disabled{opacity:0.5}
+.login-error{font-size:11px;color:#dc2626;min-height:14px}
+.login-link{font-size:11px;color:var(--accent);cursor:pointer;text-align:center;text-decoration:underline}
+.login-contact{font-size:10px;color:var(--muted);text-align:center;line-height:1.5;padding:0 4px}
+
+/* DRAWER DETALLE (izquierda) */
+.detail-drawer{position:fixed;top:0;left:-100%;width:100%;max-width:430px;height:100vh;background:var(--bg);z-index:201;transition:left 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 24px rgba(0,0,0,0.15)}
+.detail-drawer.open{left:0}
+.detail-topbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.detail-back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px 2px 0}
+.detail-back:hover{color:var(--accent)}
+.detail-title{font-size:13px;font-weight:700;color:var(--text);flex:1}
+.detail-scroll{flex:1;overflow-y:auto;scrollbar-width:none}
+.detail-scroll::-webkit-scrollbar{display:none}
+.detail-sport-hero{padding:16px 16px 12px;border-bottom:1px solid var(--border);background:var(--surface)}
+.detail-sport-bar{height:3px;border-radius:4px;margin-bottom:14px}
+.detail-comp-pill{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:20px;padding:3px 10px;margin-bottom:12px}
+.detail-comp-text{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px}
+.detail-vs{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.detail-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.detail-team-name{font-size:12px;font-weight:700;text-align:center;line-height:1.3;color:var(--text)}
+.detail-vs-sep{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);flex-shrink:0}
+.detail-single-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);text-align:center}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 0}
+.detail-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:default}
+.detail-cell.clickable{cursor:pointer;transition:border-color 0.15s}
+.detail-cell.clickable:hover{border-color:var(--accent)}
+.detail-cell-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.detail-cell-val{font-size:13px;font-weight:700;margin-top:2px;line-height:1.2;color:var(--text)}
+.detail-cell-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.detail-entry{margin:12px 16px 0;display:flex;align-items:center;gap:10px;border-radius:var(--radius);padding:10px 14px}
+.detail-entry-icon{font-size:20px}
+.detail-entry-title{font-size:13px;font-weight:700}
+.detail-poster-wrap{margin:12px 16px 0;cursor:pointer}
+.detail-poster-wrap img{width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px}
+.detail-poster-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.lightbox.open{opacity:1;pointer-events:all}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:var(--radius);object-fit:contain}
+.lightbox-close{position:absolute;top:16px;right:16px;font-size:24px;color:#fff;cursor:pointer;opacity:0.7}
+
+/* Perfil btn */
+.profile-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;border:2px solid var(--border);transition:border-color 0.2s;background:var(--surface2)}
+.profile-btn:hover,.profile-btn.open{border-color:var(--accent)}
+.profile-btn-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
+.profile-btn-initial{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.logo-wrap{display:flex;align-items:center;gap:8px}
+.logo-img{height:26px;width:auto;flex-shrink:0}
+.legal-footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:6px 16px;border-top:1px solid var(--border);background:var(--surface)}
+.legal-footer a{font-size:9px;color:var(--muted);text-decoration:none;letter-spacing:0.3px}
+.legal-footer a:hover{color:var(--accent)}
+
+/* Buscador resultados */
+.search-results{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.sri{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);cursor:pointer;font-size:12px}
+.sri-name{font-weight:600;flex:1;color:var(--text)}
+.sri-sub{font-size:10px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top-bar">
+    <div class="logo logo-wrap">
+      <img src="/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
+      Kirolorik
+    </div>
+    <div class="top-actions">
+      <div class="location-pill">
+        <div class="loc-dot"></div>
+        <span id="locText">Eibar</span>
+      </div>
+      <div class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</div>
+      <div class="profile-btn" id="profileBtn" onclick="toggleProfile()">
+        <div class="profile-btn-inner" id="profileBtnInner">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-inner">
+      <div class="settings-search-row">
+        <div class="search-box">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px">
+            <span style="font-size:14px;color:var(--muted)">🔍</span>
+            <input type="text" id="searchInput" placeholder="Club, deporte o localidad..."
+              oninput="doSearch(this.value)"
+              style="flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text)">
+          </div>
+          <div class="search-results" id="searchResults"></div>
+        </div>
+        <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+          <option value="cas">CAS</option>
+          <option value="eus">EUS</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="date-strip" id="dateStrip">
+    <div class="date-chip date-arrow" onclick="scrollAtras()">‹</div>
+  </div>
+
+  <div class="sport-filter" id="sportFilter">
+    <div class="sp active" onclick="filtrar(this,'todos')" data-i18n="todos">Todos</div>
+    <div class="sp" onclick="filtrar(this,'futbol')">⚽ <span data-i18n="futbol">Fútbol</span></div>
+    <div class="sp" onclick="filtrar(this,'basket')">🏀 <span data-i18n="basket">Basket</span></div>
+    <div class="sp" onclick="filtrar(this,'balonmano')">🤾 <span data-i18n="balonmano">Balonmano</span></div>
+    <div class="sp" onclick="filtrar(this,'waterpolo')">🏊 <span data-i18n="waterpolo">Waterpolo</span></div>
+    <div class="sp" onclick="filtrar(this,'boxeo')">🥊 <span data-i18n="boxeo">Boxeo</span></div>
+    <div class="sp" onclick="filtrar(this,'tenis')">🎾 <span data-i18n="tenis">Tenis</span></div>
+    <div class="sp" onclick="filtrar(this,'atletismo')">🏃 <span data-i18n="atletismo">Atletismo</span></div>
+    <div class="sp" onclick="filtrar(this,'ciclismo')">🚴 <span data-i18n="ciclismo">Ciclismo</span></div>
+  </div>
+
+  <div class="parrilla-wrap">
+    <div class="parrilla" id="parrilla">
+      <div class="empty-slot">Cargando...</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div><span data-i18n="entrada">Entrada</span></div>
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(249,115,22,0.12);font-size:11px">🎟️</div><span data-i18n="rifa">Rifa</span></div>
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(22,163,74,0.1);color:#16a34a;font-size:8px;font-weight:800;font-family:'Bebas Neue',sans-serif">FREE</div><span data-i18n="gratis">Gratis</span></div>
+    <div class="legend-item" style="margin-left:auto;font-size:9px"><span data-i18n="sinIcono">Sin icono = libre</span></div>
+  </div>
+
+  <div class="ad-fixed" onclick="window.location='mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik'">
+    <div class="ad-tag" data-i18n="espacioPub">Espacio publicitario</div>
+    <div class="ad-logo">📣</div>
+    <div class="ad-body">
+      <div class="ad-name" data-i18n="adNombre">¿Tu negocio aquí?</div>
+      <div class="ad-desc" data-i18n="adDesc">Llega a las familias deportistas · kirolorik.info@gmail.com</div>
+    </div>
+    <div class="ad-cta" data-i18n="contactar">Contactar</div>
+  </div>
+
+  <div class="legal-footer">
+    <a href="/legal.html#quienes" data-i18n="kirolorik">Kirolorik</a>
+    <a href="/legal.html#privacidad" data-i18n="privacidad">Privacidad</a>
+    <a href="/legal.html#cookies" data-i18n="cookies">Cookies</a>
+    <a href="/legal.html#rgpd" data-i18n="rgpd">RGPD</a>
+    <a href="/legal.html#terminos" data-i18n="terminos">Términos</a>
+    <a href="/legal.html#publicidad" data-i18n="publicidad">Publicidad</a>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="cerrarTodo()"></div>
+
+<!-- DRAWER PERFIL -->
+<div class="profile-drawer" id="profileDrawer">
+  <div class="drawer-header" id="drawerHeader"></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- DRAWER DETALLE -->
+<div class="detail-drawer" id="detailDrawer">
+  <div class="detail-topbar">
+    <div class="detail-back" onclick="cerrarDetalle()">←</div>
+    <div class="detail-title" id="detailTitleBar">Detalle del evento</div>
+  </div>
+  <div class="detail-scroll" id="detailScroll"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="cerrarLightbox()">
+  <div class="lightbox-close">✕</div>
+  <img id="lightboxImg" src="" alt="Poster">
+</div>
+
+<script src="/i18n.js"></script>
+<script>
+const SB_URL='https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+let authUser=null, authToken=null;
+let fechaActiva=null, deporteActivo='todos';
+let lang='cas';
+
+const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
+const DEPORTES={
+  futbol:{color:'var(--c-futbol)',emoji:'⚽'},
+  basket:{color:'var(--c-basket)',emoji:'🏀'},
+  balonmano:{color:'var(--c-balonmano)',emoji:'🤾'},
+  waterpolo:{color:'var(--c-waterpolo)',emoji:'🏊'},
+  boxeo:{color:'var(--c-boxeo)',emoji:'🥊'},
+  tenis:{color:'var(--c-tenis)',emoji:'🎾'},
+  atletismo:{color:'var(--c-atletismo)',emoji:'🏃'},
+  ciclismo:{color:'var(--c-ciclismo)',emoji:'🚴'},
+  otros:{color:'var(--c-otros)',emoji:'🏅'}
+};
+
+function t(k){ return i18n(k, lang); }
+
+function aplicarTraducciones(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;
+    const v=t(k);
+    if(v!==k) el.textContent=v;
+  });
+  const si=document.getElementById('searchInput');
+  if(si) si.placeholder=t('placeholder');
+  document.querySelectorAll('.event-sport[data-deporte]').forEach(el=>{
+    el.textContent=t(el.dataset.deporte)||el.dataset.deporte;
+  });
+  // Días de la semana
+  document.querySelectorAll('.date-chip[data-dow]').forEach(el=>{
+    const dow=parseInt(el.dataset.dow);
+    el.querySelector('.dn').textContent=KIROLORIK_I18N[lang].dias[dow];
+  });
+}
+
+function setLang(l){
+  lang=l;
+  sessionStorage.setItem('kb_lang',l);
+  aplicarTraducciones();
+  renderDrawerPerfil();
+}
+
+function getFechaHoy(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getHoraActual(){
+  const d=new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function formatFecha(iso){
+  if(!iso) return '';
+  const [y,m,d]=iso.split('-');
+  const dt=new Date(y,m-1,d);
+  const dias=KIROLORIK_I18N[lang].dias;
+  const meses=KIROLORIK_I18N[lang].meses;
+  return `${dias[dt.getDay()]} ${d} ${meses[m-1]} ${y}`;
+}
+
+function badge(tipo){
+  if(tipo==='pago')   return `<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">${t('entrada')}</div></div>`;
+  if(tipo==='rifa')   return `<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">${t('rifa')}</div></div>`;
+  if(tipo==='gratis') return `<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">${t('gratis')}</div></div>`;
+  return '<div class="entry-badge"><div class="entry-none"></div></div>';
+}
+
+function nombreEvento(e){
+  if(e.nombre_evento) return e.nombre_evento;
+  return (e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'');
+}
+
+// ── PARRILLA ──
+async function cargar(){
+  const parrilla=document.getElementById('parrilla');
+  parrilla.innerHTML=`<div class="empty-slot">${t('cargando')}</div>`;
+  let url=`${SB_URL}/rest/v1/eventos?select=*&activo=eq.true&order=fecha.asc,hora.asc`;
+  if(fechaActiva) url+=`&fecha=eq.${fechaActiva}`;
+  else url+=`&fecha=gte.${getFechaHoy()}`;
+  if(deporteActivo!=='todos') url+=`&deporte=eq.${deporteActivo}`;
+  try{
+    const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const data=await res.json();
+    if(!Array.isArray(data)||!data.length){
+      parrilla.innerHTML=`<div class="empty-slot">${t('sinEventos')}</div>`;
+      return;
+    }
+    const ahora=new Date();
+    const hoy=getFechaHoy();
+    const filtered=data.filter(e=>{
+      if(fechaActiva) return true;
+      const [h,m]=(e.hora||'00:00:00').split(':');
+      const inicio=new Date(e.fecha+'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':00');
+      const fin=new Date(inicio.getTime()+(e.duracion_minutos||90)*60000);
+      return fin>ahora;
+    });
+    if(!filtered.length){
+      parrilla.innerHTML=`<div class="empty-slot">${t('sinEventos')}</div>`;
+      return;
+    }
+    const grupos={};
+    filtered.forEach(e=>{
+      const h=(e.hora||'00:00:00').slice(0,5);
+      if(!grupos[h]) grupos[h]=[];
+      grupos[h].push(e);
+    });
+    const horaActual=getHoraActual();
+    let nowInserted=false;
+    parrilla.innerHTML='';
+    Object.entries(grupos).forEach(([hora,evs])=>{
+      const [hh,mm]=hora.split(':');
+      if(!nowInserted&&hora>horaActual&&(!fechaActiva||fechaActiva===hoy)){
+        nowInserted=true;
+        const now=document.createElement('div');
+        now.className='now-row';
+        now.innerHTML=`<div class="now-dot"></div><div class="now-label">${t('ahora')}</div><div class="now-time">${horaActual}</div>`;
+        parrilla.appendChild(now);
+      }
+      const row=document.createElement('div');
+      row.className='time-row';
+      const evHTML=evs.map(e=>{
+        const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)',emoji:'🏅'};
+        const depLabel=t(e.deporte)||e.deporte||'Otro';
+        const gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
+        return `<div class="event" onclick='abrirDetalle(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
+          <div class="event-bar" style="background:${dep.color}"></div>
+          <div class="event-info">
+            <div class="event-teams">${nombreEvento(e)}</div>
+            <div class="event-meta">
+              <span class="event-sport" data-deporte="${e.deporte}" style="color:${dep.color}">${depLabel}</span>
+              <span class="event-sep">·</span>
+              <span class="event-cat">${e.categoria||''}${gen}</span>
+            </div>
+          </div>
+          ${badge(e.tipo_entrada)}
+        </div>`;
+      }).join('');
+      row.innerHTML=`<div class="time-col"><span class="time-h">${hh}</span><span class="time-m">${mm}</span></div><div class="events-col">${evHTML}</div>`;
+      parrilla.appendChild(row);
+    });
+  }catch(err){
+    parrilla.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error: ${err.message}</div>`;
+  }
+}
+
+// ── DETALLE ──
+function abrirDetalle(e){
+  const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)',emoji:'🏅'};
+  const depLabel=t(e.deporte)||e.deporte;
+  const scroll=document.getElementById('detailScroll');
+  document.getElementById('detailTitleBar').textContent=depLabel+' · '+formatFecha(e.fecha);
+
+  let entradaHTML='';
+  if(e.tipo_entrada==='gratis') entradaHTML=`<div class="detail-entry" style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2)"><div class="detail-entry-icon">🟢</div><div><div class="detail-entry-title" style="color:#16a34a">${t('entradaLibre')}</div></div></div>`;
+  else if(e.tipo_entrada==='pago') entradaHTML=`<div class="detail-entry" style="background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.25)"><div class="detail-entry-icon">€</div><div><div class="detail-entry-title" style="color:#b45309">${t('entradaPago')}</div></div></div>`;
+  else if(e.tipo_entrada==='rifa') entradaHTML=`<div class="detail-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div class="detail-entry-icon">🎟️</div><div><div class="detail-entry-title" style="color:#ea580c">${t('entradaRifa')}</div></div></div>`;
+
+  let vsHTML='';
+  if(e.nombre_evento) vsHTML=`<div class="detail-single-name">${dep.emoji} ${e.nombre_evento}</div>`;
+  else vsHTML=`<div class="detail-vs"><div class="detail-team"><div style="font-size:28px">${dep.emoji}</div><div class="detail-team-name">${e.equipo_local||'—'}</div></div><div class="detail-vs-sep">VS</div><div class="detail-team"><div style="font-size:28px">${dep.emoji}</div><div class="detail-team-name">${e.equipo_visitante||'—'}</div></div></div>`;
+
+  const mapsQ=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
+  const mapsURL=`https://www.google.com/maps/search/?api=1&query=${mapsQ}`;
+  const posterHTML=e.imagen_url?`<div style="padding:12px 16px 0"><div class="detail-poster-label">${t('poster')}</div><div class="detail-poster-wrap" onclick="abrirLightbox('${e.imagen_url}')"><img src="${e.imagen_url}" alt="Cartel" loading="lazy"></div></div>`:'';
+  const gen=e.genero&&e.genero!=='Sin especificar'?` · ${e.genero}`:'';
+
+  scroll.innerHTML=`
+    <div class="detail-sport-hero">
+      <div class="detail-sport-bar" style="background:${dep.color}"></div>
+      <div class="detail-comp-pill"><span class="detail-comp-text">${e.tipo_competicion||'Evento'} · ${e.categoria||''}${gen}</span></div>
+      ${vsHTML}
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell">
+        <div class="detail-cell-label">Fecha</div>
+        <div class="detail-cell-val">${formatFecha(e.fecha)}</div>
+        <div class="detail-cell-sub">${(e.hora||'').slice(0,5)} h · ~${e.duracion_minutos||90} min</div>
+      </div>
+      <div class="detail-cell clickable" onclick="window.open('${mapsURL}','_blank')">
+        <div class="detail-cell-label">Instalación</div>
+        <div class="detail-cell-val">${e.instalacion||'—'}</div>
+        <div class="detail-cell-sub" style="color:var(--accent)">${t('verMapa')} →</div>
+      </div>
+      <div class="detail-cell">
+        <div class="detail-cell-label">Municipio</div>
+        <div class="detail-cell-val">${e.municipio||'—'}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="detail-cell-label">Deporte</div>
+        <div class="detail-cell-val">${dep.emoji} ${depLabel}</div>
+        <div class="detail-cell-sub">${e.tipo_competicion||''}</div>
+      </div>
+    </div>
+    ${entradaHTML}
+    ${e.info_evento?`<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">📣 ${t('sobreEvento')}</div><div style="font-size:13px;color:var(--text);line-height:1.6">${e.info_evento}</div></div>`:''}
+    ${posterHTML}
+    <div style="height:24px"></div>`;
+
+  document.getElementById('detailDrawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  cerrarPerfil();
+}
+
+function cerrarDetalle(){
+  document.getElementById('detailDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function abrirLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('open');}
+function cerrarLightbox(){document.getElementById('lightbox').classList.remove('open');}
+function cerrarTodo(){cerrarDetalle();cerrarPerfil();}
+
+// ── DATES ──
+function buildDates(){
+  const strip=document.getElementById('dateStrip');
+  const dias=KIROLORIK_I18N[lang].dias;
+  const hoy=new Date();
+  for(let i=0;i<=13;i++){
+    const d=new Date(hoy);
+    d.setDate(hoy.getDate()+i);
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dow=d.getDay();
+    const chip=document.createElement('div');
+    chip.className='date-chip'+(i===0?' today':'');
+    chip.dataset.fecha=iso;
+    chip.dataset.dow=dow;
+    chip.innerHTML=`<span class="dn">${KIROLORIK_I18N[lang].dias[dow]}</span><span class="dd">${d.getDate()}</span>`;
+    chip.onclick=()=>{
+      if(chip.classList.contains('today')&&fechaActiva===iso){
+        chip.classList.remove('today');fechaActiva=null;
+      }else{
+        document.querySelectorAll('.date-chip:not(.date-arrow)').forEach(c=>c.classList.remove('today'));
+        chip.classList.add('today');fechaActiva=iso;
+      }
+      cargar();
+    };
+    strip.appendChild(chip);
+  }
+}
+
+function scrollAtras(){document.getElementById('dateStrip').scrollBy({left:-80,behavior:'smooth'});}
+
+function filtrar(chip,dep){
+  document.querySelectorAll('.sp').forEach(s=>s.classList.remove('active'));
+  chip.classList.add('active');deporteActivo=dep;cargar();
+}
+
+// ── SETTINGS ──
+function toggleSettings(){
+  document.getElementById('settingsPanel').classList.toggle('open');
+  document.getElementById('settingsBtn').classList.toggle('open');
+  cerrarPerfil();
+}
+
+// ── BUSCADOR (Supabase) ──
+let searchTimeout=null;
+async function doSearch(v){
+  const r=document.getElementById('searchResults');
+  if(!v.trim()){r.innerHTML='';return;}
+  clearTimeout(searchTimeout);
+  searchTimeout=setTimeout(async()=>{
+    try{
+      // Buscar en eventos: equipos locales y visitantes
+      const url=`${SB_URL}/rest/v1/eventos?select=equipo_local,equipo_visitante,deporte,municipio&activo=eq.true&or=(equipo_local.ilike.*${v}*,equipo_visitante.ilike.*${v}*,municipio.ilike.*${v}*)&limit=5`;
+      const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+      const data=await res.json();
+      const vistos=new Set();
+      const items=[];
+      data.forEach(e=>{
+        const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{emoji:'🏅'};
+        if(e.equipo_local&&!vistos.has(e.equipo_local)&&e.equipo_local.toLowerCase().includes(v.toLowerCase())){
+          vistos.add(e.equipo_local);
+          items.push({icon:dep.emoji,name:e.equipo_local,sub:`${t(e.deporte)} · ${e.municipio||''}`,tipo:'equipo'});
+        }
+        if(e.equipo_visitante&&!vistos.has(e.equipo_visitante)&&e.equipo_visitante.toLowerCase().includes(v.toLowerCase())){
+          vistos.add(e.equipo_visitante);
+          items.push({icon:dep.emoji,name:e.equipo_visitante,sub:`${t(e.deporte)} · ${e.municipio||''}`,tipo:'equipo'});
+        }
+        if(e.municipio&&!vistos.has('mun_'+e.municipio)&&e.municipio.toLowerCase().includes(v.toLowerCase())){
+          vistos.add('mun_'+e.municipio);
+          items.push({icon:'📍',name:e.municipio,sub:'Udalerria / Municipio',tipo:'municipio'});
+        }
+      });
+      if(!items.length){r.innerHTML=`<div class="sri" style="color:var(--muted);cursor:default">${t('sinResultados')}</div>`;return;}
+      r.innerHTML=items.slice(0,5).map(d=>`<div class="sri" onclick="selectResult('${d.name}','${d.tipo}')"><span>${d.icon}</span><span class="sri-name">${d.name}</span><span class="sri-sub">${d.sub}</span></div>`).join('');
+    }catch{r.innerHTML='';}
+  },300);
+}
+
+function selectResult(name,tipo){
+  document.getElementById('searchInput').value=name;
+  document.getElementById('searchResults').innerHTML='';
+  if(tipo==='municipio') document.getElementById('locText').textContent=name;
+}
+
+// ── PERFIL ──
+function toggleProfile(){
+  const d=document.getElementById('profileDrawer');
+  if(d.classList.contains('open')){cerrarPerfil();}
+  else{
+    renderDrawerPerfil();
+    d.classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('profileBtn').classList.add('open');
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('settingsBtn').classList.remove('open');
+  }
+}
+
+function cerrarPerfil(){
+  document.getElementById('profileDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('profileBtn').classList.remove('open');
+}
+
+let modoRecuperar=false;
+function renderDrawerPerfil(){
+  const header=document.getElementById('drawerHeader');
+  const body=document.getElementById('drawerBody');
+  if(authUser){
+    const email=authUser.email||'';
+    const initial=email.charAt(0).toUpperCase();
+    const color=AVATAR_COLORS[email.charCodeAt(0)%AVATAR_COLORS.length];
+    document.getElementById('profileBtnInner').innerHTML=
+      `<div class="profile-btn-initial" style="background:${color};color:#fff;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${initial}</div>`;
+    header.innerHTML=`<div class="drawer-avatar" style="background:${color};color:#fff">${initial}</div><div class="drawer-hola">${t('hola')}, ${email.split('@')[0]}</div><div class="drawer-sub">${email}</div>`;
+    body.innerHTML=`
+      <button class="drawer-item" onclick="irPerfil()">👤 ${t('perfil')}</button>
+      <div class="drawer-sep"></div>
+      <button class="drawer-item accent" onclick="irAdmin()">📋 ${t('adminEventos')}</button>
+      <div class="drawer-sep"></div>
+      <button class="drawer-item danger" onclick="logout()">🚿 ${t('logoutBtn')}</button>`;
+  } else {
+    document.getElementById('profileBtnInner').innerHTML='👤';
+    header.innerHTML=`<div class="drawer-avatar guest">👤</div><div class="drawer-hola">${t('invitado')}</div>`;
+    if(modoRecuperar){
+      body.innerHTML=`
+        <div class="drawer-login">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${t('recuperarPass')}</div>
+          <div class="field"><label>Email</label><input type="email" id="recEmail" placeholder="${t('emailPlaceholder')}"></div>
+          <div class="login-error" id="recError"></div>
+          <button class="btn-kick" onclick="enviarRecuperar()">${t('enviarEnlace')}</button>
+          <div class="login-link" onclick="modoRecuperar=false;renderDrawerPerfil()">← ${t('volver')}</div>
+        </div>`;
+    } else {
+      body.innerHTML=`
+        <div class="drawer-login">
+          <div class="field"><label>Email</label><input type="email" id="drawerEmail" placeholder="${t('emailPlaceholder')}"></div>
+          <div class="field"><label>Password</label><input type="password" id="drawerPass" placeholder="${t('passPlaceholder')}" onkeydown="if(event.key==='Enter')login()"></div>
+          <div class="login-error" id="drawerError"></div>
+          <button class="btn-kick" id="loginBtn" onclick="login()">${t('loginBtn')}</button>
+          <div class="login-link" onclick="modoRecuperar=true;renderDrawerPerfil()">${t('olvidastePass')}</div>
+          <div class="drawer-sep" style="margin:4px 0"></div>
+          <div class="login-contact">${t('registroContacto')}</div>
+        </div>`;
+    }
+  }
+}
+
+// ── AUTH ──
+async function login(){
+  const email=document.getElementById('drawerEmail')?.value.trim();
+  const pass=document.getElementById('drawerPass')?.value;
+  const errEl=document.getElementById('drawerError');
+  const btn=document.getElementById('loginBtn');
+  if(!email||!pass){if(errEl)errEl.textContent='Rellena email y contraseña';return;}
+  if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error_description||'Error');
+    authToken=data.access_token;authUser=data.user;
+    sessionStorage.setItem('kb_token',authToken);
+    sessionStorage.setItem('kb_user',JSON.stringify(authUser));
+    modoRecuperar=false;
+    renderDrawerPerfil();
+  }catch(e){
+    if(errEl)errEl.textContent=e.message;
+    if(btn){btn.disabled=false;btn.textContent=t('loginBtn');}
+  }
+}
+
+async function enviarRecuperar(){
+  const email=document.getElementById('recEmail')?.value.trim();
+  const errEl=document.getElementById('recError');
+  if(!email){if(errEl)errEl.textContent='Introduce tu email';return;}
+  try{
+    await fetch(`${SB_URL}/auth/v1/recover`,{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email})
+    });
+    if(errEl){errEl.style.color='#16a34a';errEl.textContent=t('emailEnviado');}
+  }catch(e){if(errEl)errEl.textContent=e.message;}
+}
+
+async function logout(){
+  await fetch(`${SB_URL}/auth/v1/logout`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken}}).catch(()=>{});
+  authUser=null;authToken=null;
+  sessionStorage.removeItem('kb_token');sessionStorage.removeItem('kb_user');
+  renderDrawerPerfil();cerrarPerfil();
+}
+
+function irPerfil(){cerrarPerfil();window.location.href='/perfil.html';}
+function irAdmin(){cerrarPerfil();window.location.href='/adminEventos.html';}
+
+// ── INIT ──
+const savedToken=sessionStorage.getItem('kb_token');
+const savedUser=sessionStorage.getItem('kb_user');
+const savedLang=sessionStorage.getItem('kb_lang');
+if(savedToken&&savedUser){authToken=savedToken;authUser=JSON.parse(savedUser);}
+if(savedLang){lang=savedLang;document.getElementById('langSelect').value=lang;}
+buildDates();
+cargar();
+aplicarTraducciones();
+renderDrawerPerfil();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>
