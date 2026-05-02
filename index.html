@@ -8,18 +8,24 @@
 <title>Kirolorik</title>
 <link rel="manifest" href="/manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/css/style.css">
 <style>
-.settings-search-row{display:flex;gap:8px;align-items:flex-start}
-.search-box{flex:1}
-.lang-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:var(--text);outline:none;cursor:pointer;min-width:62px}
+/* ── SELECTOR IDIOMA TOP BAR ── */
+.lang-select{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:6px 8px;
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;
+  color:var(--text);outline:none;cursor:pointer;
+  height:32px;
+}
+.lang-select:focus{border-color:var(--accent)}
 
 /* OVERLAY */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s}
 .overlay.open{opacity:1;pointer-events:all}
 
 /* DRAWER PERFIL (derecha) */
-.profile-drawer{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,0.12)}
+.profile-drawer{position:fixed;top:0;right:-290px;width:290px;height:100%;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,0.12)}
 .profile-drawer.open{right:0}
 .drawer-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
 .drawer-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;margin-bottom:10px}
@@ -41,7 +47,7 @@
 .login-contact{font-size:10px;color:var(--muted);text-align:center;line-height:1.5;padding:0 4px}
 
 /* DRAWER DETALLE (izquierda) */
-.detail-drawer{position:fixed;top:0;left:-100%;width:100%;max-width:430px;height:100vh;background:var(--bg);z-index:201;transition:left 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 24px rgba(0,0,0,0.15)}
+.detail-drawer{position:fixed;top:0;left:-100%;width:100%;max-width:430px;height:100%;background:var(--bg);z-index:201;transition:left 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 24px rgba(0,0,0,0.15)}
 .detail-drawer.open{left:0}
 .detail-topbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
 .detail-back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px 2px 0}
@@ -59,7 +65,7 @@
 .detail-vs-sep{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);flex-shrink:0}
 .detail-single-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);text-align:center}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 0}
-.detail-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:default}
+.detail-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
 .detail-cell.clickable{cursor:pointer;transition:border-color 0.15s}
 .detail-cell.clickable:hover{border-color:var(--accent)}
 .detail-cell-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
@@ -75,7 +81,7 @@
 /* LIGHTBOX */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s}
 .lightbox.open{opacity:1;pointer-events:all}
-.lightbox img{max-width:100%;max-height:90vh;border-radius:var(--radius);object-fit:contain}
+.lightbox img{max-width:100%;max-height:90dvh;border-radius:var(--radius);object-fit:contain}
 .lightbox-close{position:absolute;top:16px;right:16px;font-size:24px;color:#fff;cursor:pointer;opacity:0.7}
 
 /* Perfil btn */
@@ -83,13 +89,19 @@
 .profile-btn:hover,.profile-btn.open{border-color:var(--accent)}
 .profile-btn-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
 .profile-btn-initial{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+
 .logo-wrap{display:flex;align-items:center;gap:8px}
 .logo-img{height:26px;width:auto;flex-shrink:0}
-.legal-footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:6px 16px;border-top:1px solid var(--border);background:var(--surface)}
+
+.legal-footer{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  gap:12px;flex-wrap:wrap;padding:8px 16px;
+  padding-bottom:calc(8px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--border);background:var(--surface);
+}
 .legal-footer a{font-size:9px;color:var(--muted);text-decoration:none;letter-spacing:0.3px}
 .legal-footer a:hover{color:var(--accent)}
 
-/* Buscador resultados */
 .search-results{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .sri{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);cursor:pointer;font-size:12px}
 .sri-name{font-weight:600;flex:1;color:var(--text)}
@@ -99,9 +111,10 @@
 <body>
 <div class="app">
 
+  <!-- TOP BAR -->
   <div class="top-bar">
     <div class="logo logo-wrap">
-      <img src="/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
+      <img src="/assets/img/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
       Kirolorik
     </div>
     <div class="top-actions">
@@ -109,30 +122,23 @@
         <div class="loc-dot"></div>
         <span id="locText">Eibar</span>
       </div>
-      <div class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</div>
+      <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+        <option value="cas">CAS</option>
+        <option value="eus">EUS</option>
+      </select>
       <div class="profile-btn" id="profileBtn" onclick="toggleProfile()">
         <div class="profile-btn-inner" id="profileBtnInner">👤</div>
       </div>
     </div>
   </div>
 
-  <div class="settings-panel" id="settingsPanel">
-    <div class="settings-inner">
-      <div class="settings-search-row">
-        <div style="flex:1"></div>
-        <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
-          <option value="cas">CAS</option>
-          <option value="eus">EUS</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
+  <!-- DATE STRIP -->
   <div class="date-strip" id="dateStrip">
     <div class="date-chip date-arrow" onclick="scrollAtras()">‹</div>
   </div>
 
-  <div class="sport-filter" id="sportFilter">
+  <!-- SPORT FILTER -->
+  <div class="sport-filter">
     <div class="sp active" onclick="filtrar(this,'todos')" data-i18n="todos">Todos</div>
     <div class="sp" onclick="filtrar(this,'futbol')">⚽ <span data-i18n="futbol">Fútbol</span></div>
     <div class="sp" onclick="filtrar(this,'basket')">🏀 <span data-i18n="basket">Basket</span></div>
@@ -144,12 +150,14 @@
     <div class="sp" onclick="filtrar(this,'ciclismo')">🚴 <span data-i18n="ciclismo">Ciclismo</span></div>
   </div>
 
+  <!-- PARRILLA -->
   <div class="parrilla-wrap">
     <div class="parrilla" id="parrilla">
       <div class="empty-slot">Cargando...</div>
     </div>
   </div>
 
+  <!-- LEYENDA -->
   <div class="legend">
     <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div><span data-i18n="entrada">Entrada</span></div>
     <div class="legend-item"><div class="leg-icon" style="background:rgba(249,115,22,0.12);font-size:11px">🎟️</div><span data-i18n="rifa">Rifa</span></div>
@@ -157,6 +165,7 @@
     <div class="legend-item" style="margin-left:auto;font-size:9px"><span data-i18n="sinIcono">Sin icono = libre</span></div>
   </div>
 
+  <!-- BANNER -->
   <div class="ad-fixed" onclick="window.location='mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik'">
     <div class="ad-tag" data-i18n="espacioPub">Espacio publicitario</div>
     <div class="ad-logo">📣</div>
@@ -167,13 +176,14 @@
     <div class="ad-cta" data-i18n="contactar">Contactar</div>
   </div>
 
+  <!-- FOOTER LEGAL -->
   <div class="legal-footer">
-    <a href="/legal.html#quienes" data-i18n="kirolorik">Kirolorik</a>
-    <a href="/legal.html#privacidad" data-i18n="privacidad">Privacidad</a>
-    <a href="/legal.html#cookies" data-i18n="cookies">Cookies</a>
-    <a href="/legal.html#rgpd" data-i18n="rgpd">RGPD</a>
-    <a href="/legal.html#terminos" data-i18n="terminos">Términos</a>
-    <a href="/legal.html#publicidad" data-i18n="publicidad">Publicidad</a>
+    <a href="/pages/legal.html#quienes" data-i18n="kirolorik">Kirolorik</a>
+    <a href="/pages/legal.html#privacidad" data-i18n="privacidad">Privacidad</a>
+    <a href="/pages/legal.html#cookies" data-i18n="cookies">Cookies</a>
+    <a href="/pages/legal.html#rgpd" data-i18n="rgpd">RGPD</a>
+    <a href="/pages/legal.html#terminos" data-i18n="terminos">Términos</a>
+    <a href="/pages/legal.html#publicidad" data-i18n="publicidad">Publicidad</a>
   </div>
 
 </div>
@@ -201,13 +211,13 @@
   <img id="lightboxImg" src="" alt="Poster">
 </div>
 
-<script src="/i18n.js"></script>
+<script src="/assets/js/i18n.js"></script>
 <script>
 const SB_URL='https://glscnwctcvrosmbrljns.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 
-let authUser=null, authToken=null;
-let fechaActiva=null, deporteActivo='todos';
+let authUser=null,authToken=null;
+let fechaActiva=null,deporteActivo='todos';
 let lang='cas';
 
 const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
@@ -223,23 +233,18 @@ const DEPORTES={
   otros:{color:'var(--c-otros)',emoji:'🏅'}
 };
 
-function t(k){ return i18n(k, lang); }
+function t(k){return i18n(k,lang)}
 
 function aplicarTraducciones(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.dataset.i18n;
-    const v=t(k);
-    if(v!==k) el.textContent=v;
+    const v=t(el.dataset.i18n);
+    if(v!==el.dataset.i18n) el.textContent=v;
   });
-  const si=document.getElementById('searchInput');
-  if(si) si.placeholder=t('placeholder');
   document.querySelectorAll('.event-sport[data-deporte]').forEach(el=>{
     el.textContent=t(el.dataset.deporte)||el.dataset.deporte;
   });
-  // Días de la semana
   document.querySelectorAll('.date-chip[data-dow]').forEach(el=>{
-    const dow=parseInt(el.dataset.dow);
-    el.querySelector('.dn').textContent=KIROLORIK_I18N[lang].dias[dow];
+    el.querySelector('.dn').textContent=KIROLORIK_I18N[lang].dias[+el.dataset.dow];
   });
 }
 
@@ -262,9 +267,7 @@ function formatFecha(iso){
   if(!iso) return '';
   const [y,m,d]=iso.split('-');
   const dt=new Date(y,m-1,d);
-  const dias=KIROLORIK_I18N[lang].dias;
-  const meses=KIROLORIK_I18N[lang].meses;
-  return `${dias[dt.getDay()]} ${d} ${meses[m-1]} ${y}`;
+  return `${KIROLORIK_I18N[lang].dias[dt.getDay()]} ${d} ${KIROLORIK_I18N[lang].meses[m-1]} ${y}`;
 }
 
 function badge(tipo){
@@ -290,26 +293,21 @@ async function cargar(){
   try{
     const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     const data=await res.json();
-    if(!Array.isArray(data)||!data.length){
-      parrilla.innerHTML=`<div class="empty-slot">${t('sinEventos')}</div>`;
-      return;
-    }
     const ahora=new Date();
     const hoy=getFechaHoy();
     const filtered=data.filter(e=>{
       if(fechaActiva) return true;
       const [h,m]=(e.hora||'00:00:00').split(':');
       const inicio=new Date(e.fecha+'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':00');
-      const fin=new Date(inicio.getTime()+(e.duracion_minutos||90)*60000);
-      return fin>ahora;
+      return new Date(inicio.getTime()+(e.duracion_minutos||90)*60000)>ahora;
     });
-    if(!filtered.length){
+    if(!Array.isArray(filtered)||!filtered.length){
       parrilla.innerHTML=`<div class="empty-slot">${t('sinEventos')}</div>`;
       return;
     }
     const grupos={};
     filtered.forEach(e=>{
-      const h=(e.hora||'00:00:00').slice(0,5);
+      const h=(e.hora||'00:00').slice(0,5);
       if(!grupos[h]) grupos[h]=[];
       grupos[h].push(e);
     });
@@ -356,7 +354,6 @@ async function cargar(){
 function abrirDetalle(e){
   const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)',emoji:'🏅'};
   const depLabel=t(e.deporte)||e.deporte;
-  const scroll=document.getElementById('detailScroll');
   document.getElementById('detailTitleBar').textContent=depLabel+' · '+formatFecha(e.fecha);
 
   let entradaHTML='';
@@ -373,7 +370,7 @@ function abrirDetalle(e){
   const posterHTML=e.imagen_url?`<div style="padding:12px 16px 0"><div class="detail-poster-label">${t('poster')}</div><div class="detail-poster-wrap" onclick="abrirLightbox('${e.imagen_url}')"><img src="${e.imagen_url}" alt="Cartel" loading="lazy"></div></div>`:'';
   const gen=e.genero&&e.genero!=='Sin especificar'?` · ${e.genero}`:'';
 
-  scroll.innerHTML=`
+  document.getElementById('detailScroll').innerHTML=`
     <div class="detail-sport-hero">
       <div class="detail-sport-bar" style="background:${dep.color}"></div>
       <div class="detail-comp-pill"><span class="detail-comp-text">${e.tipo_competicion||'Evento'} · ${e.categoria||''}${gen}</span></div>
@@ -410,10 +407,7 @@ function abrirDetalle(e){
   cerrarPerfil();
 }
 
-function cerrarDetalle(){
-  document.getElementById('detailDrawer').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
+function cerrarDetalle(){document.getElementById('detailDrawer').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 function abrirLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('open');}
 function cerrarLightbox(){document.getElementById('lightbox').classList.remove('open');}
 function cerrarTodo(){cerrarDetalle();cerrarPerfil();}
@@ -421,7 +415,6 @@ function cerrarTodo(){cerrarDetalle();cerrarPerfil();}
 // ── DATES ──
 function buildDates(){
   const strip=document.getElementById('dateStrip');
-  const dias=KIROLORIK_I18N[lang].dias;
   const hoy=new Date();
   for(let i=0;i<=13;i++){
     const d=new Date(hoy);
@@ -434,12 +427,8 @@ function buildDates(){
     chip.dataset.dow=dow;
     chip.innerHTML=`<span class="dn">${KIROLORIK_I18N[lang].dias[dow]}</span><span class="dd">${d.getDate()}</span>`;
     chip.onclick=()=>{
-      if(chip.classList.contains('today')&&fechaActiva===iso){
-        chip.classList.remove('today');fechaActiva=null;
-      }else{
-        document.querySelectorAll('.date-chip:not(.date-arrow)').forEach(c=>c.classList.remove('today'));
-        chip.classList.add('today');fechaActiva=iso;
-      }
+      if(chip.classList.contains('today')&&fechaActiva===iso){chip.classList.remove('today');fechaActiva=null;}
+      else{document.querySelectorAll('.date-chip:not(.date-arrow)').forEach(c=>c.classList.remove('today'));chip.classList.add('today');fechaActiva=iso;}
       cargar();
     };
     strip.appendChild(chip);
@@ -447,59 +436,7 @@ function buildDates(){
 }
 
 function scrollAtras(){document.getElementById('dateStrip').scrollBy({left:-80,behavior:'smooth'});}
-
-function filtrar(chip,dep){
-  document.querySelectorAll('.sp').forEach(s=>s.classList.remove('active'));
-  chip.classList.add('active');deporteActivo=dep;cargar();
-}
-
-// ── SETTINGS ──
-function toggleSettings(){
-  document.getElementById('settingsPanel').classList.toggle('open');
-  document.getElementById('settingsBtn').classList.toggle('open');
-  cerrarPerfil();
-}
-
-// ── BUSCADOR (Supabase) ──
-let searchTimeout=null;
-async function doSearch(v){
-  const r=document.getElementById('searchResults');
-  if(!v.trim()){r.innerHTML='';return;}
-  clearTimeout(searchTimeout);
-  searchTimeout=setTimeout(async()=>{
-    try{
-      // Buscar en eventos: equipos locales y visitantes
-      const url=`${SB_URL}/rest/v1/eventos?select=equipo_local,equipo_visitante,deporte,municipio&activo=eq.true&or=(equipo_local.ilike.*${v}*,equipo_visitante.ilike.*${v}*,municipio.ilike.*${v}*)&limit=5`;
-      const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-      const data=await res.json();
-      const vistos=new Set();
-      const items=[];
-      data.forEach(e=>{
-        const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{emoji:'🏅'};
-        if(e.equipo_local&&!vistos.has(e.equipo_local)&&e.equipo_local.toLowerCase().includes(v.toLowerCase())){
-          vistos.add(e.equipo_local);
-          items.push({icon:dep.emoji,name:e.equipo_local,sub:`${t(e.deporte)} · ${e.municipio||''}`,tipo:'equipo'});
-        }
-        if(e.equipo_visitante&&!vistos.has(e.equipo_visitante)&&e.equipo_visitante.toLowerCase().includes(v.toLowerCase())){
-          vistos.add(e.equipo_visitante);
-          items.push({icon:dep.emoji,name:e.equipo_visitante,sub:`${t(e.deporte)} · ${e.municipio||''}`,tipo:'equipo'});
-        }
-        if(e.municipio&&!vistos.has('mun_'+e.municipio)&&e.municipio.toLowerCase().includes(v.toLowerCase())){
-          vistos.add('mun_'+e.municipio);
-          items.push({icon:'📍',name:e.municipio,sub:'Udalerria / Municipio',tipo:'municipio'});
-        }
-      });
-      if(!items.length){r.innerHTML=`<div class="sri" style="color:var(--muted);cursor:default">${t('sinResultados')}</div>`;return;}
-      r.innerHTML=items.slice(0,5).map(d=>`<div class="sri" onclick="selectResult('${d.name}','${d.tipo}')"><span>${d.icon}</span><span class="sri-name">${d.name}</span><span class="sri-sub">${d.sub}</span></div>`).join('');
-    }catch{r.innerHTML='';}
-  },300);
-}
-
-function selectResult(name,tipo){
-  document.getElementById('searchInput').value=name;
-  document.getElementById('searchResults').innerHTML='';
-  if(tipo==='municipio') document.getElementById('locText').textContent=name;
-}
+function filtrar(chip,dep){document.querySelectorAll('.sp').forEach(s=>s.classList.remove('active'));chip.classList.add('active');deporteActivo=dep;cargar();}
 
 // ── PERFIL ──
 function toggleProfile(){
@@ -510,11 +447,8 @@ function toggleProfile(){
     d.classList.add('open');
     document.getElementById('overlay').classList.add('open');
     document.getElementById('profileBtn').classList.add('open');
-    document.getElementById('settingsPanel').classList.remove('open');
-    document.getElementById('settingsBtn').classList.remove('open');
   }
 }
-
 function cerrarPerfil(){
   document.getElementById('profileDrawer').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
@@ -529,8 +463,7 @@ function renderDrawerPerfil(){
     const email=authUser.email||'';
     const initial=email.charAt(0).toUpperCase();
     const color=AVATAR_COLORS[email.charCodeAt(0)%AVATAR_COLORS.length];
-    document.getElementById('profileBtnInner').innerHTML=
-      `<div class="profile-btn-initial" style="background:${color};color:#fff;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${initial}</div>`;
+    document.getElementById('profileBtnInner').innerHTML=`<div class="profile-btn-initial" style="background:${color};color:#fff;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${initial}</div>`;
     header.innerHTML=`<div class="drawer-avatar" style="background:${color};color:#fff">${initial}</div><div class="drawer-hola">${t('hola')}, ${email.split('@')[0]}</div><div class="drawer-sub">${email}</div>`;
     body.innerHTML=`
       <button class="drawer-item" onclick="irPerfil()">👤 ${t('perfil')}</button>
@@ -542,30 +475,27 @@ function renderDrawerPerfil(){
     document.getElementById('profileBtnInner').innerHTML='👤';
     header.innerHTML=`<div class="drawer-avatar guest">👤</div><div class="drawer-hola">${t('invitado')}</div>`;
     if(modoRecuperar){
-      body.innerHTML=`
-        <div class="drawer-login">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${t('recuperarPass')}</div>
-          <div class="field"><label>Email</label><input type="email" id="recEmail" placeholder="${t('emailPlaceholder')}"></div>
-          <div class="login-error" id="recError"></div>
-          <button class="btn-kick" onclick="enviarRecuperar()">${t('enviarEnlace')}</button>
-          <div class="login-link" onclick="modoRecuperar=false;renderDrawerPerfil()">← ${t('volver')}</div>
-        </div>`;
+      body.innerHTML=`<div class="drawer-login">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${t('recuperarPass')}</div>
+        <div class="field"><label>Email</label><input type="email" id="recEmail" placeholder="${t('emailPlaceholder')}"></div>
+        <div class="login-error" id="recError"></div>
+        <button class="btn-kick" onclick="enviarRecuperar()">${t('enviarEnlace')}</button>
+        <div class="login-link" onclick="modoRecuperar=false;renderDrawerPerfil()">← ${t('volver')}</div>
+      </div>`;
     } else {
-      body.innerHTML=`
-        <div class="drawer-login">
-          <div class="field"><label>Email</label><input type="email" id="drawerEmail" placeholder="${t('emailPlaceholder')}"></div>
-          <div class="field"><label>Password</label><input type="password" id="drawerPass" placeholder="${t('passPlaceholder')}" onkeydown="if(event.key==='Enter')login()"></div>
-          <div class="login-error" id="drawerError"></div>
-          <button class="btn-kick" id="loginBtn" onclick="login()">${t('loginBtn')}</button>
-          <div class="login-link" onclick="modoRecuperar=true;renderDrawerPerfil()">${t('olvidastePass')}</div>
-          <div class="drawer-sep" style="margin:4px 0"></div>
-          <div class="login-contact">${t('registroContacto')}</div>
-        </div>`;
+      body.innerHTML=`<div class="drawer-login">
+        <div class="field"><label>Email</label><input type="email" id="drawerEmail" placeholder="${t('emailPlaceholder')}"></div>
+        <div class="field"><label>Password</label><input type="password" id="drawerPass" placeholder="${t('passPlaceholder')}" onkeydown="if(event.key==='Enter')login()"></div>
+        <div class="login-error" id="drawerError"></div>
+        <button class="btn-kick" id="loginBtn" onclick="login()">${t('loginBtn')}</button>
+        <div class="login-link" onclick="modoRecuperar=true;renderDrawerPerfil()">${t('olvidastePass')}</div>
+        <div class="drawer-sep" style="margin:4px 0"></div>
+        <div class="login-contact">${t('registroContacto')}</div>
+      </div>`;
     }
   }
 }
 
-// ── AUTH ──
 async function login(){
   const email=document.getElementById('drawerEmail')?.value.trim();
   const pass=document.getElementById('drawerPass')?.value;
@@ -574,21 +504,13 @@ async function login(){
   if(!email||!pass){if(errEl)errEl.textContent='Rellena email y contraseña';return;}
   if(btn){btn.disabled=true;btn.textContent='...';}
   try{
-    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{
-      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass})
-    });
+    const res=await fetch(`${SB_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
     const data=await res.json();
     if(!res.ok) throw new Error(data.error_description||'Error');
     authToken=data.access_token;authUser=data.user;
-    sessionStorage.setItem('kb_token',authToken);
-    sessionStorage.setItem('kb_user',JSON.stringify(authUser));
-    modoRecuperar=false;
-    renderDrawerPerfil();
-  }catch(e){
-    if(errEl)errEl.textContent=e.message;
-    if(btn){btn.disabled=false;btn.textContent=t('loginBtn');}
-  }
+    sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser));
+    modoRecuperar=false;renderDrawerPerfil();
+  }catch(e){if(errEl)errEl.textContent=e.message;if(btn){btn.disabled=false;btn.textContent=t('loginBtn');}}
 }
 
 async function enviarRecuperar(){
@@ -596,10 +518,7 @@ async function enviarRecuperar(){
   const errEl=document.getElementById('recError');
   if(!email){if(errEl)errEl.textContent='Introduce tu email';return;}
   try{
-    await fetch(`${SB_URL}/auth/v1/recover`,{
-      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email})
-    });
+    await fetch(`${SB_URL}/auth/v1/recover`,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email})});
     if(errEl){errEl.style.color='#16a34a';errEl.textContent=t('emailEnviado');}
   }catch(e){if(errEl)errEl.textContent=e.message;}
 }
@@ -611,8 +530,8 @@ async function logout(){
   renderDrawerPerfil();cerrarPerfil();
 }
 
-function irPerfil(){cerrarPerfil();window.location.href='/perfil.html';}
-function irAdmin(){cerrarPerfil();window.location.href='/adminEventos.html';}
+function irPerfil(){cerrarPerfil();window.location.href='/pages/perfil.html';}
+function irAdmin(){cerrarPerfil();window.location.href='/admin/eventos.html';}
 
 // ── INIT ──
 const savedToken=sessionStorage.getItem('kb_token');
@@ -620,10 +539,7 @@ const savedUser=sessionStorage.getItem('kb_user');
 const savedLang=sessionStorage.getItem('kb_lang');
 if(savedToken&&savedUser){authToken=savedToken;authUser=JSON.parse(savedUser);}
 if(savedLang){lang=savedLang;document.getElementById('langSelect').value=lang;}
-buildDates();
-cargar();
-aplicarTraducciones();
-renderDrawerPerfil();
+buildDates();cargar();aplicarTraducciones();renderDrawerPerfil();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
