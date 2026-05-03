@@ -116,7 +116,7 @@ a:hover{text-decoration:underline}
 
       <div class="info-card">
         <div class="info-card-head"><span class="info-card-icon">📍</span><span class="info-card-title">Empezamos en Eibar</span></div>
-        <div class="info-card-text">Eibar es nuestra ciudad de lanzamiento. Una ciudad con una cultura deportiva profunda y una comunidad local comprometida con el deporte en todas sus formas. Desde aquí queremos crecer y llegar a más municipios.</div>
+        <div class="info-card-text">Eibar es nuestra ciudad de lanzamiento. Una ciudad con una cultura deportiva profunda y una comunidad local comprometida con el deporte en todas sus formas. Desde aquí queremos crecer y llegar a más municipios de Euskal Herria y más allá.</div>
       </div>
 
       <div class="info-card">
@@ -340,13 +340,23 @@ const TITLES = {
 function showTab(id, el){
   document.querySelectorAll('.legal-section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.legal-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
+  const sec = document.getElementById('sec-'+id);
+  if(sec) sec.classList.add('active');
   if(el) el.classList.add('active');
+  else {
+    // Activar tab por id sin elemento
+    const idx = Object.keys(TITLES).indexOf(id);
+    const tabs = document.querySelectorAll('.legal-tab');
+    if(tabs[idx]) tabs[idx].classList.add('active');
+  }
   document.getElementById('headerTitle').textContent = TITLES[id]||'Legal';
 }
 
 // Abrir en sección correcta si viene con hash
-const hash = window.location.hash.replace('#','');
-if(hash && document.getElementById('sec-'+hash)){
-  const tabs = document.querySelectorAll('.legal-tab');
-  const idx = Object.keys(TITLES).
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.replace('#','');
+  if(hash && TITLES[hash]) showTab(hash);
+});
+</script>
+</body>
+</html>
