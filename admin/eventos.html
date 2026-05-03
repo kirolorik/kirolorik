@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik · Eventos</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/css/style.css">
 <style>
 /* ── TABS ── */
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-shrink:0}
@@ -368,4 +368,214 @@ async function guardarForm(){
   const hora=document.getElementById('f_hora').value;
   const municipio=document.getElementById('f_municipio').value.trim();
   const local=document.getElementById('f_local').value.trim();
-  const nombre=document.getElementById('f_nombre').
+  const nombre=document.getElementById('f_nombre').value.trim();
+  if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
+  if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
+  const ev=buildEvento({
+    deporte:document.getElementById('f_deporte').value,
+    genero:document.getElementById('f_genero').value,
+    nombre, cat:document.getElementById('f_cat').value,
+    comp:document.getElementById('f_comp').value,
+    local, visitante:document.getElementById('f_visitante').value.trim(),
+    fecha, hora, municipio,
+    instalacion:document.getElementById('f_instalacion').value.trim(),
+    entrada:document.getElementById('f_entrada').value,
+    duracion:document.getElementById('f_duracion').value,
+    imagen_url
+  });
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
+      method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(ev)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    toast('✅ Evento guardado');
+    ['f_local','f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+// ── HOJA DE CÁLCULO ──
+const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
+const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
+const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
+const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
+const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
+
+function sel(opts,val){
+  return `<select>${opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+}
+
+function addRow(d={}){
+  const body=document.getElementById('sheetBody');
+  const n=body.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="row-num">${n}</td>
+    <td><input type="date" value="${d.fecha||''}"></td>
+    <td><input type="time" value="${d.hora||''}"></td>
+    <td>${sel(DEPORTES_OPTS,d.deporte||'futbol')}</td>
+    <td>${sel(GENERO_OPTS,d.genero||'Sin especificar')}</td>
+    <td>${sel(CAT_OPTS,d.cat||'Senior')}</td>
+    <td>${sel(COMP_OPTS,d.comp||'Liga')}</td>
+    <td><input type="text" value="${d.nombre||''}" placeholder="Nombre evento"></td>
+    <td><input type="text" value="${d.local||''}" placeholder="Equipo local"></td>
+    <td><input type="text" value="${d.visitante||''}" placeholder="Visitante"></td>
+    <td><input type="text" value="${d.municipio||''}" placeholder="Municipio"></td>
+    <td><input type="text" value="${d.instalacion||''}" placeholder="Instalación"></td>
+    <td>${sel(ENTRADA_OPTS,d.entrada||'sin info')}</td>
+    <td class="row-del" onclick="this.closest('tr').remove();renumerar()">✕</td>`;
+  body.appendChild(tr);
+}
+
+function renumerar(){
+  document.querySelectorAll('#sheetBody .row-num').forEach((td,i)=>td.textContent=i+1);
+}
+
+function getRowData(tr){
+  const inputs=tr.querySelectorAll('input,select');
+  return {
+    fecha:inputs[0].value, hora:inputs[1].value,
+    deporte:inputs[2].value, genero:inputs[3].value,
+    cat:inputs[4].value, comp:inputs[5].value,
+    nombre:inputs[6].value, local:inputs[7].value,
+    visitante:inputs[8].value, municipio:inputs[9].value,
+    instalacion:inputs[10].value, entrada:inputs[11].value
+  };
+}
+
+async function guardarHoja(){
+  const rows=Array.from(document.getElementById('sheetBody').rows);
+  const eventos=rows.map(tr=>getRowData(tr))
+    .filter(d=>d.fecha&&d.hora&&d.municipio)
+    .map(d=>buildEvento(d));
+
+  if(!eventos.length){toast('Sin filas válidas — revisa fecha, hora y municipio',true);return;}
+  const status=document.getElementById('sheetStatus');
+  status.textContent='Guardando '+eventos.length+' eventos...';
+
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
+      method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(eventos)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    toast(`✅ ${eventos.length} eventos guardados`);
+    status.textContent='';
+    document.getElementById('sheetBody').innerHTML='';
+    addRow();addRow();addRow();
+  }catch(e){toast('Error: '+e.message,true);status.textContent='';}
+}
+
+// Preview imagen
+document.addEventListener('change', e => {
+  if(e.target.id !== 'f_imagen') return;
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('f_imagen_img').src = ev.target.result;
+    document.getElementById('f_imagen_preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function subirImagen(file) {
+  if(!file) return null;
+  const ext = file.name.split('.').pop();
+  const nombre = `evento_${Date.now()}.${ext}`;
+  const res = await fetch(`${SB_URL}/storage/v1/object/eventos/${nombre}`, {
+    method: 'POST',
+    headers: {'apikey': SB_KEY, 'Authorization': 'Bearer '+(authToken||SB_KEY), 'Content-Type': file.type},
+    body: file
+  });
+  if(!res.ok) throw new Error('Error al subir imagen');
+  return `${SB_URL}/storage/v1/object/public/eventos/${nombre}`;
+}
+document.addEventListener('paste',e=>{
+  const activeTab=document.getElementById('tabSheet');
+  if(activeTab.style.display==='none') return;
+  const text=e.clipboardData.getData('text/plain');
+  if(!text) return;
+  const lines=text.trim().split('\n').filter(l=>l.trim());
+  if(!lines.length) return;
+  e.preventDefault();
+  // Limpiar filas vacías antes de pegar
+  const body=document.getElementById('sheetBody');
+  Array.from(body.rows).forEach(tr=>{
+    const inputs=tr.querySelectorAll('input');
+    const empty=Array.from(inputs).every(i=>!i.value);
+    if(empty) tr.remove();
+  });
+  lines.forEach(line=>{
+    const cols=line.split('\t');
+    addRow({
+      fecha:cols[0]||'', hora:cols[1]||'',
+      deporte:cols[2]||'futbol', genero:cols[3]||'Sin especificar',
+      cat:cols[4]||'Senior', comp:cols[5]||'Liga',
+      nombre:cols[6]||'', local:cols[7]||'',
+      visitante:cols[8]||'', municipio:cols[9]||'',
+      instalacion:cols[10]||'', entrada:cols[11]||'sin info'
+    });
+  });
+  renumerar();
+  toast(`📋 ${lines.length} filas pegadas`);
+});
+
+// ── LISTA ──
+async function cargarLista(){
+  const list=document.getElementById('eventosList');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*&order=fecha.asc,hora.asc`,{headers:H()});
+    const data=await res.json();
+    if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
+    list.innerHTML=data.map(e=>{
+      const titulo=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
+      const color=COLORES[e.deporte]||'#64748b';
+      return `<div class="evento-card">
+        <div class="evento-bar" style="background:${color}"></div>
+        <div class="evento-info">
+          <div class="evento-teams">${titulo}</div>
+          <div class="evento-meta">${e.deporte} · ${e.categoria||''} · ${e.fecha} ${(e.hora||'').slice(0,5)} · ${e.municipio||''}</div>
+          <div style="margin-top:4px">
+            <span class="${e.activo?'badge-activo':'badge-inactivo'}">${e.activo?'Activo':'Inactivo'}</span>
+          </div>
+        </div>
+        <div class="ev-actions">
+          <button class="ev-btn" title="Editar" onclick='abrirEdicion(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${e.id},${e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
+          <button class="ev-btn" title="Borrar" onclick="borrar(${e.id})">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar</div>`;}
+}
+
+async function toggleActivo(id,actual){
+  try{
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({activo:!actual})
+    });
+    toast(actual?'Evento desactivado':'Evento activado');
+    cargarLista();
+  }catch{toast('Error',true);}
+}
+
+async function borrar(id){
+  if(!confirm('¿Borrar este evento?')) return;
+  try{
+    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    toast('Evento eliminado');cargarLista();
+  }catch{toast('Error al borrar',true);}
+}
+
+// ── INIT ──
+const savedToken=sessionStorage.getItem('kb_token');
+const savedUser=sessionStorage.getItem('kb_user');
+if(savedToken&&savedUser){
+  authToken=savedToken;
+  authUser=JSON.parse(savedUser);
+  mostrarAdmin();
+}else{
+  document.getElementById('loginScreen').style.display='flex';
+}
+</script>
+</body>
+</html>
