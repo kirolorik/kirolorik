@@ -496,4 +496,172 @@ async function guardarPassword(){
       method:'PUT',headers:{...H()},
       body:JSON.stringify({password:p1})
     });
-    if(!res.
+    if(!res.ok) throw new Error();
+    cerrarModal('modalPass');
+    document.getElementById('inputPass1').value='';
+    document.getElementById('inputPass2').value='';
+    toast('Contraseña actualizada','ok');
+  }catch(e){err.textContent='Error al cambiar la contraseña';}
+}
+
+// ── EQUIPOS ──
+async function cargarEquipos(){
+  const list=document.getElementById('equiposList');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=created_at.asc`,{headers:H()});
+    const data=await res.json();
+    if(!data.length){
+      list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún equipo.</div>';
+      return;
+    }
+    list.innerHTML=data.map(eq=>`
+      <div class="equipo-card">
+        <div class="equipo-escudo">
+          ${eq.escudo_url?`<img src="${eq.escudo_url}" alt="">`:DEPORTES_EMOJI[eq.deporte]||'🏅'}
+        </div>
+        <div class="equipo-info">
+          <div class="equipo-nombre">${eq.nombre}</div>
+          <div class="equipo-meta">${eq.deporte} · ${eq.municipio||''}</div>
+        </div>
+        <div class="equipo-actions">
+          <button class="equipo-btn" title="Editar" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="equipo-btn" title="Eliminar" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML='<div style="font-size:12px;color:#dc2626">Error al cargar equipos</div>';}
+}
+
+function abrirModalEquipo(){
+  document.getElementById('equipoEditId').value='';
+  document.getElementById('modalEquipoTitle').textContent='Añadir equipo';
+  document.getElementById('eq_nombre').value='';
+  document.getElementById('eq_deporte').value='futbol';
+  document.getElementById('eq_municipio').value='';
+  document.getElementById('eq_escudo').value='';
+  document.getElementById('eq_escudo_preview').style.display='none';
+  abrirModal('modalEquipo');
+}
+
+function editarEquipo(eq){
+  document.getElementById('equipoEditId').value=eq.id;
+  document.getElementById('modalEquipoTitle').textContent='Editar equipo';
+  document.getElementById('eq_nombre').value=eq.nombre||'';
+  document.getElementById('eq_deporte').value=eq.deporte||'futbol';
+  document.getElementById('eq_municipio').value=eq.municipio||'';
+  document.getElementById('eq_escudo').value='';
+  if(eq.escudo_url){
+    document.getElementById('eq_escudo_img').src=eq.escudo_url;
+    document.getElementById('eq_escudo_preview').style.display='block';
+  } else {
+    document.getElementById('eq_escudo_preview').style.display='none';
+  }
+  abrirModal('modalEquipo');
+}
+
+document.getElementById('eq_escudo').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    document.getElementById('eq_escudo_img').src=ev.target.result;
+    document.getElementById('eq_escudo_preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function subirEscudo(file){
+  const ext=file.name.split('.').pop();
+  const nombre=`escudo_${authUser.id}_${Date.now()}.${ext}`;
+  const res=await fetch(`${SB_URL}/storage/v1/object/escudos/${nombre}`,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken,'Content-Type':file.type},
+    body:file
+  });
+  if(!res.ok) throw new Error('Error al subir escudo');
+  return `${SB_URL}/storage/v1/object/public/escudos/${nombre}`;
+}
+
+async function guardarEquipo(){
+  const nombre=document.getElementById('eq_nombre').value.trim();
+  const deporte=document.getElementById('eq_deporte').value;
+  const municipio=document.getElementById('eq_municipio').value.trim();
+  const editId=document.getElementById('equipoEditId').value;
+  if(!nombre){toast('El nombre es obligatorio','error');return;}
+
+  let escudo_url=null;
+  const file=document.getElementById('eq_escudo').files[0];
+  if(file){
+    try{escudo_url=await subirEscudo(file);}
+    catch(e){toast('Aviso: escudo no subido','error');}
+  }
+
+  const datos={nombre,deporte,municipio:municipio||null,user_id:authUser.id,activo:true};
+  if(escudo_url) datos.escudo_url=escudo_url;
+
+  try{
+    if(editId){
+      await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${editId}`,{
+        method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      });
+      toast('Equipo actualizado','ok');
+    } else {
+      await fetch(`${SB_URL}/rest/v1/mis_equipos`,{
+        method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      });
+      toast('Equipo añadido','ok');
+    }
+    cerrarModal('modalEquipo');
+    cargarEquipos();
+  }catch(e){toast('Error al guardar','error');}
+}
+
+async function borrarEquipo(id){
+  if(!confirm('¿Eliminar este equipo?')) return;
+  try{
+    await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({activo:false})
+    });
+    toast('Equipo eliminado','ok');
+    cargarEquipos();
+  }catch(e){toast('Error','error');}
+}
+
+// ── BAJA ──
+function solicitarBaja(){ abrirModal('modalBaja'); }
+
+async function confirmarBaja(){
+  const email=document.getElementById('confirmEmail').value.trim();
+  if(email!==authUser.email){toast('El email no coincide','error');return;}
+  try{
+    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
+      body:JSON.stringify({activo:false,baja_solicitada_at:new Date().toISOString()})
+    });
+    cerrarModal('modalBaja');
+    toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
+    setTimeout(()=>{
+      sessionStorage.removeItem('kb_token');
+      sessionStorage.removeItem('kb_user');
+      window.location.href='/';
+    },3000);
+  }catch(e){toast('Error al procesar la solicitud','error');}
+}
+
+// ── INIT ──
+const savedToken=sessionStorage.getItem('kb_token');
+const savedUser=sessionStorage.getItem('kb_user');
+if(!savedToken||!savedUser){
+  window.location.href='/';
+} else {
+  authToken=savedToken;
+  authUser=JSON.parse(savedUser);
+  cargarPerfil();
+}
+
+// Cerrar modales al pulsar overlay
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});</script>
+</body>
+</html>
