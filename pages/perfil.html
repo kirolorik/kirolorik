@@ -6,325 +6,217 @@
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik · Mi perfil</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css">
 <style>
-body{background:var(--bg)}
-
-.perfil-wrap{
-  max-width:480px;margin:0 auto;
-  min-height:100dvh;display:flex;flex-direction:column;
-  padding-bottom:calc(32px + env(safe-area-inset-bottom));
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f8;--surface:#fff;--surface2:#eef0f3;
+  --border:#dde1e7;--text:#1a1d23;--text2:#4a5060;
+  --muted:#8a90a0;--accent:#1a6bff;--accent-bg:rgba(26,107,255,0.08);
+  --r:14px;--r2:9px;--shadow:0 1px 4px rgba(0,0,0,0.08);
 }
-@media(min-width:500px){.perfil-wrap{max-width:560px}}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);margin:0}
+a{color:var(--accent)}
+
+.wrap{max-width:500px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:40px}
 
 /* Header */
-.p-header{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 16px;background:var(--surface);
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;z-index:10;
-  flex-shrink:0;
-}
-.p-back{font-size:22px;cursor:pointer;color:var(--muted);text-decoration:none;line-height:1}
-.p-header-title{font-size:14px;font-weight:700;color:var(--text);flex:1}
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
+.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
 
-/* Avatar hero */
-.p-hero{
-  display:flex;flex-direction:column;align-items:center;
-  padding:24px 16px 20px;background:var(--surface);
-  border-bottom:1px solid var(--border);
-}
-.p-avatar{
-  width:72px;height:72px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;font-weight:700;color:#fff;
-  margin-bottom:10px;position:relative;cursor:pointer;
-  flex-shrink:0;
-}
-.p-avatar-badge{
-  position:absolute;bottom:0;right:0;
-  width:22px;height:22px;border-radius:50%;
-  background:var(--surface);border:2px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;
-}
-.p-email{font-size:12px;color:var(--muted);margin-top:2px}
+/* Hero */
+.hero{display:flex;flex-direction:column;align-items:center;padding:24px 16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
+.hero-alias{font-size:16px;font-weight:700;color:var(--text)}
+.hero-email{font-size:12px;color:var(--muted);margin-top:2px}
 
 /* Secciones */
-.p-section{padding:16px 16px 0}
-.p-section-title{
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:2px;color:var(--muted);margin-bottom:10px;
-}
+.section{padding:16px 16px 0}
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
 
-/* Cards de ajuste */
-.p-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);margin-bottom:8px;overflow:hidden;
-}
-.p-row{
-  display:flex;align-items:center;gap:12px;
-  padding:13px 14px;border-bottom:1px solid var(--border);
-}
-.p-row:last-child{border-bottom:none}
-.p-row-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0}
-.p-row-label{font-size:13px;font-weight:600;color:var(--text);flex:1}
-.p-row-val{font-size:12px;color:var(--muted)}
-.p-row-arrow{font-size:16px;color:var(--muted)}
-.p-row.clickable{cursor:pointer;transition:background 0.15s}
-.p-row.clickable:hover{background:var(--surface2)}
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.row.click{cursor:pointer;transition:background 0.15s}
+.row.click:hover,.row.click:active{background:var(--surface2)}
+.rico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.rlabel{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.rval{font-size:12px;color:var(--muted)}
+.rarrow{font-size:16px;color:var(--muted)}
 
 /* Equipos */
-.equipo-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;
-  display:flex;align-items:center;gap:12px;
-}
-.equipo-escudo{
-  width:40px;height:40px;border-radius:10px;
-  background:var(--surface2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;flex-shrink:0;overflow:hidden;
-}
-.equipo-escudo img{width:100%;height:100%;object-fit:cover}
-.equipo-info{flex:1;min-width:0}
-.equipo-nombre{font-size:13px;font-weight:700;color:var(--text)}
-.equipo-meta{font-size:10px;color:var(--muted);margin-top:2px}
-.equipo-actions{display:flex;gap:6px;flex-shrink:0}
-.equipo-btn{
-  font-size:14px;cursor:pointer;opacity:0.4;transition:opacity 0.15s;
-  background:none;border:none;padding:4px;
-}
-.equipo-btn:hover{opacity:1}
+.eq-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.eq-shield{width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.eq-shield img{width:100%;height:100%;object-fit:cover}
+.eq-info{flex:1;min-width:0}
+.eq-name{font-size:13px;font-weight:700;color:var(--text)}
+.eq-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.eq-acts{display:flex;gap:6px;flex-shrink:0}
+.eq-btn{font-size:16px;cursor:pointer;opacity:0.35;transition:opacity 0.15s;background:none;border:none;padding:4px}
+.eq-btn:hover{opacity:1}
 
-/* Botón añadir equipo */
-.btn-add-equipo{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 14px;background:var(--surface);
-  border:1px dashed var(--border);border-radius:var(--radius);
-  cursor:pointer;transition:all 0.15s;width:100%;
-  font-family:'DM Sans',sans-serif;margin-bottom:8px;
-}
-.btn-add-equipo:hover{border-color:var(--accent);color:var(--accent)}
-.btn-add-equipo-icon{font-size:20px;width:40px;text-align:center}
-.btn-add-equipo-text{font-size:13px;font-weight:600;color:inherit}
+.btn-add{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--r);cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;margin-bottom:8px;transition:all 0.15s}
+.btn-add:hover{border-color:var(--accent);color:var(--accent)}
+.btn-add-ico{font-size:20px;width:40px;text-align:center}
+.btn-add-txt{font-size:13px;font-weight:600}
 
-/* Zona peligro */
-.danger-card{
-  background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);
-  border-radius:var(--radius);padding:14px;
-}
+/* Danger */
+.danger-card{background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);border-radius:var(--r);padding:14px}
 .danger-title{font-size:13px;font-weight:700;color:#dc2626;margin-bottom:4px}
-.danger-text{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
-.btn-danger{
-  background:none;border:1px solid #dc2626;color:#dc2626;
-  border-radius:var(--radius-sm);padding:9px 16px;
-  font-size:12px;font-weight:700;cursor:pointer;
-  font-family:'DM Sans',sans-serif;transition:all 0.15s;
-}
+.danger-txt{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.btn-danger{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:var(--r2);padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
 .btn-danger:hover{background:#dc2626;color:#fff}
 
-/* Modal bottom sheet */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.5);
-  z-index:300;display:flex;align-items:flex-end;justify-content:center;
-  opacity:0;pointer-events:none;transition:opacity 0.25s;
-}
-.modal-overlay.open{opacity:1;pointer-events:all}
-.modal-sheet{
-  background:var(--bg);width:100%;max-width:480px;
-  max-height:90dvh;overflow-y:auto;
-  border-radius:20px 20px 0 0;padding:20px 16px;
-  padding-bottom:calc(20px + env(safe-area-inset-bottom));
-  transform:translateY(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1);
-}
-.modal-overlay.open .modal-sheet{transform:translateY(0)}
-.modal-handle{
-  width:36px;height:4px;border-radius:4px;
-  background:var(--border);margin:0 auto 16px;
-}
-.modal-title{
-  font-family:'Bebas Neue',sans-serif;font-size:18px;
-  letter-spacing:1px;color:var(--text);margin-bottom:16px;
-}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg);width:100%;max-width:500px;max-height:90dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);margin-bottom:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-cancel{width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px}
+.field-err{font-size:11px;color:#dc2626;min-height:14px;margin-bottom:8px}
 
 /* Toast */
-.toast{
-  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-  background:var(--text);color:var(--bg);border-radius:var(--radius-sm);
-  padding:10px 20px;font-size:13px;font-weight:600;
-  opacity:0;transition:opacity 0.3s;pointer-events:none;
-  white-space:nowrap;z-index:400;
-}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);border-radius:var(--r2);padding:10px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;z-index:400}
 .toast.show{opacity:1}
-.toast.error{background:#dc2626;color:#fff}
 .toast.ok{background:#16a34a;color:#fff}
+.toast.err{background:#dc2626;color:#fff}
 
-/* Input rápido inline */
-.inline-edit{
-  display:flex;align-items:center;gap:8px;
-  padding:4px 14px 10px;border-bottom:1px solid var(--border);
-}
-.inline-edit input{
-  flex:1;background:var(--surface2);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:8px 10px;
-  font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);
-  outline:none;
-}
-.inline-edit input:focus{border-color:var(--accent)}
-.inline-edit button{
-  background:var(--accent);color:var(--accent-txt);
-  border:none;border-radius:var(--radius-sm);padding:8px 12px;
-  font-size:12px;font-weight:700;cursor:pointer;
-  font-family:'DM Sans',sans-serif;flex-shrink:0;
-}
-.inline-edit .btn-cancel{
-  background:none;color:var(--muted);border:1px solid var(--border);
-}
+/* Idioma radio */
+.lang-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.lang-opt.sel{border-color:var(--accent);background:var(--accent-bg)}
+.lang-ico{font-size:20px;width:28px;text-align:center}
+.lang-name{font-size:13px;font-weight:600;flex:1}
+.lang-check{font-size:16px}
+
+/* Sin login */
+.no-login{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px 16px;text-align:center;gap:12px}
+.no-login-ico{font-size:48px}
+.no-login-title{font-size:18px;font-weight:700;color:var(--text)}
+.no-login-txt{font-size:13px;color:var(--muted);line-height:1.6}
+.btn-volver{background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
 </style>
 </head>
 <body>
-<div class="perfil-wrap">
+<div class="wrap" id="wrap">
 
-  <div class="p-header">
-    <a class="p-back" href="/" onclick="history.back();return false">←</a>
-    <div class="p-header-title">Mi perfil</div>
-    <div id="saveIndicator" style="font-size:11px;color:var(--muted)"></div>
+  <div class="hdr">
+    <a class="back" href="/">←</a>
+    <span class="hdr-title">Mi perfil</span>
   </div>
 
-  <!-- HERO AVATAR -->
-  <div class="p-hero" id="heroSection">
-    <div class="p-avatar" id="heroAvatar" style="background:#1a6bff">
-      <span id="heroInitial">?</span>
-      <div class="p-avatar-badge">✏️</div>
+  <!-- Sin sesión -->
+  <div class="no-login" id="noLogin" style="display:none">
+    <div class="no-login-ico">🔒</div>
+    <div class="no-login-title">Acceso restringido</div>
+    <div class="no-login-txt">Necesitas iniciar sesión para ver tu perfil.</div>
+    <button class="btn-volver" onclick="window.location.href='/'">Volver al inicio</button>
+  </div>
+
+  <!-- Con sesión -->
+  <div id="perfilContent" style="display:none">
+
+    <div class="hero">
+      <div class="avatar" id="avEl">?</div>
+      <div class="hero-alias" id="aliasEl">—</div>
+      <div class="hero-email" id="emailEl">—</div>
     </div>
-    <div style="font-size:15px;font-weight:700;color:var(--text)" id="heroAlias">—</div>
-    <div class="p-email" id="heroEmail">—</div>
-  </div>
 
-  <!-- DATOS PERSONALES -->
-  <div class="p-section">
-    <div class="p-section-title">Datos personales</div>
-    <div class="p-card" id="cardDatos">
-      <div class="p-row clickable" onclick="editarAlias()">
-        <div class="p-row-icon">✏️</div>
-        <div class="p-row-label">Alias</div>
-        <div class="p-row-val" id="valAlias">—</div>
-        <div class="p-row-arrow">›</div>
-      </div>
-      <div class="p-row clickable" onclick="editarIdioma()">
-        <div class="p-row-icon">🌐</div>
-        <div class="p-row-label">Idioma</div>
-        <div class="p-row-val" id="valIdioma">CAS</div>
-        <div class="p-row-arrow">›</div>
-      </div>
-      <div class="p-row">
-        <div class="p-row-icon">📧</div>
-        <div class="p-row-label">Email</div>
-        <div class="p-row-val" id="valEmail">—</div>
-      </div>
-      <div class="p-row clickable" onclick="cambiarPassword()">
-        <div class="p-row-icon">🔑</div>
-        <div class="p-row-label">Contraseña</div>
-        <div class="p-row-val">Cambiar</div>
-        <div class="p-row-arrow">›</div>
+    <div class="section">
+      <div class="sec-title">Datos personales</div>
+      <div class="card">
+        <div class="row click" onclick="openModal('mAlias')">
+          <div class="rico">✏️</div><div class="rlabel">Alias</div>
+          <div class="rval" id="vAlias">—</div><div class="rarrow">›</div>
+        </div>
+        <div class="row click" onclick="openModal('mIdioma')">
+          <div class="rico">🌐</div><div class="rlabel">Idioma</div>
+          <div class="rval" id="vIdioma">CAS</div><div class="rarrow">›</div>
+        </div>
+        <div class="row">
+          <div class="rico">📧</div><div class="rlabel">Email</div>
+          <div class="rval" id="vEmail">—</div>
+        </div>
+        <div class="row click" onclick="openModal('mPass')">
+          <div class="rico">🔑</div><div class="rlabel">Contraseña</div>
+          <div class="rval">Cambiar</div><div class="rarrow">›</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- MIS EQUIPOS -->
-  <div class="p-section">
-    <div class="p-section-title">Mis equipos</div>
-    <div id="equiposList">
-      <div style="font-size:12px;color:var(--muted);padding:8px 0">Cargando...</div>
+    <div class="section">
+      <div class="sec-title">Mis equipos</div>
+      <div id="equiposList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
+      <button class="btn-add" onclick="openModalEquipo()">
+        <div class="btn-add-ico">➕</div>
+        <div class="btn-add-txt">Añadir equipo</div>
+      </button>
     </div>
-    <button class="btn-add-equipo" onclick="abrirModalEquipo()">
-      <div class="btn-add-equipo-icon">➕</div>
-      <div class="btn-add-equipo-text">Añadir equipo</div>
-    </button>
-  </div>
 
-  <!-- ZONA PELIGRO -->
-  <div class="p-section" style="margin-top:8px">
-    <div class="p-section-title">Zona de riesgo</div>
-    <div class="danger-card">
-      <div class="danger-title">Eliminar perfil</div>
-      <div class="danger-text">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Si en ese plazo no recuperas la cuenta, todos tus datos se borrarán permanentemente.</div>
-      <button class="btn-danger" onclick="solicitarBaja()">Solicitar eliminación de cuenta</button>
+    <div class="section" style="margin-top:8px">
+      <div class="sec-title">Zona de riesgo</div>
+      <div class="danger-card">
+        <div class="danger-title">Eliminar perfil</div>
+        <div class="danger-txt">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Pasado ese plazo, todos tus datos se borrarán permanentemente.</div>
+        <button class="btn-danger" onclick="openModal('mBaja')">Solicitar eliminación de cuenta</button>
+      </div>
     </div>
-  </div>
 
+  </div>
 </div>
 
-<!-- MODAL EDITAR ALIAS -->
-<div class="modal-overlay" id="modalAlias">
-  <div class="modal-sheet">
+<!-- MODAL ALIAS -->
+<div class="modal-bg" id="mAlias">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Cambiar alias</div>
-    <div class="field" style="margin-bottom:16px">
-      <label>Alias visible en la app</label>
-      <input type="text" id="inputAlias" placeholder="Tu alias...">
-    </div>
-    <button class="btn-primary" onclick="guardarAlias()">Guardar ⚽</button>
-    <button onclick="cerrarModal('modalAlias')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+    <div class="field"><label>Alias visible en la app</label><input type="text" id="inputAlias" placeholder="Tu alias..."></div>
+    <button class="btn-primary" onclick="guardarAlias()">Guardar</button>
+    <button class="btn-cancel" onclick="closeModal('mAlias')">Cancelar</button>
   </div>
 </div>
 
 <!-- MODAL IDIOMA -->
-<div class="modal-overlay" id="modalIdioma">
-  <div class="modal-sheet">
+<div class="modal-bg" id="mIdioma">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Idioma</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-      <div class="p-row clickable p-card" style="margin:0" onclick="guardarIdioma('cas')">
-        <div class="p-row-icon">🇪🇸</div>
-        <div class="p-row-label">Castellano</div>
-        <div id="checkCas" style="font-size:16px"></div>
-      </div>
-      <div class="p-row clickable p-card" style="margin:0" onclick="guardarIdioma('eus')">
-        <div class="p-row-icon">🏔️</div>
-        <div class="p-row-label">Euskera</div>
-        <div id="checkEus" style="font-size:16px"></div>
-      </div>
-    </div>
-    <button onclick="cerrarModal('modalIdioma')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
+    <div id="langOpts" style="margin-bottom:16px"></div>
+    <button class="btn-cancel" onclick="closeModal('mIdioma')">Cancelar</button>
   </div>
 </div>
 
 <!-- MODAL CONTRASEÑA -->
-<div class="modal-overlay" id="modalPass">
-  <div class="modal-sheet">
+<div class="modal-bg" id="mPass">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Cambiar contraseña</div>
-    <div class="field" style="margin-bottom:10px">
-      <label>Nueva contraseña</label>
-      <input type="password" id="inputPass1" placeholder="Mínimo 8 caracteres">
-    </div>
-    <div class="field" style="margin-bottom:16px">
-      <label>Repetir contraseña</label>
-      <input type="password" id="inputPass2" placeholder="Repite la contraseña">
-    </div>
-    <div id="passError" style="font-size:11px;color:#dc2626;min-height:14px;margin-bottom:8px"></div>
-    <button class="btn-primary" onclick="guardarPassword()">Cambiar contraseña 🔑</button>
-    <button onclick="cerrarModal('modalPass')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+    <div class="field"><label>Nueva contraseña</label><input type="password" id="pass1" placeholder="Mínimo 8 caracteres"></div>
+    <div class="field"><label>Repetir contraseña</label><input type="password" id="pass2" placeholder="Repite la contraseña"></div>
+    <div class="field-err" id="passErr"></div>
+    <button class="btn-primary" onclick="guardarPass()">Cambiar contraseña</button>
+    <button class="btn-cancel" onclick="closeModal('mPass')">Cancelar</button>
   </div>
 </div>
 
-<!-- MODAL AÑADIR EQUIPO -->
-<div class="modal-overlay" id="modalEquipo">
-  <div class="modal-sheet">
+<!-- MODAL EQUIPO -->
+<div class="modal-bg" id="mEquipo">
+  <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modalEquipoTitle">Añadir equipo</div>
-    <input type="hidden" id="equipoEditId">
-
-    <div class="field">
-      <label>Nombre del equipo</label>
-      <input type="text" id="eq_nombre" placeholder="Ej: Eibar Saskibaloia 2010">
-    </div>
+    <div class="modal-title" id="mEquipoTitle">Añadir equipo</div>
+    <input type="hidden" id="eqId">
+    <div class="field"><label>Nombre del equipo</label><input type="text" id="eqNombre" placeholder="Nombre del equipo"></div>
     <div class="row2">
-      <div class="field">
-        <label>Deporte</label>
-        <select id="eq_deporte">
+      <div class="field"><label>Deporte</label>
+        <select id="eqDeporte">
           <option value="futbol">⚽ Fútbol</option>
           <option value="basket">🏀 Basket</option>
           <option value="balonmano">🤾 Balonmano</option>
@@ -336,332 +228,329 @@ body{background:var(--bg)}
           <option value="otros">🏅 Otros</option>
         </select>
       </div>
-      <div class="field">
-        <label>Municipio</label>
-        <input type="text" id="eq_municipio" placeholder="Eibar...">
-      </div>
+      <div class="field"><label>Municipio</label><input type="text" id="eqMunicipio" placeholder="Eibar..."></div>
     </div>
-
     <div class="field">
-      <label>Escudo del equipo <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · PNG, JPG)</span></label>
-      <input type="file" id="eq_escudo" accept="image/*" style="padding:8px">
-      <div id="eq_escudo_preview" style="margin-top:8px;display:none">
-        <img id="eq_escudo_img" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
+      <label>Escudo (opcional)</label>
+      <input type="file" id="eqEscudo" accept="image/*" style="padding:8px">
+      <div id="eqPreview" style="margin-top:8px;display:none">
+        <img id="eqPreviewImg" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
       </div>
     </div>
-
-    <button class="btn-primary" onclick="guardarEquipo()">Guardar equipo ⚽</button>
-    <button onclick="cerrarModal('modalEquipo')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+    <button class="btn-primary" onclick="guardarEquipo()">Guardar equipo</button>
+    <button class="btn-cancel" onclick="closeModal('mEquipo')">Cancelar</button>
   </div>
 </div>
 
-<!-- MODAL CONFIRMAR BAJA -->
-<div class="modal-overlay" id="modalBaja">
-  <div class="modal-sheet">
+<!-- MODAL BAJA -->
+<div class="modal-bg" id="mBaja">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" style="color:#dc2626">¿Eliminar tu cuenta?</div>
-    <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">
-      Tu perfil se desactivará durante <strong>30 días</strong>. Durante ese tiempo puedes volver a entrar para recuperarlo.<br><br>
-      Pasado ese plazo, todos tus datos se eliminarán de forma permanente. ¿Estás seguro?
-    </div>
-    <div class="field" style="margin-bottom:16px">
-      <label>Escribe tu email para confirmar</label>
-      <input type="email" id="confirmEmail" placeholder="Tu email de acceso">
-    </div>
+    <p style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">Tu perfil se desactivará durante <strong>30 días</strong>. Pasado ese plazo, todos tus datos se eliminarán permanentemente.</p>
+    <div class="field"><label>Escribe tu email para confirmar</label><input type="email" id="bajaMail" placeholder="Tu email de acceso"></div>
+    <div class="field-err" id="bajaErr"></div>
     <button class="btn-danger" style="width:100%;padding:12px;font-size:13px" onclick="confirmarBaja()">Sí, eliminar mi cuenta</button>
-    <button onclick="cerrarModal('modalBaja')" style="width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px">Cancelar</button>
+    <button class="btn-cancel" onclick="closeModal('mBaja')">Cancelar</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="/assets/js/i18n.js"></script>
 <script>
-const SB_URL='https://glscnwctcvrosmbrljns.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
+const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',otros:'🏅'};
 
-const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
-const DEPORTES_EMOJI={futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',otros:'🏅'};
+let tok = null, user = null, perfil = null, idiomaActual = 'cas';
 
-let authToken=null, authUser=null, perfilData=null;
-
-function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+function H(){ return {'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json'}; }
+function color(e){ return COLORS[(e||'').charCodeAt(0) % COLORS.length]; }
 
 function toast(msg, tipo=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast show'+(tipo?' '+tipo:'');
-  setTimeout(()=>t.className='toast',3000);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (tipo ? ' '+tipo : '');
+  setTimeout(() => t.className = 'toast', 3000);
 }
 
-// ── MODAL ──
-function abrirModal(id){ document.getElementById(id).classList.add('open'); }
-function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m=>{
-  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
-});
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+}
 
-// ── AVATAR COLOR ──
-function avatarColor(email){ return AVATAR_COLORS[(email||'').charCodeAt(0)%AVATAR_COLORS.length]; }
+// Cerrar modales al pulsar fondo
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
 
 // ── CARGAR PERFIL ──
 async function cargarPerfil(){
-  if(!authUser) return;
-  const email=authUser.email||'';
-  const initial=(email).charAt(0).toUpperCase();
-  const color=avatarColor(email);
+  const email = user.email || '';
+  const ini   = email.charAt(0).toUpperCase();
+  const col   = color(email);
 
-  document.getElementById('heroAvatar').style.background=color;
-  document.getElementById('heroInitial').textContent=initial;
-  document.getElementById('heroEmail').textContent=email;
-  document.getElementById('valEmail').textContent=email;
+  const av = document.getElementById('avEl');
+  av.textContent = ini;
+  av.style.background = col;
 
-  try{
-    const res=await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}&select=*`,{headers:H()});
-    const data=await res.json();
-    if(data.length){
-      perfilData=data[0];
-      const alias=perfilData.alias||email.split('@')[0];
-      document.getElementById('heroAlias').textContent=alias;
-      document.getElementById('valAlias').textContent=alias;
-      document.getElementById('valIdioma').textContent=(perfilData.idioma||'cas').toUpperCase();
+  document.getElementById('emailEl').textContent = email;
+  document.getElementById('vEmail').textContent  = email;
+
+  try {
+    const res  = await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}&select=*`, { headers: H() });
+    const data = await res.json();
+
+    if(data && data.length > 0){
+      perfil = data[0];
+      idiomaActual = perfil.idioma || 'cas';
     } else {
-      // Crear perfil si no existe
-      await fetch(`${SB_URL}/rest/v1/perfiles`,{
-        method:'POST',headers:{...H(),'Prefer':'return=minimal'},
-        body:JSON.stringify({id:authUser.id,idioma:'cas'})
+      // Crear perfil vacío
+      await fetch(`${SB}/rest/v1/perfiles`, {
+        method:'POST',
+        headers: {...H(), 'Prefer':'return=minimal'},
+        body: JSON.stringify({id: user.id, idioma:'cas'})
       });
-      document.getElementById('heroAlias').textContent=email.split('@')[0];
-      document.getElementById('valAlias').textContent=email.split('@')[0];
+      perfil = {id: user.id, idioma:'cas', alias: null};
     }
-  }catch(e){ console.error(e); }
+
+    const alias = perfil.alias || email.split('@')[0];
+    document.getElementById('aliasEl').textContent = alias;
+    document.getElementById('vAlias').textContent  = alias;
+    document.getElementById('vIdioma').textContent = (perfil.idioma || 'cas').toUpperCase();
+
+  } catch(e) {
+    toast('Error cargando perfil', 'err');
+    console.error(e);
+  }
 
   cargarEquipos();
 }
 
 // ── ALIAS ──
-function editarAlias(){
-  document.getElementById('inputAlias').value=document.getElementById('valAlias').textContent;
-  abrirModal('modalAlias');
-  setTimeout(()=>document.getElementById('inputAlias').focus(),300);
-}
-
-async function guardarAlias(){
-  const alias=document.getElementById('inputAlias').value.trim();
-  if(!alias){toast('El alias no puede estar vacío','error');return;}
-  try{
-    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
-      body:JSON.stringify({alias})
-    });
-    document.getElementById('valAlias').textContent=alias;
-    document.getElementById('heroAlias').textContent=alias;
-    cerrarModal('modalAlias');
+function guardarAlias(){
+  const alias = document.getElementById('inputAlias').value.trim();
+  if(!alias){ toast('El alias no puede estar vacío','err'); return; }
+  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({alias})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    document.getElementById('aliasEl').textContent = alias;
+    document.getElementById('vAlias').textContent  = alias;
+    closeModal('mAlias');
     toast('Alias actualizado','ok');
-  }catch(e){toast('Error al guardar','error');}
+  }).catch(() => toast('Error al guardar','err'));
 }
 
 // ── IDIOMA ──
-function editarIdioma(){
-  const actual=document.getElementById('valIdioma').textContent.toLowerCase();
-  document.getElementById('checkCas').textContent=actual==='cas'?'✅':'';
-  document.getElementById('checkEus').textContent=actual==='eus'?'✅':'';
-  abrirModal('modalIdioma');
+function renderLangOpts(){
+  const langs = [{id:'cas',label:'Castellano',ico:'🇪🇸'},{id:'eus',label:'Euskera',ico:'🏔️'}];
+  document.getElementById('langOpts').innerHTML = langs.map(l => `
+    <div class="lang-opt ${idiomaActual===l.id?'sel':''}" onclick="selIdioma('${l.id}')">
+      <span class="lang-ico">${l.ico}</span>
+      <span class="lang-name">${l.label}</span>
+      <span class="lang-check">${idiomaActual===l.id?'✅':''}</span>
+    </div>`).join('');
 }
 
-async function guardarIdioma(lang){
-  try{
-    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
-      body:JSON.stringify({idioma:lang})
-    });
-    document.getElementById('valIdioma').textContent=lang.toUpperCase();
-    sessionStorage.setItem('kb_lang',lang);
-    cerrarModal('modalIdioma');
+function selIdioma(lang){
+  idiomaActual = lang;
+  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({idioma:lang})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    document.getElementById('vIdioma').textContent = lang.toUpperCase();
+    sessionStorage.setItem('kb_lang', lang);
+    closeModal('mIdioma');
     toast('Idioma guardado','ok');
-  }catch(e){toast('Error','error');}
+  }).catch(() => toast('Error','err'));
 }
 
 // ── CONTRASEÑA ──
-function cambiarPassword(){ abrirModal('modalPass'); }
-
-async function guardarPassword(){
-  const p1=document.getElementById('inputPass1').value;
-  const p2=document.getElementById('inputPass2').value;
-  const err=document.getElementById('passError');
-  err.textContent='';
-  if(p1.length<8){err.textContent='La contraseña debe tener al menos 8 caracteres';return;}
-  if(p1!==p2){err.textContent='Las contraseñas no coinciden';return;}
-  try{
-    const res=await fetch(`${SB_URL}/auth/v1/user`,{
-      method:'PUT',headers:{...H()},
-      body:JSON.stringify({password:p1})
-    });
-    if(!res.ok) throw new Error();
-    cerrarModal('modalPass');
-    document.getElementById('inputPass1').value='';
-    document.getElementById('inputPass2').value='';
+function guardarPass(){
+  const p1 = document.getElementById('pass1').value;
+  const p2 = document.getElementById('pass2').value;
+  const err = document.getElementById('passErr');
+  err.textContent = '';
+  if(p1.length < 8){ err.textContent = 'Mínimo 8 caracteres'; return; }
+  if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
+  fetch(`${SB}/auth/v1/user`, {
+    method:'PUT', headers:H(), body:JSON.stringify({password:p1})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    closeModal('mPass');
+    document.getElementById('pass1').value = '';
+    document.getElementById('pass2').value = '';
     toast('Contraseña actualizada','ok');
-  }catch(e){err.textContent='Error al cambiar la contraseña';}
+  }).catch(() => { err.textContent = 'Error al cambiar la contraseña'; });
 }
 
 // ── EQUIPOS ──
 async function cargarEquipos(){
-  const list=document.getElementById('equiposList');
-  try{
-    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=created_at.asc`,{headers:H()});
-    const data=await res.json();
-    if(!data.length){
-      list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún equipo.</div>';
+  const list = document.getElementById('equiposList');
+  try {
+    const res  = await fetch(`${SB}/rest/v1/mis_equipos?user_id=eq.${user.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
+    const data = await res.json();
+    if(!data || !data.length){
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún equipo.</div>';
       return;
     }
-    list.innerHTML=data.map(eq=>`
-      <div class="equipo-card">
-        <div class="equipo-escudo">
-          ${eq.escudo_url?`<img src="${eq.escudo_url}" alt="">`:DEPORTES_EMOJI[eq.deporte]||'🏅'}
+    list.innerHTML = data.map(eq => `
+      <div class="eq-card">
+        <div class="eq-shield">
+          ${eq.escudo_url ? `<img src="${eq.escudo_url}" alt="">` : (DEPEMOJI[eq.deporte]||'🏅')}
         </div>
-        <div class="equipo-info">
-          <div class="equipo-nombre">${eq.nombre}</div>
-          <div class="equipo-meta">${eq.deporte} · ${eq.municipio||''}</div>
+        <div class="eq-info">
+          <div class="eq-name">${eq.nombre}</div>
+          <div class="eq-meta">${eq.deporte} · ${eq.municipio||''}</div>
         </div>
-        <div class="equipo-actions">
-          <button class="equipo-btn" title="Editar" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
-          <button class="equipo-btn" title="Eliminar" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+        <div class="eq-acts">
+          <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
+          <button class="eq-btn" onclick="borrarEquipo('${eq.id}')">🗑️</button>
         </div>
       </div>`).join('');
-  }catch(e){list.innerHTML='<div style="font-size:12px;color:#dc2626">Error al cargar equipos</div>';}
+  } catch(e) {
+    list.innerHTML = '<div style="font-size:12px;color:#dc2626">Error al cargar equipos</div>';
+  }
 }
 
-function abrirModalEquipo(){
-  document.getElementById('equipoEditId').value='';
-  document.getElementById('modalEquipoTitle').textContent='Añadir equipo';
-  document.getElementById('eq_nombre').value='';
-  document.getElementById('eq_deporte').value='futbol';
-  document.getElementById('eq_municipio').value='';
-  document.getElementById('eq_escudo').value='';
-  document.getElementById('eq_escudo_preview').style.display='none';
-  abrirModal('modalEquipo');
+function openModalEquipo(){
+  document.getElementById('eqId').value      = '';
+  document.getElementById('mEquipoTitle').textContent = 'Añadir equipo';
+  document.getElementById('eqNombre').value  = '';
+  document.getElementById('eqDeporte').value = 'futbol';
+  document.getElementById('eqMunicipio').value = '';
+  document.getElementById('eqEscudo').value  = '';
+  document.getElementById('eqPreview').style.display = 'none';
+  openModal('mEquipo');
 }
 
 function editarEquipo(eq){
-  document.getElementById('equipoEditId').value=eq.id;
-  document.getElementById('modalEquipoTitle').textContent='Editar equipo';
-  document.getElementById('eq_nombre').value=eq.nombre||'';
-  document.getElementById('eq_deporte').value=eq.deporte||'futbol';
-  document.getElementById('eq_municipio').value=eq.municipio||'';
-  document.getElementById('eq_escudo').value='';
+  document.getElementById('eqId').value      = eq.id;
+  document.getElementById('mEquipoTitle').textContent = 'Editar equipo';
+  document.getElementById('eqNombre').value  = eq.nombre||'';
+  document.getElementById('eqDeporte').value = eq.deporte||'futbol';
+  document.getElementById('eqMunicipio').value = eq.municipio||'';
+  document.getElementById('eqEscudo').value  = '';
   if(eq.escudo_url){
-    document.getElementById('eq_escudo_img').src=eq.escudo_url;
-    document.getElementById('eq_escudo_preview').style.display='block';
+    document.getElementById('eqPreviewImg').src = eq.escudo_url;
+    document.getElementById('eqPreview').style.display = 'block';
   } else {
-    document.getElementById('eq_escudo_preview').style.display='none';
+    document.getElementById('eqPreview').style.display = 'none';
   }
-  abrirModal('modalEquipo');
+  openModal('mEquipo');
 }
 
-document.getElementById('eq_escudo').addEventListener('change', e=>{
-  const file=e.target.files[0];
+document.getElementById('eqEscudo').addEventListener('change', e => {
+  const file = e.target.files[0];
   if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    document.getElementById('eq_escudo_img').src=ev.target.result;
-    document.getElementById('eq_escudo_preview').style.display='block';
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById('eqPreviewImg').src = ev.target.result;
+    document.getElementById('eqPreview').style.display = 'block';
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(file);
 });
 
 async function subirEscudo(file){
-  const ext=file.name.split('.').pop();
-  const nombre=`escudo_${authUser.id}_${Date.now()}.${ext}`;
-  const res=await fetch(`${SB_URL}/storage/v1/object/escudos/${nombre}`,{
+  const ext  = file.name.split('.').pop();
+  const name = `escudo_${user.id}_${Date.now()}.${ext}`;
+  const res  = await fetch(`${SB}/storage/v1/object/escudos/${name}`, {
     method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken,'Content-Type':file.type},
+    headers:{'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':file.type},
     body:file
   });
   if(!res.ok) throw new Error('Error al subir escudo');
-  return `${SB_URL}/storage/v1/object/public/escudos/${nombre}`;
+  return `${SB}/storage/v1/object/public/escudos/${name}`;
 }
 
 async function guardarEquipo(){
-  const nombre=document.getElementById('eq_nombre').value.trim();
-  const deporte=document.getElementById('eq_deporte').value;
-  const municipio=document.getElementById('eq_municipio').value.trim();
-  const editId=document.getElementById('equipoEditId').value;
-  if(!nombre){toast('El nombre es obligatorio','error');return;}
-
-  let escudo_url=null;
-  const file=document.getElementById('eq_escudo').files[0];
+  const nombre = document.getElementById('eqNombre').value.trim();
+  if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const datos = {
+    nombre,
+    deporte:    document.getElementById('eqDeporte').value,
+    municipio:  document.getElementById('eqMunicipio').value.trim() || null,
+    user_id:    user.id,
+    activo:     true
+  };
+  const file = document.getElementById('eqEscudo').files[0];
   if(file){
-    try{escudo_url=await subirEscudo(file);}
-    catch(e){toast('Aviso: escudo no subido','error');}
+    try { datos.escudo_url = await subirEscudo(file); }
+    catch(e){ toast('Aviso: escudo no subido','err'); }
   }
-
-  const datos={nombre,deporte,municipio:municipio||null,user_id:authUser.id,activo:true};
-  if(escudo_url) datos.escudo_url=escudo_url;
-
-  try{
+  const editId = document.getElementById('eqId').value;
+  try {
     if(editId){
-      await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${editId}`,{
-        method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${editId}`, {
+        method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
       });
       toast('Equipo actualizado','ok');
     } else {
-      await fetch(`${SB_URL}/rest/v1/mis_equipos`,{
-        method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(datos)
+      await fetch(`${SB}/rest/v1/mis_equipos`, {
+        method:'POST', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
       });
       toast('Equipo añadido','ok');
     }
-    cerrarModal('modalEquipo');
+    closeModal('mEquipo');
     cargarEquipos();
-  }catch(e){toast('Error al guardar','error');}
+  } catch(e){ toast('Error al guardar','err'); }
 }
 
 async function borrarEquipo(id){
   if(!confirm('¿Eliminar este equipo?')) return;
-  try{
-    await fetch(`${SB_URL}/rest/v1/mis_equipos?id=eq.${id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
-      body:JSON.stringify({activo:false})
+  try {
+    await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
     toast('Equipo eliminado','ok');
     cargarEquipos();
-  }catch(e){toast('Error','error');}
+  } catch(e){ toast('Error','err'); }
 }
 
 // ── BAJA ──
-function solicitarBaja(){ abrirModal('modalBaja'); }
-
 async function confirmarBaja(){
-  const email=document.getElementById('confirmEmail').value.trim();
-  if(email!==authUser.email){toast('El email no coincide','error');return;}
-  try{
-    await fetch(`${SB_URL}/rest/v1/perfiles?id=eq.${authUser.id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},
-      body:JSON.stringify({activo:false,baja_solicitada_at:new Date().toISOString()})
+  const mail = document.getElementById('bajaMail').value.trim();
+  const err  = document.getElementById('bajaErr');
+  err.textContent = '';
+  if(mail !== user.email){ err.textContent = 'El email no coincide'; return; }
+  try {
+    await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'},
+      body: JSON.stringify({activo:false, baja_solicitada_at: new Date().toISOString()})
     });
-    cerrarModal('modalBaja');
+    closeModal('mBaja');
     toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
-    setTimeout(()=>{
+    setTimeout(() => {
       sessionStorage.removeItem('kb_token');
       sessionStorage.removeItem('kb_user');
-      window.location.href='/';
-    },3000);
-  }catch(e){toast('Error al procesar la solicitud','error');}
+      window.location.href = '/';
+    }, 3000);
+  } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
 }
 
 // ── INIT ──
-const savedToken=sessionStorage.getItem('kb_token');
-const savedUser=sessionStorage.getItem('kb_user');
-if(!savedToken||!savedUser){
-  window.location.href='/';
+tok  = sessionStorage.getItem('kb_token');
+const savedUser = sessionStorage.getItem('kb_user');
+
+if(!tok || !savedUser){
+  document.getElementById('noLogin').style.display    = 'flex';
+  document.getElementById('perfilContent').style.display = 'none';
 } else {
-  authToken=savedToken;
-  authUser=JSON.parse(savedUser);
+  user = JSON.parse(savedUser);
+  document.getElementById('noLogin').style.display    = 'none';
+  document.getElementById('perfilContent').style.display = 'block';
   cargarPerfil();
 }
 
-// Cerrar modales al pulsar overlay
-document.querySelectorAll('.modal-overlay').forEach(m=>{
-  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
-});</script>
+// Abrir idioma con opciones renderizadas
+document.querySelector('[onclick="openModal(\'mIdioma\')"]').addEventListener('click', renderLangOpts);
+document.getElementById('inputAlias').addEventListener('keydown', e => {
+  if(e.key === 'Enter') guardarAlias();
+});
+</script>
 </body>
 </html>
