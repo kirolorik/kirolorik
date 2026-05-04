@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /pages/perfil.html
+
+Sitemap: https://kirolorik.app/sitemap.xml
