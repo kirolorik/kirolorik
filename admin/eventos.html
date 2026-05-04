@@ -117,13 +117,14 @@ tbody td select{cursor:pointer}
       <div class="field"><label>Deporte</label><select id="f_deporte"><option value="futbol">⚽ Fútbol</option><option value="basket">🏀 Basket</option><option value="balonmano">🤾 Balonmano</option><option value="waterpolo">🏊 Waterpolo</option><option value="boxeo">🥊 Boxeo</option><option value="tenis">🎾 Tenis</option><option value="atletismo">🏃 Atletismo</option><option value="ciclismo">🚴 Ciclismo</option><option value="otros">🏅 Otros</option></select></div>
       <div class="field"><label>Género</label><select id="f_genero"><option value="Sin especificar">Sin especificar</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Mixto">Mixto</option></select></div>
     </div>
-    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
+    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
     <div class="row2">
       <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Junior</option><option>Senior</option><option>Veteranos</option><option>Todas</option></select></div>
       <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
     </div>
-    <div class="field"><label>Equipo local</label><input type="text" id="f_local" placeholder="Nombre del equipo local"></div>
-    <div class="field"><label>Equipo visitante</label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_local" placeholder="Nombre del equipo local"></div>
+    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
     <div class="row2">
       <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
       <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
@@ -337,6 +338,12 @@ async function guardarEdicion(){
     duracion_minutos:parseInt(document.getElementById('e_duracion').value)||90,
     info_evento:document.getElementById('e_info').value.trim()||null,
   };
+  // Subir imagen si hay una nueva
+  const imgFile = document.getElementById('e_imagen')?.files[0];
+  if(imgFile){
+    try{ updates.imagen_url = await subirImagen(imgFile); }
+    catch(e){ toast('Aviso: imagen no subida','true'); }
+  }
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${eventoEditando.id}`,{
       method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(updates)
@@ -359,6 +366,7 @@ function buildEvento(d){
     instalacion:d.instalacion||null, tipo_entrada:d.entrada||'sin info',
     duracion_minutos:parseInt(d.duracion)||90,
     imagen_url:d.imagen_url||null,
+    info_evento:d.info||null,
     activo:true, user_id:authUser?.id||null
   };
 }
