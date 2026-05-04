@@ -300,16 +300,27 @@ let lang='cas';
 
 const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 const DEPORTES={
-  futbol:{color:'var(--c-futbol)',emoji:'⚽'},
-  basket:{color:'var(--c-basket)',emoji:'🏀'},
-  balonmano:{color:'var(--c-balonmano)',emoji:'🤾'},
-  waterpolo:{color:'var(--c-waterpolo)',emoji:'🏊'},
-  boxeo:{color:'var(--c-boxeo)',emoji:'🥊'},
-  tenis:{color:'var(--c-tenis)',emoji:'🎾'},
-  atletismo:{color:'var(--c-atletismo)',emoji:'🏃'},
-  ciclismo:{color:'var(--c-ciclismo)',emoji:'🚴'},
-  otros:{color:'var(--c-otros)',emoji:'🏅'}
+  futbol:    {color:'var(--c-futbol)',   emoji:'⚽'},
+  basket:    {color:'var(--c-basket)',   emoji:'🏀'},
+  balonmano: {color:'var(--c-balonmano)',emoji:'🤾'},
+  waterpolo: {color:'var(--c-waterpolo)',emoji:'🏊'},
+  boxeo:     {color:'var(--c-boxeo)',    emoji:'🥊'},
+  tenis:     {color:'var(--c-tenis)',    emoji:'🎾'},
+  atletismo: {color:'var(--c-atletismo)',emoji:'🏃'},
+  ciclismo:  {color:'var(--c-ciclismo)', emoji:'🚴'},
+  voley:     {color:'#8B5CF6',           emoji:'🏐'},
+  natacion:  {color:'#06B6D4',           emoji:'🏊'},
+  padel:     {color:'#10B981',           emoji:'🎾'},
+  ajedrez:   {color:'#6B7280',           emoji:'♟️'},
+  rugby:     {color:'#92400E',           emoji:'🏉'},
+  hockey:    {color:'#DC2626',           emoji:'🏒'},
+  otros:     {color:'var(--c-otros)',    emoji:'🏅'}
 };
+
+// Deporte no conocido: color y emoji genéricos
+function getDeporte(d){
+  return DEPORTES[(d||'').toLowerCase()] || {color:'var(--c-otros)', emoji:'🏅'};
+}
 
 function t(k){return i18n(k,lang)}
 
@@ -404,7 +415,7 @@ async function cargar(){
       const row=document.createElement('div');
       row.className='time-row';
       const evHTML=evs.map(e=>{
-        const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)',emoji:'🏅'};
+        const dep=getDeporte(e.deporte);
         const depLabel=t(e.deporte)||e.deporte||'Otro';
         const gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
         return `<div class="event" onclick='abrirDetalle(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
@@ -430,7 +441,7 @@ async function cargar(){
 
 // ── DETALLE ──
 function abrirDetalle(e){
-  const dep=DEPORTES[(e.deporte||'').toLowerCase()]||{color:'var(--c-otros)',emoji:'🏅'};
+  const dep=getDeporte(e.deporte);
   const depLabel=t(e.deporte)||e.deporte;
   document.getElementById('detailTitleBar').textContent=depLabel+' · '+formatFecha(e.fecha);
 
@@ -475,6 +486,7 @@ function abrirDetalle(e){
         <div class="detail-cell-sub">${e.tipo_competicion||''}</div>
       </div>
     </div>
+    ${e.updated_at?`<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">* Última actualización: ${formatFecha(e.updated_at.split('T')[0])}</div>`:''}
     ${entradaHTML}
     ${e.info_evento?`<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">📣 ${t('sobreEvento')}</div><div style="font-size:13px;color:var(--text);line-height:1.6">${e.info_evento}</div></div>`:''}
     ${posterHTML}
