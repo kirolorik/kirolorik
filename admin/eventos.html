@@ -114,8 +114,36 @@ tbody td select{cursor:pointer}
   <div id="tabForm" style="display:none">
     <div class="admin-section-title">Nuevo evento</div>
     <div class="row2">
-      <div class="field"><label>Deporte</label><select id="f_deporte"><option value="futbol">⚽ Fútbol</option><option value="basket">🏀 Basket</option><option value="balonmano">🤾 Balonmano</option><option value="waterpolo">🏊 Waterpolo</option><option value="boxeo">🥊 Boxeo</option><option value="tenis">🎾 Tenis</option><option value="atletismo">🏃 Atletismo</option><option value="ciclismo">🚴 Ciclismo</option><option value="otros">🏅 Otros</option></select></div>
-      <div class="field"><label>Género</label><select id="f_genero"><option value="Sin especificar">Sin especificar</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Mixto">Mixto</option></select></div>
+      <div class="field">
+        <label>Deporte</label>
+        <input type="text" id="f_deporte" list="deportes-list" placeholder="Fútbol, basket...">
+        <datalist id="deportes-list">
+          <option value="futbol">⚽ Fútbol</option>
+          <option value="basket">🏀 Basket</option>
+          <option value="balonmano">🤾 Balonmano</option>
+          <option value="waterpolo">🏊 Waterpolo</option>
+          <option value="boxeo">🥊 Boxeo</option>
+          <option value="tenis">🎾 Tenis</option>
+          <option value="atletismo">🏃 Atletismo</option>
+          <option value="ciclismo">🚴 Ciclismo</option>
+          <option value="voley">🏐 Voley</option>
+          <option value="natacion">🏊 Natación</option>
+          <option value="padel">🎾 Pádel</option>
+          <option value="ajedrez">♟️ Ajedrez</option>
+          <option value="rugby">🏉 Rugby</option>
+          <option value="hockey">🏒 Hockey</option>
+          <option value="otros">🏅 Otros</option>
+        </datalist>
+      </div>
+      <div class="field">
+        <label>Género</label>
+        <select id="f_genero">
+          <option value="Sin especificar">Sin especificar</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Mixto">Mixto</option>
+        </select>
+      </div>
     </div>
     <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
     <div class="row2">
@@ -288,7 +316,16 @@ function abrirEdicion(e){
         <div onclick="cerrarEdicion()" style="font-size:22px;cursor:pointer;color:var(--muted)">✕</div>
       </div>
       <div class="row2">
-        <div class="field"><label>Deporte</label><select id="e_deporte"><option ${selOpt(DEPORTES_OPTS,e.deporte)}></select></div>
+        <div class="field"><label>Deporte</label>
+          <input type="text" id="e_deporte" list="deportes-list-edit" value="${e.deporte||''}">
+          <datalist id="deportes-list-edit">
+            <option value="futbol"><option value="basket"><option value="balonmano">
+            <option value="waterpolo"><option value="boxeo"><option value="tenis">
+            <option value="atletismo"><option value="ciclismo"><option value="voley">
+            <option value="natacion"><option value="padel"><option value="ajedrez">
+            <option value="rugby"><option value="hockey"><option value="otros">
+          </datalist>
+        </div>
         <div class="field"><label>Género</label><select id="e_genero">${selOpt(GENERO_OPTS,e.genero)}</select></div>
       </div>
       <div class="field"><label>Nombre evento</label><input type="text" id="e_nombre" value="${e.nombre_evento||''}"></div>
