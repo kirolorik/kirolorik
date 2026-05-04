@@ -19,7 +19,67 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
-/* ── SELECTOR IDIOMA TOP BAR ── */
+/* ── BANNER EXPANDIBLE ── */
+.ad-wrap{flex-shrink:0;border-top:1px solid var(--border);background:var(--surface);overflow:hidden}
+.ad-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;cursor:pointer;position:relative;
+  transition:background 0.15s;min-height:54px;
+}
+.ad-bar:hover{background:var(--surface2)}
+.ad-tag{position:absolute;top:3px;right:10px;font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.ad-logo{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ad-body{flex:1;min-width:0}
+.ad-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-desc-short{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ad-nav{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.ad-arrow{
+  width:26px;height:26px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;color:var(--text2);
+  transition:all 0.15s;flex-shrink:0;
+}
+.ad-arrow:hover{border-color:var(--accent);color:var(--accent)}
+.ad-dots{display:flex;gap:4px;align-items:center;padding:0 4px}
+.ad-dot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:background 0.2s;cursor:pointer}
+.ad-dot.on{background:var(--accent)}
+
+/* Panel expandido */
+.ad-panel{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.35s cubic-bezier(.4,0,.2,1);
+  border-top:0px solid var(--border);
+}
+.ad-panel.open{max-height:320px;border-top:1px solid var(--border)}
+.ad-panel-inner{padding:0}
+.ad-img{width:100%;max-height:200px;object-fit:cover;display:block}
+.ad-img-placeholder{
+  width:100%;height:140px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;
+}
+.ad-img-placeholder-ico{font-size:32px;opacity:0.4}
+.ad-img-placeholder-txt{font-size:11px;color:var(--muted)}
+.ad-panel-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+}
+.ad-desc-long{font-size:12px;color:var(--text2);line-height:1.5;flex:1;padding-right:10px}
+.ad-cta{
+  background:var(--accent);color:var(--accent-txt);
+  font-size:10px;font-weight:800;border-radius:var(--radius-sm);
+  padding:7px 12px;flex-shrink:0;text-decoration:none;
+  text-transform:uppercase;white-space:nowrap;
+}
+.ad-close{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;color:var(--muted);
+  transition:all 0.15s;flex-shrink:0;margin-left:6px;
+}
+.ad-close:hover{border-color:var(--accent);color:var(--accent)}
 .lang-select{
   background:var(--surface2);border:1px solid var(--border);
   border-radius:var(--radius-sm);padding:6px 8px;
@@ -174,15 +234,24 @@
     <div class="legend-item" style="margin-left:auto;font-size:9px"><span data-i18n="sinIcono">Sin icono = libre</span></div>
   </div>
 
-  <!-- BANNER -->
-  <div class="ad-fixed" onclick="window.location='mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik'">
-    <div class="ad-tag" data-i18n="espacioPub">Espacio publicitario</div>
-    <div class="ad-logo">📣</div>
-    <div class="ad-body">
-      <div class="ad-name" data-i18n="adNombre">¿Tu negocio aquí?</div>
-      <div class="ad-desc" data-i18n="adDesc">Llega a las familias deportistas · kirolorik.info@gmail.com</div>
+  <!-- BANNER EXPANDIBLE -->
+  <div class="ad-wrap" id="adWrap">
+    <div class="ad-bar" id="adBar" onclick="toggleBanner()">
+      <div class="ad-tag">Publicidad</div>
+      <div class="ad-logo" id="adLogo">📣</div>
+      <div class="ad-body">
+        <div class="ad-name" id="adName">Cargando...</div>
+        <div class="ad-desc-short" id="adDescShort"></div>
+      </div>
+      <div class="ad-nav" onclick="event.stopPropagation()">
+        <div class="ad-arrow" onclick="navBanner(-1)">‹</div>
+        <div class="ad-dots" id="adDots"></div>
+        <div class="ad-arrow" onclick="navBanner(1)">›</div>
+      </div>
     </div>
-    <div class="ad-cta" data-i18n="contactar">Contactar</div>
+    <div class="ad-panel" id="adPanel">
+      <div class="ad-panel-inner" id="adPanelInner"></div>
+    </div>
   </div>
 
   <!-- FOOTER LEGAL -->
@@ -542,13 +611,86 @@ async function logout(){
 function irPerfil(){cerrarPerfil();window.location.href='/pages/perfil.html';}
 function irAdmin(){cerrarPerfil();window.location.href='/admin/eventos.html';}
 
+// ── BANNER ──
+let banners = [], bannerIdx = 0, bannerOpen = false;
+
+async function cargarBanners(){
+  try{
+    const res = await fetch(
+      `${SB_URL}/rest/v1/banners?select=*&activo=eq.true&order=orden.asc`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+    );
+    banners = await res.json();
+    if(!Array.isArray(banners)||!banners.length) return;
+    renderBannerBar();
+    renderBannerDots();
+  }catch(e){ console.error('Banners:', e); }
+}
+
+function renderBannerBar(){
+  if(!banners.length) return;
+  const b = banners[bannerIdx];
+  document.getElementById('adName').textContent = b.nombre || '';
+  document.getElementById('adDescShort').textContent = b.descripcion
+    ? b.descripcion.substring(0, 60) + (b.descripcion.length > 60 ? '...' : '')
+    : '';
+  // Si hay panel abierto actualizarlo también
+  if(bannerOpen) renderBannerPanel();
+}
+
+function renderBannerDots(){
+  const dots = document.getElementById('adDots');
+  dots.innerHTML = banners.map((_, i) =>
+    `<div class="ad-dot ${i===bannerIdx?'on':''}" onclick="irBanner(${i})"></div>`
+  ).join('');
+}
+
+function renderBannerPanel(){
+  const b = banners[bannerIdx];
+  const inner = document.getElementById('adPanelInner');
+  const imgHTML = b.imagen_url
+    ? `<img class="ad-img" src="${b.imagen_url}" alt="${b.nombre}" loading="lazy">`
+    : `<div class="ad-img-placeholder"><div class="ad-img-placeholder-ico">📣</div><div class="ad-img-placeholder-txt">Espacio publicitario</div></div>`;
+  inner.innerHTML = `
+    ${imgHTML}
+    <div class="ad-panel-footer">
+      <div class="ad-desc-long">${b.descripcion||''}</div>
+      <a class="ad-cta" href="${b.url_destino||'#'}" target="_blank">Contactar</a>
+      <div class="ad-close" onclick="toggleBanner()">✕</div>
+    </div>`;
+}
+
+function toggleBanner(){
+  bannerOpen = !bannerOpen;
+  const panel = document.getElementById('adPanel');
+  if(bannerOpen){
+    renderBannerPanel();
+    panel.classList.add('open');
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+function navBanner(dir){
+  if(!banners.length) return;
+  bannerIdx = (bannerIdx + dir + banners.length) % banners.length;
+  renderBannerBar();
+  renderBannerDots();
+}
+
+function irBanner(idx){
+  bannerIdx = idx;
+  renderBannerBar();
+  renderBannerDots();
+}
+
 // ── INIT ──
 const savedToken=sessionStorage.getItem('kb_token');
 const savedUser=sessionStorage.getItem('kb_user');
 const savedLang=sessionStorage.getItem('kb_lang');
 if(savedToken&&savedUser){authToken=savedToken;authUser=JSON.parse(savedUser);}
 if(savedLang){lang=savedLang;document.getElementById('langSelect').value=lang;}
-buildDates();cargar();aplicarTraducciones();renderDrawerPerfil();
+buildDates();cargar();cargarBanners();aplicarTraducciones();renderDrawerPerfil();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
