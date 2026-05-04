@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<meta name="description" content="Preguntas frecuentes y soporte de Kirolorik — Agenda deportiva local de Eibar.">
+<title>Kirolorik · FAQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f8;--surface:#fff;--surface2:#eef0f3;
+  --border:#dde1e7;--text:#1a1d23;--muted:#8a90a0;
+  --accent:#1a6bff;--accent-bg:rgba(26,107,255,0.08);--r:14px;--r2:9px;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text)}
+a{color:var(--accent)}
+
+.wrap{max-width:500px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:40px}
+@media(min-width:500px){.wrap{max-width:560px}}
+
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.cats::-webkit-scrollbar{display:none}
+.cat{padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s}
+.cat.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.content{flex:1;padding:16px}
+
+/* FAQ items */
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.faq-q{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;cursor:pointer;transition:background 0.15s;
+}
+.faq-q:hover{background:var(--surface2)}
+.faq-q-text{font-size:13px;font-weight:700;color:var(--text);flex:1;line-height:1.4}
+.faq-arrow{font-size:16px;color:var(--muted);transition:transform 0.2s;flex-shrink:0}
+.faq-item.open .faq-arrow{transform:rotate(90deg)}
+.faq-a{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.3s cubic-bezier(.4,0,.2,1);
+}
+.faq-item.open .faq-a{max-height:400px}
+.faq-a-inner{padding:0 16px 14px;font-size:13px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border)}
+
+/* Reporte */
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:24px}
+.report-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px}
+.report-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:80px}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;transition:opacity 0.2s}
+.btn-send:disabled{opacity:0.5;cursor:not-allowed}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);border-radius:var(--r2);padding:10px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;z-index:400}
+.toast.show{opacity:1}
+.toast.ok{background:#16a34a;color:#fff}
+.toast.err{background:#dc2626;color:#fff}
+
+.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <span class="back" onclick="history.back()">←</span>
+    <span class="hdr-title">Ayuda · FAQ</span>
+  </div>
+
+  <div class="cats" id="catsEl">
+    <div class="cat on" data-cat="todos">Todas</div>
+    <div class="cat" data-cat="general">General</div>
+    <div class="cat" data-cat="clubs">Clubs</div>
+    <div class="cat" data-cat="publicidad">Publicidad</div>
+    <div class="cat" data-cat="tecnico">Técnico</div>
+  </div>
+
+  <div class="content">
+    <div id="faqList"><div class="empty">Cargando...</div></div>
+
+    <!-- REPORTE DE ERRORES -->
+    <div class="report-card">
+      <div class="report-title">¿Has encontrado un error?</div>
+      <div class="report-sub">Cuéntanos qué ha pasado y en qué página. Revisamos todos los reportes y lo solucionamos lo antes posible.</div>
+
+      <div class="field">
+        <label>¿En qué parte de la app?</label>
+        <select id="rPagina">
+          <option value="inicio">Parrilla principal</option>
+          <option value="detalle">Detalle de evento</option>
+          <option value="perfil">Mi perfil</option>
+          <option value="admin">Gestión de eventos</option>
+          <option value="legal">Legal / FAQ</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción del error</label>
+        <textarea id="rDescripcion" placeholder="¿Qué estabas haciendo? ¿Qué pasó? ¿Qué esperabas que pasara?"></textarea>
+      </div>
+      <div class="field">
+        <label>Tu email (opcional, para que podamos avisarte cuando esté resuelto)</label>
+        <input type="email" id="rEmail" placeholder="correo@ejemplo.com">
+      </div>
+      <button class="btn-send" id="btnSend" onclick="enviarReporte()">Enviar reporte 🐛</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+let catActual = 'todos', faqs = [];
+
+function toast(msg, tipo=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(tipo?' '+tipo:'');
+  setTimeout(()=>t.className='toast',3500);
+}
+
+// ── CARGAR FAQ ──
+async function cargarFaq(){
+  try{
+    const res  = await fetch(`${SB}/rest/v1/faq?activo=eq.true&order=orden.asc`, {
+      headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}
+    });
+    faqs = await res.json();
+    renderFaq();
+  }catch(e){
+    document.getElementById('faqList').innerHTML='<div class="empty">Error al cargar las preguntas</div>';
+  }
+}
+
+function renderFaq(){
+  const list = document.getElementById('faqList');
+  const filtrados = catActual==='todos' ? faqs : faqs.filter(f=>f.categoria===catActual);
+  if(!filtrados.length){
+    list.innerHTML='<div class="empty">No hay preguntas en esta categoría todavía</div>';
+    return;
+  }
+  list.innerHTML = filtrados.map((f,i)=>`
+    <div class="faq-item" id="faq-${i}">
+      <div class="faq-q" onclick="toggleFaq(${i})">
+        <div class="faq-q-text">${f.pregunta}</div>
+        <div class="faq-arrow">›</div>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">${f.respuesta}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleFaq(i){
+  const item = document.getElementById('faq-'+i);
+  const isOpen = item.classList.contains('open');
+  // Cerrar todos
+  document.querySelectorAll('.faq-item').forEach(el=>el.classList.remove('open'));
+  // Abrir si estaba cerrado
+  if(!isOpen) item.classList.add('open');
+}
+
+// ── CATEGORÍAS ──
+document.querySelectorAll('.cat').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.cat').forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+    catActual = el.dataset.cat;
+    renderFaq();
+  });
+});
+
+// ── REPORTE ──
+async function enviarReporte(){
+  const desc = document.getElementById('rDescripcion').value.trim();
+  if(!desc){ toast('Describe el error antes de enviar','err'); return; }
+  const btn = document.getElementById('btnSend');
+  btn.disabled=true; btn.textContent='Enviando...';
+  try{
+    const res = await fetch(`${SB}/rest/v1/errores`, {
+      method:'POST',
+      headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({
+        pagina:    document.getElementById('rPagina').value,
+        descripcion: desc,
+        email_contacto: document.getElementById('rEmail').value.trim()||null
+      })
+    });
+    if(!res.ok) throw new Error();
+    toast('✅ Reporte enviado — gracias por ayudarnos a mejorar','ok');
+    document.getElementById('rDescripcion').value='';
+    document.getElementById('rEmail').value='';
+  }catch(e){
+    toast('Error al enviar el reporte','err');
+  }
+  btn.disabled=false; btn.textContent='Enviar reporte 🐛';
+}
+
+cargarFaq();
+</script>
+</body>
+</html>
