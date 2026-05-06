@@ -105,13 +105,13 @@ tbody td select{cursor:pointer}
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('list',this)">📋 Lista</div>
-    <div class="tab" onclick="switchTab('form',this)">➕ Nuevo</div>
+    <div class="tab" onclick="switchTab('list',this)">📋 Lista</div>
+    <div class="tab active" onclick="switchTab('form',this)">➕ Nuevo</div>
     <div class="tab" onclick="switchTab('sheet',this)">📊 Hoja</div>
   </div>
 
-  <!-- TAB FORMULARIO -->
-  <div id="tabForm" style="display:none">
+  <!-- TAB FORMULARIO (por defecto) -->
+  <div id="tabForm">
     <div class="admin-section-title">Nuevo evento</div>
     <div class="row2">
       <div class="field">
@@ -215,7 +215,7 @@ tbody td select{cursor:pointer}
   </div>
 
   <!-- TAB LISTA -->
-  <div id="tabList">
+  <div id="tabList" style="display:none">
     <div id="eventosList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
