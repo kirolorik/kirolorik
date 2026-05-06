@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<meta name="description" content="Tarifas publicitarias de Kirolorik — Llega a las familias deportistas de tu municipio cada fin de semana.">
+<title>Kirolorik · Publicidad local</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+body{background:var(--bg);margin:0}
+.wrap{max-width:500px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:48px}
+@media(min-width:500px){.wrap{max-width:560px}}
+
+/* Header */
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
+.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+
+/* Hero */
+.hero{padding:24px 16px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.hero-kiro{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:8px}
+.hero-title span{color:var(--accent)}
+.hero-sub{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* Cards */
+.cards{padding:16px;display:flex;flex-direction:column;gap:8px}
+
+.plan-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;
+  position:relative;overflow:hidden;transition:all 0.15s;
+}
+.plan-card:not(.soon):hover{
+  border-color:var(--text);
+  box-shadow:3px 3px 0 var(--text);
+  transform:translate(-1px,-1px);
+}
+.plan-card.featured{
+  border-color:var(--text);background:var(--text);
+}
+.plan-card.featured:hover{
+  box-shadow:3px 3px 0 var(--accent);
+}
+.plan-card.soon{opacity:0.5;pointer-events:none}
+
+.plan-name{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:0.5px;color:var(--text);margin-bottom:3px;
+}
+.plan-card.featured .plan-name{color:#fff}
+.plan-desc{font-size:12px;color:var(--muted);line-height:1.45}
+.plan-card.featured .plan-desc{color:#999}
+
+.plan-right{text-align:right;flex-shrink:0}
+.plan-price{
+  font-family:'Bebas Neue',sans-serif;font-size:30px;
+  color:var(--text);line-height:1;white-space:nowrap;
+}
+.plan-card.featured .plan-price{color:var(--accent)}
+.plan-period{font-size:11px;color:var(--muted);margin-top:2px;text-align:right}
+.plan-card.featured .plan-period{color:#666}
+.plan-saving{
+  display:inline-block;background:var(--accent-bg);color:var(--accent);
+  font-size:10px;font-weight:700;letter-spacing:0.05em;
+  padding:2px 8px;border-radius:4px;margin-top:4px;
+}
+.plan-card.featured .plan-saving{background:rgba(26,107,255,0.2);color:#90b4ff}
+
+.soon-badge{
+  position:absolute;top:12px;right:14px;
+  font-size:9px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--border);padding:2px 8px;border-radius:20px;
+}
+
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* CTA */
+.cta-block{
+  margin:0 16px;background:var(--accent-bg);
+  border:1px solid var(--accent);border-radius:var(--radius);
+  padding:16px;text-align:center;
+}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--text);margin-bottom:6px}
+.cta-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.cta-btn{
+  display:inline-block;background:var(--accent);color:#fff;
+  font-size:13px;font-weight:700;border-radius:var(--radius-sm);
+  padding:12px 28px;text-decoration:none;letter-spacing:0.3px;
+  transition:opacity 0.2s;
+}
+.cta-btn:hover{opacity:0.85}
+
+/* Legal nota */
+.legal-note{
+  margin:20px 16px 0;font-size:11px;color:var(--muted);
+  line-height:1.65;border-top:1px solid var(--border);padding-top:14px;
+}
+.legal-note strong{color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <a class="back" href="/" onclick="history.back();return false">←</a>
+    <span class="hdr-title">Publicidad en Kirolorik</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-kiro">Kirolorik · Publicidad local</div>
+    <div class="hero-title">Llega a las <span>familias deportistas</span> de tu municipio</div>
+    <div class="hero-sub">Banner rotativo en portada · Exclusividad por categoría · Sin competencia directa en el mismo espacio.</div>
+  </div>
+
+  <div class="cards" id="plansEl">
+    <!-- Se rellena desde Supabase o con fallback -->
+  </div>
+
+  <div class="cta-block">
+    <div class="cta-title">¿Hablamos?</div>
+    <div class="cta-sub">Cuéntanos tu negocio y te preparamos una propuesta. El primer mes es gratuito para los primeros anunciantes.</div>
+    <a class="cta-btn" href="mailto:kirolorik.info@gmail.com?subject=Quiero anunciarme en Kirolorik">Contactar ahora →</a>
+  </div>
+
+  <div class="legal-note">
+    <strong>Exclusividad por categoría.</strong> Solo un negocio por sector en cada zona (un bar, un fisio, una tienda de deportes...). El espacio que contratas es tuyo.<br><br>
+    <strong>Precios sin IVA.</strong> Se aplica el 21% de IVA en la factura. La contratación de publicidad está sujeta a facturación legal mediante factura emitida por el titular del servicio.<br><br>
+    <strong>Pago online.</strong> Próximamente disponible mediante pasarela de pago segura (Stripe). Hasta entonces el pago se gestiona por transferencia bancaria o bizum previa confirmación por email.
+  </div>
+
+</div>
+
+<script>
+const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+// Datos de fallback si Supabase falla
+const PLANES_DEFAULT = [
+  {plan:'evento',    precio:9,   periodo:'evento', descripcion:'Tu negocio en un partido específico.', visible:false, featured:false},
+  {plan:'jornada',   precio:30,  periodo:'día',    descripcion:'Tu negocio en todos los eventos de un día concreto.', visible:false, featured:false},
+  {plan:'mensual',   precio:35,  periodo:'mes',    descripcion:'Banner en portada. Sin permanencia.<br>Cancela cuando quieras.', visible:false, featured:false},
+  {plan:'semestral', precio:180, periodo:'6 meses',descripcion:'Seis meses de visibilidad continua.<br>Pago único.', visible:false, saving:'30€/mes · ahorra 14%', featured:false},
+  {plan:'anual',     precio:300, periodo:'año',    descripcion:'Todo el año. La mejor relación precio‑impacto.<br>Pago único.', visible:false, saving:'25€/mes · ahorra 29%', featured:true},
+];
+
+const LABELS = {
+  evento:'Evento', jornada:'Jornada', mensual:'Mensual',
+  semestral:'Semestral', anual:'Anual'
+};
+const PERIODO_LABEL = {
+  evento:'/ evento · sin IVA', dia:'/ jornada · sin IVA',
+  mes:'/ mes · sin IVA', '6meses':'/ 6 meses · sin IVA',
+  'año':'/ año · sin IVA'
+};
+
+function renderPlanes(planes){
+  const el = document.getElementById('plansEl');
+  let html = '';
+  let prevWasMain = false;
+
+  planes.forEach((p, i) => {
+    const isFeatured = p.plan === 'anual';
+    const isSoon = !p.visible;
+    const price = typeof p.precio === 'number' ? p.precio : parseFloat(p.precio);
+    const periodoLabel = PERIODO_LABEL[p.periodo] || ('/ '+p.periodo+' · sin IVA');
+
+    // Separador antes de jornada (planes puntuales)
+    if(p.plan === 'jornada' && i > 0) html += '<div class="divider"></div>';
+
+    html += `
+      <div class="plan-card ${isFeatured?'featured':''} ${isSoon?'soon':''}">
+        <div class="plan-left">
+          <div class="plan-name">${LABELS[p.plan]||p.plan}</div>
+          <div class="plan-desc">${p.descripcion||''}</div>
+        </div>
+        <div class="plan-right">
+          <div class="plan-price">${isSoon ? '—' : price+'€'}</div>
+          <div class="plan-period">${isSoon ? 'próximamente' : periodoLabel}</div>
+          ${p.saving ? `<div class="plan-saving">${p.saving}</div>` : ''}
+        </div>
+        ${isSoon ? '<div class="soon-badge">Próximo</div>' : ''}
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+async function cargarTarifas(){
+  try{
+    const res = await fetch(
+      `${SB}/rest/v1/tarifas?activo=eq.true&order=created_at.asc`,
+      {headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}}
+    );
+    const data = await res.json();
+    if(data && data.length) {
+      // Añadir saving manual según plan
+      data.forEach(p => {
+        if(p.plan==='semestral') p.saving = '30€/mes · ahorra 14%';
+        if(p.plan==='anual') p.saving = '25€/mes · ahorra 29%';
+      });
+      renderPlanes(data);
+    } else {
+      renderPlanes(PLANES_DEFAULT);
+    }
+  }catch(e){
+    renderPlanes(PLANES_DEFAULT);
+  }
+}
+
+cargarTarifas();
+</script>
+</body>
+</html>
