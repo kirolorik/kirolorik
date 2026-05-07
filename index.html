@@ -760,6 +760,7 @@ const savedUser=sessionStorage.getItem('kb_user');
 const savedLang=sessionStorage.getItem('kb_lang');
 if(savedToken&&savedUser){authToken=savedToken;authUser=JSON.parse(savedUser);}
 if(savedLang){lang=savedLang;document.getElementById('langSelect').value=lang;}
+initMunicipio();
 buildDates();cargar();cargarBanners();aplicarTraducciones();renderDrawerPerfil();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
