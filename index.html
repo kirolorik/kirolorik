@@ -709,14 +709,24 @@ function initMunicipio() {
   if (el) el.textContent = municipioActual;
 }
 
-async function abrirMunicipio() {
-  // Asegúrate de que estas funciones existan para evitar errores de referencia
+async function abrirMunicipio(){
+  const drawer = document.getElementById('municipioDrawer');
+  const overlay = document.getElementById('overlay');
+
+  if (!drawer) {
+      console.error("❌ ERROR: No existe un elemento con ID 'municipioDrawer' en el HTML");
+      return;
+  }
+  if (!overlay) {
+      console.error("❌ ERROR: No existe un elemento con ID 'overlay' en el HTML");
+      return;
+  }
+
   if (typeof cerrarPerfil === 'function') cerrarPerfil();
   if (typeof cerrarDetalle === 'function') cerrarDetalle();
 
-  document.getElementById('municipioDrawer').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-  
+  drawer.classList.add('open');
+  overlay.classList.add('open');
   await cargarMunicipios();
 }
 
