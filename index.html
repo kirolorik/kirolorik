@@ -515,7 +515,6 @@ function buildDates(){
     d.setDate(hoy.getDate()+i);
     const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const dow=d.getDay();
-    const isWeekend = dow===0||dow===6;
     const chip=document.createElement('div');
     const isWeekend = dow===0||dow===6;
     chip.className='date-chip'+(i===0?' today':'')+(isWeekend?' weekend':'');
@@ -734,9 +733,10 @@ async function cargarMunicipios(){
       list.innerHTML='<div class="empty-slot">Sin municipios disponibles</div>';
       return;
     }
-  list.innerHTML = data.map(m=>`
+    list.innerHTML = data.map(m=>`
       <div class="mun-item ${m.nombre===municipioActual?'selected':''}"
            onclick="seleccionarMunicipio('${m.nombre}')">
+        <div class="mun-item-ico">📍</div>
         <div style="flex:1">
           <div class="mun-item-name">${m.nombre}</div>
           <div class="mun-item-prov">${m.provincia||''}</div>
