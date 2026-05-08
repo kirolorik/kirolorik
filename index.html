@@ -298,6 +298,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let authUser=null,authToken=null;
 let fechaActiva=null,deporteActivo='todos';
 let lang='cas';
+let municipioActual=localStorage.getItem('kb_municipio')||'Eibar';
 
 const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 const DEPORTES={
@@ -515,7 +516,8 @@ function buildDates(){
     const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const dow=d.getDay();
     const chip=document.createElement('div');
-    chip.className='date-chip'+(i===0?' today':'');
+    const isWeekend = dow===0||dow===6;
+    chip.className='date-chip'+(i===0?' today':'')+(isWeekend?' weekend':'');
     chip.dataset.fecha=iso;
     chip.dataset.dow=dow;
     chip.innerHTML=`<span class="dn">${KIROLORIK_I18N[lang].dias[dow]}</span><span class="dd">${d.getDate()}</span>`;
