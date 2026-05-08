@@ -704,56 +704,89 @@ function irBanner(idx){
 // ── MUNICIPIO ──
 let municipioActual = localStorage.getItem('kb_municipio') || 'Eibar';
 
-function initMunicipio(){
-  document.getElementById('locText').textContent = municipioActual;
+function initMunicipio() {
+  const el = document.getElementById('locText');
+  if (el) el.textContent = municipioActual;
 }
 
-async function abrirMunicipio(){
-  cerrarPerfil();
-  cerrarDetalle();
+async function abrirMunicipio() {
+  // Asegúrate de que estas funciones existan para evitar errores de referencia
+  if (typeof cerrarPerfil === 'function') cerrarPerfil();
+  if (typeof cerrarDetalle === 'function') cerrarDetalle();
+
   document.getElementById('municipioDrawer').classList.add('open');
   document.getElementById('overlay').classList.add('open');
+  
   await cargarMunicipios();
 }
 
-function cerrarMunicipio(){
+function cerrarMunicipio() {
   document.getElementById('municipioDrawer').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
 }
 
-async function cargarMunicipios(){
+async function cargarMunicipios() {
   const list = document.getElementById('munList');
-  try{
+  if (!list) return;
+
+  // Feedback visual inicial
+  list.innerHTML = '<div class="empty-slot">Cargando municipios...</div>';
+
+  try {
     const res = await fetch(
       `${SB_URL}/rest/v1/municipios?activo=eq.true&order=orden.asc`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+      { 
+        headers: { 
+          'apikey': SB_KEY, 
+          'Authorization': `Bearer ${SB_KEY}` 
+        } 
+      }
     );
+
+    if (!res.ok) throw new Error('Error en la respuesta del servidor');
+
     const data = await res.json();
-    if(!Array.isArray(data)||!data.length){
-      list.innerHTML='<div class="empty-slot">Sin municipios disponibles</div>';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = '<div class="empty-slot">Sin municipios disponibles</div>';
       return;
     }
-    list.innerHTML = data.map(m=>`
-      <div class="mun-item ${m.nombre===municipioActual?'selected':''}"
-           onclick="seleccionarMunicipio('${m.nombre}')">
-        <div class="mun-item-ico">📍</div>
-        <div style="flex:1">
-          <div class="mun-item-name">${m.nombre}</div>
-          <div class="mun-item-prov">${m.provincia||''}</div>
-        </div>
-        <div class="mun-item-check">${m.nombre===municipioActual?'✅':''}</div>
-      </div>`).join('');
-  }catch(e){
-    list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar municipios</div>';
+
+    list.innerHTML = data.map(m => {
+      const isSelected = m.nombre === municipioActual;
+      return `
+        <div class="mun-item ${isSelected ? 'selected' : ''}" 
+             onclick="seleccionarMunicipio('${m.nombre.replace(/'/g, "\\'")}')">
+          <div class="mun-item-ico">📍</div>
+          <div style="flex:1">
+            <div class="mun-item-name">${m.nombre}</div>
+            <div class="mun-item-prov">${m.provincia || ''}</div>
+          </div>
+          <div class="mun-item-check">${isSelected ? '✅' : ''}</div>
+        </div>`;
+    }).join('');
+
+  } catch (e) {
+    console.error("Error al cargar municipios:", e);
+    list.innerHTML = '<div class="empty-slot" style="color:#dc2626">Error de conexión</div>';
   }
 }
 
-function seleccionarMunicipio(nombre){
+function seleccionarMunicipio(nombre) {
   municipioActual = nombre;
   localStorage.setItem('kb_municipio', nombre);
-  document.getElementById('locText').textContent = nombre;
+  
+  const el = document.getElementById('locText');
+  if (el) el.textContent = nombre;
+  
   cerrarMunicipio();
-  cargar(); // Recargar parrilla con el nuevo municipio
+  
+  // Verificación de seguridad antes de llamar a cargar()
+  if (typeof cargar === 'function') {
+    cargar(); 
+  } else {
+    console.warn("La función cargar() no está definida.");
+  }
 }
 
 // ── INIT ──
