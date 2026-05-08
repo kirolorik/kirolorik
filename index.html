@@ -298,6 +298,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let authUser=null,authToken=null;
 let fechaActiva=null,deporteActivo='todos';
 let lang='cas';
+let municipioActual=localStorage.getItem('kb_municipio')||'Eibar';
 
 const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 const DEPORTES={
@@ -516,6 +517,7 @@ function buildDates(){
     const dow=d.getDay();
     const isWeekend = dow===0||dow===6;
     const chip=document.createElement('div');
+    const isWeekend = dow===0||dow===6;
     chip.className='date-chip'+(i===0?' today':'')+(isWeekend?' weekend':'');
     chip.dataset.fecha=iso;
     chip.dataset.dow=dow;
