@@ -187,7 +187,7 @@
       Kirolorik
     </div>
     <div class="top-actions">
-      <div class="location-pill">
+      <div class="location-pill" onclick="abrirMunicipio()">
         <div class="loc-dot"></div>
         <span id="locText">Eibar</span>
       </div>
@@ -298,6 +298,7 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 let authUser=null,authToken=null;
 let fechaActiva=null,deporteActivo='todos';
 let lang='cas';
+let municipioActual=localStorage.getItem('kb_municipio')||'Eibar';
 
 const AVATAR_COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 const DEPORTES={
@@ -380,6 +381,8 @@ async function cargar(){
   if(fechaActiva) url+=`&fecha=eq.${fechaActiva}`;
   else url+=`&fecha=gte.${getFechaHoy()}`;
   if(deporteActivo!=='todos') url+=`&deporte=eq.${deporteActivo}`;
+  // Filtro por municipio
+  if(municipioActual) url+=`&municipio=eq.${encodeURIComponent(municipioActual)}`;
   try{
     const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
     const data=await res.json();
@@ -501,7 +504,7 @@ function abrirDetalle(e){
 function cerrarDetalle(){document.getElementById('detailDrawer').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 function abrirLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('open');}
 function cerrarLightbox(){document.getElementById('lightbox').classList.remove('open');}
-function cerrarTodo(){cerrarDetalle();cerrarPerfil();}
+function cerrarTodo(){cerrarDetalle();cerrarPerfil();cerrarMunicipio();}
 
 // ── DATES ──
 function buildDates(){
@@ -513,7 +516,8 @@ function buildDates(){
     const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const dow=d.getDay();
     const chip=document.createElement('div');
-    chip.className='date-chip'+(i===0?' today':'');
+    const isWeekend = dow===0||dow===6;
+    chip.className='date-chip'+(i===0?' today':'')+(isWeekend?' weekend':'');
     chip.dataset.fecha=iso;
     chip.dataset.dow=dow;
     chip.innerHTML=`<span class="dn">${KIROLORIK_I18N[lang].dias[dow]}</span><span class="dd">${d.getDate()}</span>`;
@@ -697,12 +701,68 @@ function irBanner(idx){
   renderBannerDots();
 }
 
+// ── MUNICIPIO ──
+let municipioActual = localStorage.getItem('kb_municipio') || 'Eibar';
+
+function initMunicipio(){
+  document.getElementById('locText').textContent = municipioActual;
+}
+
+async function abrirMunicipio(){
+  cerrarPerfil();
+  cerrarDetalle();
+  document.getElementById('municipioDrawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  await cargarMunicipios();
+}
+
+function cerrarMunicipio(){
+  document.getElementById('municipioDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+async function cargarMunicipios(){
+  const list = document.getElementById('munList');
+  try{
+    const res = await fetch(
+      `${SB_URL}/rest/v1/municipios?activo=eq.true&order=orden.asc`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}
+    );
+    const data = await res.json();
+    if(!Array.isArray(data)||!data.length){
+      list.innerHTML='<div class="empty-slot">Sin municipios disponibles</div>';
+      return;
+    }
+    list.innerHTML = data.map(m=>`
+      <div class="mun-item ${m.nombre===municipioActual?'selected':''}"
+           onclick="seleccionarMunicipio('${m.nombre}')">
+        <div class="mun-item-ico">📍</div>
+        <div style="flex:1">
+          <div class="mun-item-name">${m.nombre}</div>
+          <div class="mun-item-prov">${m.provincia||''}</div>
+        </div>
+        <div class="mun-item-check">${m.nombre===municipioActual?'✅':''}</div>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar municipios</div>';
+  }
+}
+
+function seleccionarMunicipio(nombre){
+  municipioActual = nombre;
+  localStorage.setItem('kb_municipio', nombre);
+  document.getElementById('locText').textContent = nombre;
+  cerrarMunicipio();
+  cargar(); // Recargar parrilla con el nuevo municipio
+}
+
 // ── INIT ──
 const savedToken=sessionStorage.getItem('kb_token');
 const savedUser=sessionStorage.getItem('kb_user');
 const savedLang=sessionStorage.getItem('kb_lang');
 if(savedToken&&savedUser){authToken=savedToken;authUser=JSON.parse(savedUser);}
 if(savedLang){lang=savedLang;document.getElementById('langSelect').value=lang;}
+initMunicipio();
 buildDates();cargar();cargarBanners();aplicarTraducciones();renderDrawerPerfil();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
