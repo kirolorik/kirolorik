@@ -290,6 +290,21 @@
   <img id="lightboxImg" src="" alt="Poster">
 </div>
 
+<!-- Capa oscura de fondo -->
+<div id="overlay" onclick="cerrarMunicipio()"></div>
+
+<!-- Menú lateral (Drawer) -->
+<div id="municipioDrawer" class="drawer">
+    <div class="drawer-header">
+        <h3>Seleccionar Municipio</h3>
+        <button onclick="cerrarMunicipio()">&times;</button>
+    </div>
+    <!-- Contenedor de la lista -->
+    <div id="munList"></div>
+</div>
+  
+
+  
 <script src="/assets/js/i18n.js"></script>
 <script>
 const SB_URL='https://glscnwctcvrosmbrljns.supabase.co';
