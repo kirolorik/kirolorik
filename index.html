@@ -169,9 +169,7 @@
 <div class="det-drawer" id="detDraw"><div class="det-top"><div class="det-back" onclick="closeDet()">←</div><div class="det-title" id="detTitle">Detalle</div></div><div class="det-scroll" id="detScroll"></div></div>
 <div class="lightbox" id="lb" onclick="closeLb()"><div class="lb-close">✕</div><img id="lbImg" src="" alt=""></div>
 
-<!-- Idiomas -->
-<script src="/assets/locales/cas.js"></script>
-<script src="/assets/locales/eus.js"></script>
+<!-- Sin archivos externos de idioma -->
 <script>
 // ═══════════════════════════════════
 // KIROLORIK
@@ -200,7 +198,7 @@ var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀
 function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function nm(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);var L=window.KIRO_L[lang]||window.KIRO_L.cas;return L.dias[dt.getDay()]+' '+p[2]+' '+L.meses[p[1]-1]+' '+p[0]}
+function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);var L=KIRO_L[lang]||KIRO_L.cas;return L.dias[dt.getDay()]+' '+p[2]+' '+L.meses[p[1]-1]+' '+p[0]}
 function en(e){return e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'')}
 function bg(t){
   if(t==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">Entrada</div></div>';
