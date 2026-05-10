@@ -306,9 +306,15 @@ function openDet(idx){
   document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||'Evento')+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">Fecha</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">Instalación</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">Ver en Google Maps →</div></div><div class="det-cell"><div class="det-lbl">Municipio</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">Deporte</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('ov').classList.add('open');
+  document.getElementById('profDraw').classList.remove('open');
+  document.getElementById('profBtn').classList.remove('open');
+  document.getElementById('ov').classList.add('open');
   closeProf();
 }
-function closeDet(){document.getElementById('detDraw').classList.remove('open');document.getElementById('ov').classList.remove('open')}
+function closeDet(){
+  document.getElementById('detDraw').classList.remove('open');
+  document.getElementById('ov').classList.remove('open');
+}
 function openLb(u){document.getElementById('lbImg').src=u;document.getElementById('lb').classList.add('open')}
 function closeLb(){document.getElementById('lb').classList.remove('open')}
 
