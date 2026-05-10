@@ -203,6 +203,14 @@
 <script src="/assets/locales/eus.js"></script>
 
 <script>
+// Fallback seguro si i18n.js o locales no cargan
+if(!window.KIRO_L)window.KIRO_L={};
+if(!window.KIRO_L.cas)window.KIRO_L.cas={dias:['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],meses:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']};
+if(!window.KIRO_L.eus)window.KIRO_L.eus={dias:['Ig','Al','Ar','Az','Og','Or','La'],meses:['Urt','Ots','Mar','Api','Mai','Eka','Uzt','Abu','Ira','Urr','Aza','Abe']};
+if(!window.kT)window.kT=function(k,l){var o=window.KIRO_L[l];return(o&&o[k]!==undefined)?o[k]:k};
+if(!window.kDias)window.kDias=function(l){return(window.KIRO_L[l]&&window.KIRO_L[l].dias)||['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']};
+if(!window.kMeses)window.kMeses=function(l){return(window.KIRO_L[l]&&window.KIRO_L[l].meses)||['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']};
+
 var SB='https://glscnwctcvrosmbrljns.supabase.co';
 var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 function hdr(){return{'apikey':SK,'Authorization':'Bearer '+SK}}
