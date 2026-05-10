@@ -160,7 +160,7 @@ tbody td select{cursor:pointer}
     <div class="field"><label>Municipio</label><input type="text" id="f_municipio" placeholder="Eibar, Ermua..."></div>
     <div class="field"><label>Instalación</label><input type="text" id="f_instalacion" placeholder="Nombre del recinto"></div>
     <div class="row2">
-      <div class="field"><label>Entrada</label><select id="f_entrada"><option value="gratis">🟢 Gratis</option><option value="pago">🟡 De pago</option><option value="rifa">🟠 Rifa</option><option value="sin info">⚪ Sin info</option></select></div>
+      <div class="field"><label>Entrada</label>        <select id="f_entrada"><option value="gratis">🟢 Gratis</option><option value="pago">🟡 De pago</option><option value="rifa">🟠 Rifa</option><option value="puertas">🚪 Puertas abiertas</option><option value="sin info">⚪ Sin info</option></select></div>
       <div class="field">
         <label>Duración (min)</label>
         <select id="f_duracion">
@@ -306,7 +306,7 @@ function abrirEdicion(e){
   const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
   const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
-  const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
+  const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
   const DURACION_OPTS=[45,60,90,120,180,240,360];
   function selOpt(opts,val){return opts.map(o=>`<option value="${o}"${String(o)===String(val)?' selected':''}>${o}</option>`).join('');}
   modal.innerHTML=`
@@ -342,7 +342,7 @@ function abrirEdicion(e){
       <div class="field"><label>Municipio</label><input type="text" id="e_municipio" value="${e.municipio||''}"></div>
       <div class="field"><label>Instalación</label><input type="text" id="e_instalacion" value="${e.instalacion||''}"></div>
       <div class="row2">
-        <div class="field"><label>Entrada</label><select id="e_entrada">${selOpt(ENTRADA_OPTS,e.tipo_entrada)}</select></div>
+        <div class="field"><label>Entrada</label>        <select id="e_entrada">${selOpt(ENTRADA_OPTS,e.tipo_entrada)}</select></div>
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${e.info_evento||''}</textarea></div>
