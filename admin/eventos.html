@@ -466,6 +466,9 @@ async function guardarForm(){
   const nombre=document.getElementById('f_nombre').value.trim();
   if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
   if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
+  let imagen_url=null;
+  const imgFile=document.getElementById('f_imagen')?.files[0];
+  if(imgFile){try{imagen_url=await subirImagen(imgFile);}catch(e){toast('Error subiendo imagen: '+e.message,true);return;}}
   const ev=buildEvento({
     deporte:document.getElementById('f_deporte').value,
     genero:document.getElementById('f_genero').value,
@@ -484,7 +487,9 @@ async function guardarForm(){
     });
     if(!res.ok) throw new Error(await res.text());
     toast('✅ Evento guardado');
-    ['f_local','f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+    ['f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+    selectedEquipoId=null;
+    renderLocalField();
   }catch(e){toast('Error: '+e.message,true);}
 }
 
