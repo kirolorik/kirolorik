@@ -15,6 +15,10 @@
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik — Agenda deportiva local · Eibar</title>
 <link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kirolorik">
+<link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
@@ -109,6 +113,10 @@
 .legal-footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--surface)}
 .legal-footer a{font-size:9px;color:var(--muted);text-decoration:none}
 .legal-footer a:hover{color:var(--accent)}
+.install-banner{display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--accent);color:var(--accent-txt);font-size:13px;font-weight:600;flex-shrink:0}
+.install-banner.show{display:flex}
+.install-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--accent-txt);background:transparent;color:var(--accent-txt);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.install-close{margin-left:auto;font-size:18px;cursor:pointer;opacity:0.8;line-height:1;padding:0 4px}
 </style>
 </head>
 <body>
@@ -146,6 +154,11 @@
       </div>
     </div>
     <div class="ad-panel" id="adPanel"></div>
+  </div>
+  <div class="install-banner" id="installBanner">
+    <span>📲 Instala Kirolorik en tu móvil</span>
+    <button class="install-btn" onclick="doInstall()">Instalar</button>
+    <span class="install-close" onclick="dismissInstall()">✕</span>
   </div>
   <div class="legal-footer">
     <a href="/pages/legal.html#quienes">Kirolorik</a>
@@ -401,6 +414,30 @@ populateSpSelect();
 loadGrid();
 loadAds();
 renderProf();
+// PWA INSTALL
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  try{if(!localStorage.getItem('kb_install_dismissed'))document.getElementById('installBanner').classList.add('show');}catch(ex){}
+});
+window.addEventListener('appinstalled',function(){
+  document.getElementById('installBanner').classList.remove('show');
+  deferredPrompt=null;
+});
+function doInstall(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(r){
+    if(r.outcome==='accepted')document.getElementById('installBanner').classList.remove('show');
+    deferredPrompt=null;
+  });
+}
+function dismissInstall(){
+  document.getElementById('installBanner').classList.remove('show');
+  try{localStorage.setItem('kb_install_dismissed','1');}catch(e){}
+}
+// SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 </script>
 </body>
