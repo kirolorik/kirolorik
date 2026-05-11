@@ -180,7 +180,7 @@ var authUser=null,authToken=null;
 var fechaSel=null,deporteSel='todos';
 var lang='cas';
 var muni='Eibar';
-var adList=[],adIdx=0,adOpen=false;
+var adList=[],adIdx=0,adOpen=true;
 var modoRec=false;
 var evCache=[];
 
@@ -369,12 +369,12 @@ function loadAds(){
     adList=data||[];
     // Orden aleatorio
     for(var i=adList.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=adList[i];adList[i]=adList[j];adList[j]=tmp}
-    if(adList.length){renderAdBar();renderAdDots()}
+    if(adList.length){renderAdBar();renderAdDots();document.getElementById('adPanel').classList.add('open')}
   }).catch(function(){});
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
 function renderAdDots(){var html='';for(var i=0;i<adList.length;i++)html+='<div class="ad-dot'+(i===adIdx?' on':'')+'" onclick="goAd('+i+')"></div>';document.getElementById('adDots').innerHTML=html}
-function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+(b.descripcion||'')+'</div><a class="ad-cta" href="'+dest+'">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
+function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';var textoExpandido=b.texto||b.descripcion||'';p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+textoExpandido+'</div><a class="ad-cta" href="'+dest+'">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
 function toggleAd(){adOpen=!adOpen;var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
