@@ -11,6 +11,7 @@
 /* ── TABS ── */
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-shrink:0}
 .tab{padding:10px 18px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tab-disabled{opacity:0.4;font-style:italic}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
 /* ── HOJA ── */
@@ -107,7 +108,7 @@ tbody td select{cursor:pointer}
   <div class="tabs">
     <div class="tab" onclick="switchTab('list',this)">📋 Lista</div>
     <div class="tab active" onclick="switchTab('form',this)">➕ Nuevo</div>
-    <div class="tab" onclick="switchTab('sheet',this)">📊 Hoja</div>
+    <div class="tab tab-disabled" onclick="switchTab('sheet',this)">📊 Hoja</div>
   </div>
 
   <!-- TAB FORMULARIO (por defecto) -->
@@ -188,30 +189,11 @@ tbody td select{cursor:pointer}
 
   <!-- TAB HOJA -->
   <div id="tabSheet" style="display:none">
-    <div class="paste-hint">
-      💡 <strong>Pega desde Excel o Google Sheets</strong> — haz clic en cualquier celda de la tabla y pega con Ctrl+V (o ⌘+V). El orden de columnas debe ser:<br>
-      <div class="col-order">fecha · hora · deporte · género · categoría · competición · nombre evento · equipo local · equipo visitante · municipio · instalación · entrada</div>
+    <div style="padding:48px 16px;text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🚧</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:8px">En desarrollo</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">La importación masiva desde hoja de cálculo<br>estará disponible próximamente.</div>
     </div>
-    <div class="sheet-wrap" id="sheetWrap">
-      <table id="sheetTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fecha</th><th>Hora</th><th>Deporte</th><th>Género</th>
-            <th>Categoría</th><th>Competición</th><th>Nombre evento</th>
-            <th>Equipo local</th><th>Equipo visitante</th>
-            <th>Municipio</th><th>Instalación</th><th>Entrada</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="sheetBody"></tbody>
-      </table>
-    </div>
-    <div class="sheet-actions">
-      <button class="btn-add-row" onclick="addRow()">+ Añadir fila</button>
-      <button class="btn-primary" style="flex:1;max-width:200px" onclick="guardarHoja()">Guardar todo ⚽</button>
-    </div>
-    <div id="sheetStatus" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
   </div>
 
   <!-- TAB LISTA -->
