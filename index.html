@@ -121,18 +121,12 @@
       <div class="prof-btn" id="profBtn" onclick="openProf()"><div class="prof-btn-in" id="profBtnIn">👤</div></div>
     </div>
   </div>
-  <div class="date-strip" id="dates"><div class="date-chip date-arrow" onclick="document.getElementById('dates').scrollBy({left:-80,behavior:'smooth'})">‹</div></div>
-  <div class="sport-filter">
-    <div class="sp active" onclick="filterSp(this,'todos')">Todos</div>
-    <div class="sp" onclick="filterSp(this,'futbol')">⚽ Fútbol</div>
-    <div class="sp" onclick="filterSp(this,'basket')">🏀 Basket</div>
-    <div class="sp" onclick="filterSp(this,'balonmano')">🤾 Balonmano</div>
-    <div class="sp" onclick="filterSp(this,'waterpolo')">🏊 Waterpolo</div>
-    <div class="sp" onclick="filterSp(this,'boxeo')">🥊 Boxeo</div>
-    <div class="sp" onclick="filterSp(this,'tenis')">🎾 Tenis</div>
-    <div class="sp" onclick="filterSp(this,'atletismo')">🏃 Atletismo</div>
-    <div class="sp" onclick="filterSp(this,'ciclismo')">🚴 Ciclismo</div>
+  <div class="sport-select-wrap">
+    <select id="sportSel" onchange="filterSpSel(this)">
+      <option value="todos">🏅 Todos los deportes</option>
+    </select>
   </div>
+  <div class="date-strip" id="dates"><div class="date-chip date-arrow" onclick="document.getElementById('dates').scrollBy({left:-80,behavior:'smooth'})">‹</div></div>
   <div class="parrilla-wrap"><div class="parrilla" id="grid"><div class="empty-slot">Cargando...</div></div></div>
   <div class="legend">
     <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div>Entrada</div>
@@ -226,7 +220,21 @@ function buildDates(){
   }
 }
 
-function filterSp(el,dep){var all=document.querySelectorAll('.sp');for(var i=0;i<all.length;i++)all[i].classList.remove('active');el.classList.add('active');deporteSel=dep;loadGrid()}
+function filterSpSel(sel){deporteSel=sel.value;loadGrid()}
+
+function populateSpSelect(){
+  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
+    var seen={},deportes=[];
+    for(var i=0;i<data.length;i++){var d=(data[i].deporte||'').toLowerCase();if(d&&!seen[d]){seen[d]=true;deportes.push(d);}}
+    deportes.sort();
+    var sel=document.getElementById('sportSel');if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="todos">🏅 Todos los deportes</option>';
+    for(var i=0;i<deportes.length;i++){var d=deportes[i],sp=SP[d]||{e:'🏅'};var o=document.createElement('option');o.value=d;o.textContent=sp.e+' '+d.charAt(0).toUpperCase()+d.slice(1);sel.appendChild(o);}
+    if(cur&&cur!=='todos')sel.value=cur;
+  }).catch(function(){});
+}
 function changeLang(l){
   lang=l;
   try{localStorage.setItem('kb_lang',l)}catch(e){}
@@ -330,7 +338,7 @@ function loadMunis(){
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error</div>'});
 }
-function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();loadGrid()}
+function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();populateSpSelect();deporteSel='todos';document.getElementById('sportSel').value='todos';loadGrid()}
 
 // PERFIL
 function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -389,6 +397,7 @@ try{var st=sessionStorage.getItem('kb_token'),su=sessionStorage.getItem('kb_user
 document.getElementById('langSel').value=lang;
 document.getElementById('locText').textContent=muni;
 buildDates();
+populateSpSelect();
 loadGrid();
 loadAds();
 renderProf();
