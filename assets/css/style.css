@@ -215,23 +215,26 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
   border-style:dashed;
 }
 
-/* Sport filter */
-.sport-filter{
-  padding:8px 16px;display:flex;gap:6px;
-  overflow-x:auto;scrollbar-width:none;
+/* Sport select */
+.sport-select-wrap{
+  padding:8px 12px 4px;
   flex-shrink:0;background:var(--bg);
   border-bottom:1px solid var(--border);
 }
-.sport-filter::-webkit-scrollbar{display:none}
-.sp{
-  padding:5px 12px;border-radius:20px;
-  border:1px solid var(--border);background:var(--surface);
-  font-size:11px;white-space:nowrap;flex-shrink:0;
-  cursor:pointer;color:var(--text2);font-weight:600;
-  transition:all 0.15s;
+.sport-select-wrap select{
+  width:100%;padding:8px 32px 8px 12px;
+  border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);
+  font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  transition:border-color 0.15s;
 }
-.sp:hover{border-color:var(--accent);color:var(--accent)}
-.sp.active{background:var(--accent);border-color:var(--accent);color:var(--accent-txt)}
+.sport-select-wrap select:focus{
+  outline:none;border-color:var(--accent);
+}
 
 /* Parrilla */
 .parrilla-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:var(--bg)}
