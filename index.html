@@ -122,12 +122,6 @@
 .splash-cas{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:24px}
 .splash-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:var(--accent-txt);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s}
 .splash-btn:hover{opacity:0.88}
-.install-banner{display:none;flex-direction:column;gap:8px;position:fixed;top:60px;right:12px;z-index:250;background:var(--accent);color:var(--accent-txt);font-size:12px;font-weight:600;padding:12px 14px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.2);max-width:200px;animation:slideIn 0.25s ease}
-.install-banner.show{display:flex}
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-.install-banner-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.install-btn{padding:6px 14px;border-radius:20px;border:2px solid var(--accent-txt);background:transparent;color:var(--accent-txt);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;width:100%}
-.install-close{font-size:16px;cursor:pointer;opacity:0.8;line-height:1;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -174,12 +168,6 @@
     </div>
     <div class="ad-panel" id="adPanel"></div>
   </div>
-  <div class="install-banner" id="installBanner">
-    <div class="install-banner-row">
-      <span id="installMsg">📲 Instala Kirolorik</span>
-      <span class="install-close" onclick="dismissInstall()">✕</span>
-    </div>
-    <button class="install-btn" id="installBtn" onclick="doInstall()">Instalar</button>
   </div>
   <div class="legal-footer">
     <a href="/pages/legal.html#quienes">Kirolorik</a>
@@ -435,73 +423,6 @@ populateSpSelect();
 loadGrid();
 loadAds();
 renderProf();
-// PWA INSTALL
-var deferredPrompt=null;
-
-// Si ya está instalada como PWA, no mostrar banner
-var isInstalled=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-
-function showInstallBanner(){
-  if(isInstalled)return;
-  try{if(localStorage.getItem('kb_install_dismissed'))return;}catch(e){}
-  document.getElementById('installBanner').classList.add('show');
-}
-
-window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault();
-  deferredPrompt=e;
-  // Con prompt disponible: botón directo
-  document.getElementById('installMsg').textContent='📲 Instala Kirolorik en tu móvil';
-  document.getElementById('installBtn').textContent='Instalar';
-  showInstallBanner();
-});
-
-window.addEventListener('appinstalled',function(){
-  document.getElementById('installBanner').classList.remove('show');
-  deferredPrompt=null;
-});
-
-function doInstall(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(r){
-      if(r.outcome==='accepted')document.getElementById('installBanner').classList.remove('show');
-      deferredPrompt=null;
-    });
-  }else{
-    // Sin prompt: mostrar instrucciones según plataforma
-    var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    var msg=isIOS
-      ? 'Pulsa el botón compartir ⎋ y luego "Añadir a inicio"'
-      : 'Pulsa ⋮ en Chrome y luego "Añadir a pantalla de inicio"';
-    document.getElementById('installMsg').textContent='👆 '+msg;
-    document.getElementById('installBtn').style.display='none';
-  }
-}
-
-function dismissInstall(){
-  document.getElementById('installBanner').classList.remove('show');
-  try{localStorage.setItem('kb_install_dismissed','1');}catch(e){}
-}
-
-// Mostrar banner en primera visita (sin esperar a beforeinstallprompt)
-window.addEventListener('load',function(){
-  if(!deferredPrompt) setTimeout(showInstallBanner, 3000);
-});
-// SPLASH
-function closeSplash(){
-  var ov=document.getElementById('splashOv');
-  ov.style.opacity='0';
-  setTimeout(function(){ov.style.display='none'},400);
-  try{sessionStorage.setItem('kb_splash','1');}catch(e){}
-}
-window.addEventListener('load',function(){
-  try{if(sessionStorage.getItem('kb_splash'))return;}catch(e){}
-  var ov=document.getElementById('splashOv');
-  ov.style.display='flex';
-  setTimeout(function(){ov.classList.add('show')},30);
-});
-
 // SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 </script>
