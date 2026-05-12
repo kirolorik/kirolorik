@@ -494,6 +494,7 @@ function buildEvento(d){
     tipo_competicion:d.comp||'Liga',
     equipo_local:d.local||null, equipo_visitante:d.visitante||null,
     equipo_id:d.equipo_id||null,
+    municipio_equipo:d.municipio_equipo||null,
     fecha:d.fecha, hora:d.hora, municipio:d.municipio||null,
     instalacion:d.instalacion||null, tipo_entrada:d.entrada||'sin info',
     duracion_minutos:parseInt(d.duracion)||90,
@@ -524,7 +525,8 @@ async function guardarForm(){
     instalacion:document.getElementById('f_instalacion').value.trim(),
     entrada:document.getElementById('f_entrada').value,
     duracion:document.getElementById('f_duracion').value,
-    imagen_url, equipo_id:selectedEquipoId||null
+    imagen_url, equipo_id:selectedEquipoId||null,
+    municipio_equipo:selectedEquipoId?userTeams.find(function(t){return t.id===selectedEquipoId})?.municipio||null:null
   });
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
