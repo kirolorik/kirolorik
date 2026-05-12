@@ -1,10 +1,16 @@
 const CACHE = 'kirolorik-v5';
-const ASSETS = [
+
+// Archivos que siempre se sirven desde red (actualizaciones frecuentes)
+const NETWORK_FIRST = [
   '/',
   '/index.html',
-  '/manifest.json',
   '/assets/css/style.css',
-  '/assets/js/i18n.js',
+  '/assets/js/i18n.js'
+];
+
+// Archivos que se cachean agresivamente (cambian poco)
+const CACHE_FIRST = [
+  '/manifest.json',
   '/assets/img/logo.png',
   '/assets/img/icon-192.png',
   '/assets/img/icon-512.png'
@@ -13,7 +19,7 @@ const ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(ASSETS.map(a => new Request(a, {cache:'reload'}))))
+      .then(c => c.addAll([...NETWORK_FIRST, ...CACHE_FIRST].map(a => new Request(a, {cache:'reload'}))))
       .catch(() => {})
   );
   self.skipWaiting();
@@ -37,18 +43,37 @@ self.addEventListener('fetch', e => {
     e.request.method !== 'GET'
   ) return;
 
-  e.respondWith(
-    caches.match(e.request)
-      .then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
+  const url = new URL(e.request.url);
+  const isNetworkFirst = NETWORK_FIRST.some(p => url.pathname === p);
+
+  if (isNetworkFirst) {
+    // Network first: intenta red, cae a caché si no hay conexión
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
           if (res.ok) {
             const copy = res.clone();
             caches.open(CACHE).then(c => c.put(e.request, copy));
           }
           return res;
-        });
-      })
-      .catch(() => caches.match('/index.html'))
-  );
+        })
+        .catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache first: sirve caché, actualiza en background
+    e.respondWith(
+      caches.match(e.request)
+        .then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(res => {
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE).then(c => c.put(e.request, copy));
+            }
+            return res;
+          });
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+  }
 });
