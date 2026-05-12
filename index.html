@@ -113,6 +113,15 @@
 .legal-footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--surface)}
 .legal-footer a{font-size:9px;color:var(--muted);text-decoration:none}
 .legal-footer a:hover{color:var(--accent)}
+.splash-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.4s ease}
+.splash-ov.show{opacity:1}
+.splash-card{background:var(--surface);border-radius:20px;padding:36px 28px 28px;text-align:center;max-width:320px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.25);transform:translateY(16px);transition:transform 0.4s ease}
+.splash-ov.show .splash-card{transform:translateY(0)}
+.splash-logo{width:64px;height:64px;margin:0 auto 20px;display:block}
+.splash-eus{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--accent);line-height:1.2;margin-bottom:6px}
+.splash-cas{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:24px}
+.splash-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:var(--accent-txt);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s}
+.splash-btn:hover{opacity:0.88}
 .install-banner{display:none;flex-direction:column;gap:8px;position:fixed;top:60px;right:12px;z-index:250;background:var(--accent);color:var(--accent-txt);font-size:12px;font-weight:600;padding:12px 14px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.2);max-width:200px;animation:slideIn 0.25s ease}
 .install-banner.show{display:flex}
 @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -122,6 +131,14 @@
 </style>
 </head>
 <body>
+<div id="splashOv" class="splash-ov" onclick="closeSplash()">
+  <div class="splash-card" onclick="event.stopPropagation()">
+    <img class="splash-logo" src="/assets/img/logo.png" alt="Kirolorik">
+    <div class="splash-eus">Kirolik ez, zalerik gabe</div>
+    <div class="splash-cas">Sin afición, no hay deporte</div>
+    <button class="splash-btn" onclick="closeSplash()">¡Al campo! ⚽</button>
+  </div>
+</div>
 <div class="app">
   <div class="top-bar">
     <div class="logo logo-wrap"><img src="/assets/img/logo.png" alt="" class="logo-img" onerror="this.style.display='none'"> Kirolorik</div>
@@ -471,6 +488,20 @@ function dismissInstall(){
 window.addEventListener('load',function(){
   if(!deferredPrompt) setTimeout(showInstallBanner, 3000);
 });
+// SPLASH
+function closeSplash(){
+  var ov=document.getElementById('splashOv');
+  ov.style.opacity='0';
+  setTimeout(function(){ov.style.display='none'},400);
+  try{sessionStorage.setItem('kb_splash','1');}catch(e){}
+}
+window.addEventListener('load',function(){
+  try{if(sessionStorage.getItem('kb_splash'))return;}catch(e){}
+  var ov=document.getElementById('splashOv');
+  ov.style.display='flex';
+  setTimeout(function(){ov.classList.add('show')},30);
+});
+
 // SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 </script>
