@@ -230,6 +230,29 @@ a{color:var(--accent)}
       </div>
       <div class="field"><label>Municipio</label><input type="text" id="eqMunicipio" placeholder="Eibar..."></div>
     </div>
+    <div class="row2">
+      <div class="field"><label>Género <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+        <select id="eqGenero">
+          <option value="">Sin especificar</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Mixto">Mixto</option>
+        </select>
+      </div>
+      <div class="field"><label>Categoría <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+        <select id="eqCategoria">
+          <option value="">Sin especificar</option>
+          <option value="Benjamín">Benjamín</option>
+          <option value="Alevín">Alevín</option>
+          <option value="Infantil">Infantil</option>
+          <option value="Cadete">Cadete</option>
+          <option value="Juvenil">Juvenil</option>
+          <option value="Junior">Junior</option>
+          <option value="Senior">Senior</option>
+          <option value="Veteranos">Veteranos</option>
+        </select>
+      </div>
+    </div>
     <div class="field">
       <label>Escudo (opcional)</label>
       <input type="file" id="eqEscudo" accept="image/*" style="padding:8px">
@@ -405,7 +428,7 @@ async function cargarEquipos(){
         </div>
         <div class="eq-info">
           <div class="eq-name">${eq.nombre}</div>
-          <div class="eq-meta">${eq.deporte} · ${eq.municipio||''}</div>
+          <div class="eq-meta">${eq.deporte}${eq.genero?' · '+eq.genero:''}${eq.categoria?' · '+eq.categoria:''} · ${eq.municipio||''}</div>
         </div>
         <div class="eq-acts">
           <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
@@ -434,6 +457,8 @@ function editarEquipo(eq){
   document.getElementById('eqNombre').value  = eq.nombre||'';
   document.getElementById('eqDeporte').value = eq.deporte||'futbol';
   document.getElementById('eqMunicipio').value = eq.municipio||'';
+  document.getElementById('eqGenero').value = eq.genero||'';
+  document.getElementById('eqCategoria').value = eq.categoria||'';
   document.getElementById('eqEscudo').value  = '';
   if(eq.escudo_url){
     document.getElementById('eqPreviewImg').src = eq.escudo_url;
@@ -474,6 +499,8 @@ async function guardarEquipo(){
     nombre,
     deporte:    document.getElementById('eqDeporte').value,
     municipio:  document.getElementById('eqMunicipio').value.trim() || null,
+    genero:     document.getElementById('eqGenero').value || null,
+    categoria:  document.getElementById('eqCategoria').value || null,
     user_id:    user.id,
     activo:     true
   };
