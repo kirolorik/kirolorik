@@ -126,11 +126,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
 .loc-dot{
   width:7px;height:7px;border-radius:50%;
   background:var(--accent);flex-shrink:0;
-  animation:locPulse 2s ease-in-out infinite;
-}
-@keyframes locPulse{
-  0%,100%{opacity:1;transform:scale(1)}
-  50%{opacity:0.35;transform:scale(0.7)}
 }
 .settings-btn{
   width:32px;height:32px;border-radius:var(--radius-sm);
@@ -218,6 +213,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
   font-size:22px;font-weight:300;color:var(--muted);
   min-width:36px;padding:6px 4px;
   border-style:dashed;
+}
+
+.away-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9px;font-weight:700;letter-spacing:0.3px;
+  color:var(--accent);background:var(--accent-bg);
+  border:1px solid var(--accent);border-radius:6px;
+  padding:1px 5px;margin-left:4px;vertical-align:middle;
 }
 
 /* Sport select */
