@@ -245,7 +245,7 @@ function buildDates(){
 function filterSpSel(sel){deporteSel=sel.value;loadGrid()}
 
 function populateSpSelect(){
-  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&or=(municipio.eq.'+encodeURIComponent(muni)+',municipio_equipo.eq.'+encodeURIComponent(muni)+')':'');
+  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     var seen={},deportes=[];
     for(var i=0;i<data.length;i++){var d=(data[i].deporte||'').toLowerCase();if(d&&!seen[d]){seen[d]=true;deportes.push(d);}}
@@ -276,7 +276,7 @@ function loadGrid(){
   if(fechaSel)url+='&fecha=eq.'+fechaSel;
   else url+='&fecha=gte.'+td();
   if(deporteSel!=='todos')url+='&deporte=eq.'+deporteSel;
-  if(muni)url+='&or=(municipio.eq.'+encodeURIComponent(muni)+',municipio_equipo.eq.'+encodeURIComponent(muni)+')';
+  if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!data||!data.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
     var now=new Date();
@@ -307,8 +307,7 @@ function loadGrid(){
         var e=evs[j],d=gs(e.deporte),dl=e.deporte||'Otro';
         var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
         var idx=evCache.indexOf(e);
-        var awayBadge=muni&&e.municipio!==muni&&e.municipio_equipo===muni?'<span class="away-badge">✈ '+e.municipio+'</span>':'';
-        eh+='<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span>'+awayBadge+'</div></div>'+bg(e.tipo_entrada)+'</div>';
+        eh+='<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
       }
       row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
       g.appendChild(row);
