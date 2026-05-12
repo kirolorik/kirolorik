@@ -292,16 +292,19 @@ function renderLocalField(){
       const sel=document.getElementById('f_local');
       sel.value=userTeams[0].nombre;
       selectedEquipoId=userTeams[0].id;
-      fillDeporte(userTeams[0].nombre,'f_deporte');
+      fillDeporte(userTeams[0].nombre,'f_');
     }
   }else{
     wrap.innerHTML=`<input type="text" id="f_local" placeholder="Nombre del equipo local">`;
   }
 }
 
-function fillDeporte(teamNombre, fieldId){
+function fillDeporte(teamNombre, prefix){
   const team=userTeams.find(t=>t.nombre===teamNombre);
-  if(team&&team.deporte) document.getElementById(fieldId).value=team.deporte;
+  if(!team) return;
+  if(team.deporte) document.getElementById(prefix+'deporte').value=team.deporte;
+  if(team.genero){const g=document.getElementById(prefix+'genero');if(g)g.value=team.genero;}
+  if(team.categoria){const c=document.getElementById(prefix+'cat');if(c)c.value=team.categoria;}
 }
 
 function onLocalChange(sel){
@@ -313,7 +316,7 @@ function onLocalChange(sel){
     if(manual) manual.style.display='none';
     const opt=sel.options[sel.selectedIndex];
     selectedEquipoId=opt.dataset.id||null;
-    if(sel.value) fillDeporte(sel.value,'f_deporte');
+    if(sel.value) fillDeporte(sel.value,'f_');
   }
 }
 
@@ -349,7 +352,7 @@ function onEditLocalChange(sel){
     if(manual) manual.style.display='none';
     const opt=sel.options[sel.selectedIndex];
     selectedEditEquipoId=opt.dataset.id||null;
-    if(sel.value) fillDeporte(sel.value,'e_deporte');
+    if(sel.value) fillDeporte(sel.value,'e_');
   }
 }
 
