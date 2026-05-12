@@ -194,7 +194,8 @@ var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd
 var H={'apikey':SK,'Authorization':'Bearer '+SK};
 
 var authUser=null,authToken=null;
-var fechaSel=null,deporteSel='todos';
+var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+var fechaSel=hoyISO,deporteSel='todos';
 var lang='cas';
 var muni='Eibar';
 var adList=[],adIdx=0,adOpen=false;
@@ -227,14 +228,15 @@ function buildDates(){
     var d=new Date(hoy);d.setDate(hoy.getDate()+i);
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var chip=document.createElement('div');
-    chip.className='date-chip'; // sin 'today' por defecto
+    chip.className='date-chip'+(iso===fechaSel?' today':'');
     chip.setAttribute('data-fecha',iso);
     chip.setAttribute('data-dow',d.getDay());
     chip.innerHTML='<span class="dn">'+(DIAS[lang]||DIAS.cas)[d.getDay()]+'</span><span class="dd">'+d.getDate()+'</span>';
     (function(myIso,myChip){
       myChip.onclick=function(){
-        if(myChip.classList.contains('today')&&fechaSel===myIso){myChip.classList.remove('today');fechaSel=null;}
-        else{var all=document.querySelectorAll('.date-chip:not(.date-arrow)');for(var j=0;j<all.length;j++)all[j].classList.remove('today');myChip.classList.add('today');fechaSel=myIso;}
+        var all=document.querySelectorAll('.date-chip:not(.date-arrow)');
+        for(var j=0;j<all.length;j++)all[j].classList.remove('today');
+        myChip.classList.add('today');fechaSel=myIso;
         loadGrid();
       };
     })(iso,chip);
@@ -272,6 +274,7 @@ function changeLang(l){
 function loadGrid(){
   var g=document.getElementById('grid');
   g.innerHTML='<div class="empty-slot">Cargando...</div>';
+  var _gridFechaSel=fechaSel;
   var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre)&activo=eq.true&order=fecha.asc,hora.asc';
   if(fechaSel)url+='&fecha=eq.'+fechaSel;
   else url+='&fecha=gte.'+td();
@@ -289,8 +292,45 @@ function loadGrid(){
       var fin=new Date(st.getTime()+(e.duracion_minutos||90)*60000);
       if(fin>now)filtered.push(e);
     }
+    // Si hoy no tiene eventos, avanzar al próximo día con eventos
+    if(!filtered.length && fechaSel){
+      var nextDay=null;
+      for(var i=0;i<data.length;i++){
+        var ef=data[i];
+        if(ef.fecha>fechaSel){nextDay=ef.fecha;break;}
+      }
+      if(nextDay){
+        fechaSel=nextDay;
+        var allChips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+        for(var ci=0;ci<allChips.length;ci++){
+          var c=allChips[ci];
+          if(c.getAttribute('data-fecha')===nextDay){c.classList.add('today');}
+          else{c.classList.remove('today');}
+        }
+        // re-filter with new day
+        filtered=[];
+        for(var i=0;i<data.length;i++){if(data[i].fecha===nextDay)filtered.push(data[i]);}
+      }
+    }
     evCache=filtered;
-    if(!filtered.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
+    if(!filtered.length){
+      // Si filtramos por día y no hay eventos, saltar al próximo día con eventos
+      if(_gridFechaSel&&data.length){
+        var nextDates=data.map(function(e){return e.fecha}).filter(function(f){return f>_gridFechaSel});
+        nextDates.sort();
+        if(nextDates.length){
+          var nextDate=nextDates[0];
+          var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+          for(var i=0;i<chips.length;i++){
+            chips[i].classList.remove('today');
+            if(chips[i].getAttribute('data-fecha')===nextDate){chips[i].classList.add('today');}
+          }
+          fechaSel=nextDate;
+          loadGrid();return;
+        }
+      }
+      g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return;
+    }
     var groups={};
     for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e)}
     var curTime=nm(),nowDone=false,hoy=td();
