@@ -423,6 +423,20 @@ populateSpSelect();
 loadGrid();
 loadAds();
 renderProf();
+// SPLASH
+function closeSplash(){
+  var ov=document.getElementById('splashOv');
+  ov.style.opacity='0';
+  setTimeout(function(){ov.style.display='none'},400);
+  try{sessionStorage.setItem('kb_splash','1');}catch(e){}
+}
+window.addEventListener('load',function(){
+  try{if(sessionStorage.getItem('kb_splash'))return;}catch(e){}
+  var ov=document.getElementById('splashOv');
+  ov.style.display='flex';
+  setTimeout(function(){ov.classList.add('show')},30);
+});
+
 // SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 </script>
