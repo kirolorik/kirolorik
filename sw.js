@@ -1,4 +1,4 @@
-const CACHE = 'kirolorik-v4';
+const CACHE = 'kirolorik-v5';
 const ASSETS = [
   '/',
   '/index.html',
