@@ -223,6 +223,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
   padding:1px 5px;margin-left:4px;vertical-align:middle;
 }
 
+.away-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9px;font-weight:700;
+  color:var(--accent);background:var(--accent-bg);
+  border:1px solid var(--accent);border-radius:6px;
+  padding:1px 5px;margin-left:4px;vertical-align:middle;
+}
+
 /* Sport select */
 .sport-select-wrap{
   padding:8px 12px 4px;
