@@ -68,7 +68,7 @@ body{background:var(--bg);margin:0}
   font-size:10px;font-weight:700;letter-spacing:0.05em;
   padding:2px 8px;border-radius:4px;margin-top:4px;
 }
-.plan-card.featured .plan-saving{background:rgba(26,107,255,0.2);color:#90b4ff}
+/* .plan-card.featured .plan-saving{background:rgba(26,107,255,0.2);color:#90b4ff} */
 
 .soon-badge{
   position:absolute;top:12px;right:14px;
@@ -114,7 +114,7 @@ body{background:var(--bg);margin:0}
   <div class="hero">
     <div class="hero-kiro">Kirolorik · Publicidad local</div>
     <div class="hero-title">Llega a las <span>familias deportistas</span> de tu municipio</div>
-    <div class="hero-sub">Banner rotativo en portada · Exclusividad por categoría · Sin competencia directa en el mismo espacio.</div>
+	<div class="hero-sub">Se el único de tu categoría visible en la zona · Cuando una categoría se ocupa, deja de estar disponible.</div>
   </div>
 
   <div class="cards" id="plansEl">
@@ -122,8 +122,9 @@ body{background:var(--bg);margin:0}
   </div>
 
   <div class="cta-block">
-    <div class="cta-title">¿Hablamos?</div>
-    <div class="cta-sub">Cuéntanos tu negocio y te preparamos una propuesta. El primer mes es gratuito para los primeros anunciantes.</div>
+    <div class="cta-title">Reservar mi categoría</div>
+    <div class="cta-sub">Cuéntanos tu negocio y te preparamos una propuesta.</div>
+	<div class="cta-sub">Primer mes gratuito para los primeros anunciantes.</div>
     <a class="cta-btn" href="mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik">Contactar ahora →</a>
   </div>
 
@@ -141,21 +142,18 @@ const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 
 // Datos de fallback si Supabase falla
 const PLANES_DEFAULT = [
-  {plan:'evento',    precio:9,   periodo:'evento', descripcion:'Tu negocio en un partido específico.', visible:false, featured:false},
-  {plan:'jornada',   precio:30,  periodo:'jornada',    descripcion:'Tu negocio en todos los eventos de la jornada (fin de semana).', visible:false, featured:false},
   {plan:'mensual',   precio:35,  periodo:'mes',    descripcion:'Banner en portada. Sin permanencia.<br>Cancela cuando quieras.', visible:false, featured:false},
   {plan:'semestral', precio:180, periodo:'6 meses',descripcion:'Seis meses de visibilidad continua.<br>Pago único.', visible:false, saving:'ahorra 14%', featured:false},
+  {plan:'evento',    precio:9,   periodo:'evento', descripcion:'Tu negocio en un partido específico.', visible:false, featured:false},
+  {plan:'jornada',   precio:30,  periodo:'jornada',    descripcion:'Tu negocio en todos los eventos de la jornada (fin de semana).', visible:false, featured:false},
   {plan:'anual',     precio:300, periodo:'año',    descripcion:'Todo el año. La mejor relación precio‑impacto.<br>Pago único.', visible:false, saving:'ahorra 29%', featured:true},
 ];
 
 const LABELS = {
-  evento:'Evento', jornada:'Jornada', mensual:'Mensual',
-  semestral:'Semestral', anual:'Anual'
+  mensual:'Mensual', semestral:'Semestral', evento:'Evento', jornada:'Jornada', anual:'Anual'
 };
 const PERIODO_LABEL = {
-  evento:'/ evento · sin IVA', dia:'/ jornada · sin IVA',
-  mes:'/ mes · sin IVA', '6meses':'/ 6 meses · sin IVA',
-  'año':'/ año · sin IVA'
+  mes:'/ mes · sin IVA', '6meses':'/ 6 meses · sin IVA', evento:'/ evento · sin IVA', dia:'/ jornada · sin IVA',    'año':'/ año · sin IVA'
 };
 
 function renderPlanes(planes){
@@ -184,7 +182,7 @@ function renderPlanes(planes){
           <div class="plan-period">${isSoon ? 'próximamente' : periodoLabel}</div>
           ${saving ? `<div class="plan-saving">${saving}</div>` : ''}
         </div>
-        ${isSoon ? '<div class="soon-badge">Próximamente</div>' : ''}
+        ${isSoon ? '<div class="soon-badge">Acceso anticipado</div>' : ''}
       </div>`;
   });
   el.innerHTML = html;
