@@ -40,41 +40,29 @@ body{background:var(--bg);margin:0}
   transform:translate(-1px,-1px);
 }
 .plan-card.featured{
-  border-color:var(--text);background:var(--text);
+  border-color:var(--border);background:var(--surface2);
 }
 .plan-card.featured:hover{
-  box-shadow:3px 3px 0 var(--accent);
+  border-color:var(--text);
+  box-shadow:3px 3px 0 var(--text);
 }
-.plan-card.soon{opacity:0.5;pointer-events:none}
 
 .plan-name{
   font-family:'Bebas Neue',sans-serif;font-size:20px;
   letter-spacing:0.5px;color:var(--text);margin-bottom:3px;
 }
-.plan-card.featured .plan-name{color:#fff}
 .plan-desc{font-size:12px;color:var(--muted);line-height:1.45}
-.plan-card.featured .plan-desc{color:#999}
 
 .plan-right{text-align:right;flex-shrink:0}
 .plan-price{
   font-family:'Bebas Neue',sans-serif;font-size:30px;
   color:var(--text);line-height:1;white-space:nowrap;
 }
-.plan-card.featured .plan-price{color:var(--accent)}
 .plan-period{font-size:11px;color:var(--muted);margin-top:2px;text-align:right}
-.plan-card.featured .plan-period{color:#666}
 .plan-saving{
   display:inline-block;background:var(--accent-bg);color:var(--accent);
   font-size:10px;font-weight:700;letter-spacing:0.05em;
   padding:2px 8px;border-radius:4px;margin-top:4px;
-}
-/* .plan-card.featured .plan-saving{background:rgba(26,107,255,0.2);color:#90b4ff} */
-
-.soon-badge{
-  position:absolute;top:12px;right:14px;
-  font-size:9px;font-weight:700;letter-spacing:0.1em;
-  text-transform:uppercase;color:var(--muted);
-  border:1px solid var(--border);padding:2px 8px;border-radius:20px;
 }
 
 .divider{height:1px;background:var(--border);margin:4px 0}
@@ -122,17 +110,16 @@ body{background:var(--bg);margin:0}
   </div>
 
   <div class="cta-block">
-    <div class="cta-title">Reservar mi categoría</div>
+    <div class="cta-title">Reservar categoría</div>
     <div class="cta-sub">Cuéntanos tu negocio y te preparamos una propuesta.</div>
-	<div class="cta-sub">“Reserva ahora tu espacio para la próxima temporada</div>
-	<div class="cta-sub">“Presencia gratuita hasta el inicio oficial de temporada</div>
-    <a class="cta-btn" href="mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik">Contactar ahora →</a>
+	<div class="cta-sub">Guarda tu espacio para la próxima temporada.</div>
+	<div class="cta-sub">Presencia gratuita hasta el inicio oficial de la temporada 26/27.</div>
+    <a class="cta-btn" href="mailto:kirolorik.info@gmail.com?subject=Reservar categoría en Kirolorik">Contactar ahora</a>
   </div>
 
   <div class="legal-note">
     <strong>Exclusividad por categoría.</strong> Solo un negocio por sector en cada zona (un bar, un fisio, una tienda de deportes...). El espacio que contratas es tuyo.<br><br>
     <strong>Precios sin IVA.</strong> Se aplica el 21% de IVA en la factura. La contratación de publicidad está sujeta a facturación legal mediante factura emitida por el titular del servicio.<br><br>
-    <strong>Pago online.</strong> Próximamente disponible mediante pasarela de pago segura (Stripe).
   </div>
 
 </div>
@@ -192,11 +179,9 @@ function renderPlanes(planes){
           <div class="plan-desc">${p.descripcion||''}</div>
         </div>
         <div class="plan-right">
-          <div class="plan-price">${isSoon ? '—' : price+'€'}</div>
-          <div class="plan-period">${isSoon ? 'próximamente' : periodoLabel}</div>
-          ${saving ? `<div class="plan-saving">${saving}</div>` : ''}
+          <div class="plan-price" style="font-size:16px;letter-spacing:0.3px">Acceso anticipado</div>
         </div>
-        ${isSoon ? '<div class="soon-badge">Acceso anticipado</div>' : ''}
+
       </div>`;
   });
   el.innerHTML = html;
