@@ -198,7 +198,7 @@ var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getM
 var fechaSel=hoyISO,deporteSel='todos';
 var lang='cas';
 var muni='Eibar';
-var adList=[],adIdx=0,adOpen=false;
+var adList=[],adIdx=0,adOpen=true;
 var modoRec=false;
 var evCache=[];
 
@@ -440,7 +440,7 @@ function loadAds(){
     adList=data||[];
     // Orden aleatorio
     for(var i=adList.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=adList[i];adList[i]=adList[j];adList[j]=tmp}
-    if(adList.length){renderAdBar();renderAdDots()}
+    if(adList.length){renderAdBar();renderAdDots();if(adOpen){renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
   }).catch(function(){});
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
