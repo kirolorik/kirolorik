@@ -141,19 +141,32 @@ const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 
 // Datos de fallback si Supabase falla
+// ─────────────────────────────────────────────────────────────
+// PLANES ACTIVOS — Mostrar ahora
+// ─────────────────────────────────────────────────────────────
 const PLANES_DEFAULT = [
-  {plan:'mensual',   precio:35,  periodo:'mes',    descripcion:'Banner en portada. Sin permanencia.<br>Cancela cuando quieras.', visible:false, featured:false},
-  {plan:'semestral', precio:180, periodo:'6 meses',descripcion:'Seis meses de visibilidad continua.<br>Pago único.', visible:false, saving:'ahorra 14%', featured:false},
-  {plan:'evento',    precio:9,   periodo:'evento', descripcion:'Tu negocio en un partido específico.', visible:false, featured:false},
-  {plan:'jornada',   precio:30,  periodo:'jornada',    descripcion:'Tu negocio en todos los eventos de la jornada (fin de semana).', visible:false, featured:false},
-  {plan:'anual',     precio:300, periodo:'año',    descripcion:'Todo el año. La mejor relación precio‑impacto.<br>Pago único.', visible:false, saving:'ahorra 29%', featured:true},
+  {plan:'mensual',    precio:35,  periodo:'mes',       descripcion:'Banner en portada. Sin permanencia.<br>Cancela cuando quieras.', visible:true,  featured:false},
+  {plan:'semestral',  precio:180, periodo:'6meses',    descripcion:'Seis meses de visibilidad continua.<br>Pago único.', visible:true,  saving:'Ahorra 14%', featured:true},
+
+  // ─────────────────────────────────────────────────────────
+  // PLANES FUTUROS — Descomentar cuando llegue el momento
+  // Orden previsto: mensual, semestral, trimestral, anual | jornada, evento
+  // ─────────────────────────────────────────────────────────
+
+  // BLOQUE PRINCIPAL (descomentar para activar):
+  // {plan:'trimestral', precio:100, periodo:'trimestre', descripcion:'Tres meses de visibilidad continua.<br>Pago único.', visible:true, saving:'Ahorra 5%', featured:false},
+  // {plan:'anual',      precio:300, periodo:'año',       descripcion:'Todo el año. La mejor relación precio‑impacto.<br>Pago único.', visible:true, saving:'Ahorra 29%', featured:false},
+
+  // BLOQUE EVENTOS — separador automático antes de jornada (descomentar para activar):
+  // {plan:'jornada', precio:30, periodo:'jornada', descripcion:'Tu negocio en todos los eventos de la jornada (fin de semana).', visible:true, featured:false},
+  // {plan:'evento',  precio:9,  periodo:'evento',  descripcion:'Tu negocio en un partido específico.', visible:true, featured:false},
 ];
 
 const LABELS = {
-  mensual:'Mensual', semestral:'Semestral', evento:'Evento', jornada:'Jornada', anual:'Anual'
+  mensual:'Mensual', trimestral:'Trimestral', semestral:'Semestral', anual:'Anual', jornada:'Jornada', evento:'Evento'
 };
 const PERIODO_LABEL = {
-  mes:'/ mes · sin IVA', '6meses':'/ 6 meses · sin IVA', evento:'/ evento · sin IVA', dia:'/ jornada · sin IVA',    'año':'/ año · sin IVA'
+  mes:'/ mes · sin IVA', trimestre:'/ trimestre · sin IVA', '6meses':'/ 6 meses · sin IVA', 'año':'/ año · sin IVA', jornada:'/ jornada · sin IVA', evento:'/ evento · sin IVA'
 };
 
 function renderPlanes(planes){
@@ -162,7 +175,7 @@ function renderPlanes(planes){
   let prevWasMain = false;
 
   planes.forEach((p, i) => {
-    const isFeatured = p.plan === 'anual';
+    const isFeatured = p.plan === 'semestral' || p.plan === 'anual';
     const isSoon = !p.visible;
     const price = typeof p.precio === 'number' ? p.precio : parseFloat(p.precio);
     const periodoLabel = PERIODO_LABEL[p.periodo] || ('/ '+p.periodo+' · sin IVA');
@@ -191,7 +204,7 @@ function renderPlanes(planes){
 async function cargarTarifas(){
   try{
     const res = await fetch(
-      `${SB}/rest/v1/tarifas?activo=eq.true&order=created_at.asc`,
+      `${SB}/rest/v1/tarifas?visible=eq.true&order=created_at.asc`,
       {headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}}
     );
     const data = await res.json();
