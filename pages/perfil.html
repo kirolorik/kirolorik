@@ -46,6 +46,10 @@ a{color:var(--accent)}
 .rarrow{font-size:16px;color:var(--muted)}
 
 /* Equipos */
+.club-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.club-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.club-equipos{padding-left:4px;border-left:2px solid var(--border);margin-left:20px}
+.club-equipos .eq-card{box-shadow:none;margin-bottom:4px;padding:8px 10px}
 .eq-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
 .eq-shield{width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
 .eq-shield img{width:100%;height:100%;object-fit:cover}
@@ -153,11 +157,11 @@ a{color:var(--accent)}
     </div>
 
     <div class="section">
-      <div class="sec-title">Mis equipos</div>
-      <div id="equiposList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
-      <button class="btn-add" onclick="openModalEquipo()">
+      <div class="sec-title">Mis clubes</div>
+      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
+      <button class="btn-add" onclick="openModalClub()">
         <div class="btn-add-ico">➕</div>
-        <div class="btn-add-txt">Añadir equipo</div>
+        <div class="btn-add-txt">Añadir club</div>
       </button>
     </div>
 
@@ -207,12 +211,36 @@ a{color:var(--accent)}
   </div>
 </div>
 
+<!-- MODAL CLUB -->
+<div class="modal-bg" id="mClub">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mClubTitle">Añadir club</div>
+    <input type="hidden" id="clubId">
+    <div class="field"><label>Nombre del club</label><input type="text" id="clubNombre" placeholder="Club Deportivo Eibar..."></div>
+    <div class="field"><label>Municipio</label><input type="text" id="clubMunicipio" placeholder="Eibar..."></div>
+    <div class="field"><label>Descripción <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+      <input type="text" id="clubDescripcion" placeholder="Asociación deportiva municipal...">
+    </div>
+    <div class="field">
+      <label>Escudo del club (opcional)</label>
+      <input type="file" id="clubEscudo" accept="image/*" style="padding:8px">
+      <div id="clubPreview" style="margin-top:8px;display:none">
+        <img id="clubPreviewImg" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="guardarClub()">Guardar club</button>
+    <button class="btn-cancel" onclick="closeModal('mClub')">Cancelar</button>
+  </div>
+</div>
+
 <!-- MODAL EQUIPO -->
 <div class="modal-bg" id="mEquipo">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="mEquipoTitle">Añadir equipo</div>
     <input type="hidden" id="eqId">
+    <input type="hidden" id="eqClubId">
     <div class="field"><label>Nombre del equipo</label><input type="text" id="eqNombre" placeholder="Nombre del equipo"></div>
     <div class="row2">
       <div class="field"><label>Deporte</label>
@@ -251,13 +279,6 @@ a{color:var(--accent)}
           <option value="Senior">Senior</option>
           <option value="Veteranos">Veteranos</option>
         </select>
-      </div>
-    </div>
-    <div class="field">
-      <label>Escudo (opcional)</label>
-      <input type="file" id="eqEscudo" accept="image/*" style="padding:8px">
-      <div id="eqPreview" style="margin-top:8px;display:none">
-        <img id="eqPreviewImg" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
       </div>
     </div>
     <button class="btn-primary" onclick="guardarEquipo()">Guardar equipo</button>
@@ -350,7 +371,7 @@ async function cargarPerfil(){
     console.error(e);
   }
 
-  cargarEquipos();
+  cargarClubes();
 }
 
 // ── ALIAS ──
@@ -412,73 +433,165 @@ function guardarPass(){
 }
 
 // ── EQUIPOS ──
-async function cargarEquipos(){
-  const list = document.getElementById('equiposList');
+async function cargarClubes(){
+  const list = document.getElementById('clubesList');
   try {
-    const res  = await fetch(`${SB}/rest/v1/mis_equipos?user_id=eq.${user.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
+    const res = await fetch(`${SB}/rest/v1/perfil_club?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,escudo_url,municipio,descripcion)`, {headers:H()});
     const data = await res.json();
     if(!data || !data.length){
-      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún equipo.</div>';
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún club.</div>';
       return;
     }
-    list.innerHTML = data.map(eq => `
-      <div class="eq-card">
-        <div class="eq-shield">
-          ${eq.escudo_url ? `<img src="${eq.escudo_url}" alt="">` : (DEPEMOJI[eq.deporte]||'🏅')}
-        </div>
-        <div class="eq-info">
-          <div class="eq-name">${eq.nombre}</div>
-          <div class="eq-meta">${eq.deporte}${eq.genero?' · '+eq.genero:''}${eq.categoria?' · '+eq.categoria:''} · ${eq.municipio||''}</div>
-        </div>
-        <div class="eq-acts">
-          <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
-          <button class="eq-btn" onclick="borrarEquipo('${eq.id}')">🗑️</button>
-        </div>
-      </div>`).join('');
+    let html = '';
+    for(const pc of data){
+      const club = pc.clubes;
+      if(!club) continue;
+      const resEq = await fetch(`${SB}/rest/v1/mis_equipos?club_id=eq.${club.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
+      const equipos = await resEq.json() || [];
+      const equiposHtml = equipos.map(eq => `
+        <div class="eq-card">
+          <div class="eq-shield" style="width:32px;height:32px;font-size:18px">${DEPEMOJI[eq.deporte]||'🏅'}</div>
+          <div class="eq-info">
+            <div class="eq-name">${eq.nombre}</div>
+            <div class="eq-meta">${eq.deporte}${eq.genero?' · '+eq.genero:''}${eq.categoria?' · '+eq.categoria:''}</div>
+          </div>
+          <div class="eq-acts">
+            <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="eq-btn" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+          </div>
+        </div>`).join('');
+      html += `
+        <div class="club-card">
+          <div class="club-header">
+            <div class="eq-shield">${club.escudo_url ? `<img src="${club.escudo_url}" alt="">` : '🏟️'}</div>
+            <div class="eq-info">
+              <div class="eq-name">${club.nombre}</div>
+              <div class="eq-meta">${club.municipio||''}${pc.rol==='editor'?' · Editor':''}</div>
+            </div>
+            <div class="eq-acts">
+              <button class="eq-btn" onclick='editarClub(${JSON.stringify(club).replace(/'/g,"&#39;")})'>✏️</button>
+              <button class="eq-btn" onclick="borrarClub('${club.id}')">🗑️</button>
+            </div>
+          </div>
+          <div class="club-equipos">${equiposHtml}</div>
+          <button class="btn-add" style="margin:8px 0 0" onclick="openModalEquipo('${club.id}')">
+            <div class="btn-add-ico">➕</div><div class="btn-add-txt">Añadir equipo</div>
+          </button>
+        </div>`;
+    }
+    list.innerHTML = html;
   } catch(e) {
-    list.innerHTML = '<div style="font-size:12px;color:#dc2626">Error al cargar equipos</div>';
+    list.innerHTML = '<div style="font-size:12px;color:#dc2626">Error al cargar clubes</div>';
   }
 }
 
-function openModalEquipo(){
-  document.getElementById('eqId').value      = '';
+function openModalClub(){
+  document.getElementById('clubId').value = '';
+  document.getElementById('mClubTitle').textContent = 'Añadir club';
+  document.getElementById('clubNombre').value = '';
+  document.getElementById('clubMunicipio').value = '';
+  document.getElementById('clubDescripcion').value = '';
+  document.getElementById('clubEscudo').value = '';
+  document.getElementById('clubPreview').style.display = 'none';
+  openModal('mClub');
+}
+
+function editarClub(club){
+  document.getElementById('clubId').value = club.id;
+  document.getElementById('mClubTitle').textContent = 'Editar club';
+  document.getElementById('clubNombre').value = club.nombre||'';
+  document.getElementById('clubMunicipio').value = club.municipio||'';
+  document.getElementById('clubDescripcion').value = club.descripcion||'';
+  if(club.escudo_url){
+    document.getElementById('clubPreviewImg').src = club.escudo_url;
+    document.getElementById('clubPreview').style.display = 'block';
+  } else {
+    document.getElementById('clubPreview').style.display = 'none';
+  }
+  openModal('mClub');
+}
+
+async function guardarClub(){
+  const nombre = document.getElementById('clubNombre').value.trim();
+  if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const datos = {
+    nombre,
+    municipio: document.getElementById('clubMunicipio').value.trim()||null,
+    descripcion: document.getElementById('clubDescripcion').value.trim()||null,
+    activo: true
+  };
+  const file = document.getElementById('clubEscudo').files[0];
+  if(file){
+    try { datos.escudo_url = await subirEscudo(file); }
+    catch(e){ toast('Aviso: escudo no subido','err'); }
+  }
+  const editId = document.getElementById('clubId').value;
+  try {
+    if(editId){
+      await fetch(`${SB}/rest/v1/clubes?id=eq.${editId}`, {
+        method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
+      });
+      toast('Club actualizado','ok');
+    } else {
+      const res = await fetch(`${SB}/rest/v1/clubes`, {
+        method:'POST', headers:{...H(),'Prefer':'return=representation'}, body:JSON.stringify(datos)
+      });
+      const [club] = await res.json();
+      await fetch(`${SB}/rest/v1/perfil_club`, {
+        method:'POST', headers:{...H(),'Prefer':'return=minimal'},
+        body:JSON.stringify({user_id:user.id, club_id:club.id, rol:'admin', activo:true})
+      });
+      toast('Club creado','ok');
+    }
+    closeModal('mClub');
+    cargarClubes();
+  } catch(e){ toast('Error al guardar','err'); }
+}
+
+async function borrarClub(id){
+  if(!confirm('¿Eliminar este club y todos sus equipos?')) return;
+  try {
+    await fetch(`${SB}/rest/v1/clubes?id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
+    });
+    toast('Club eliminado','ok');
+    cargarClubes();
+  } catch(e){ toast('Error','err'); }
+}
+
+function openModalEquipo(clubId){
+  document.getElementById('eqId').value = '';
+  document.getElementById('eqClubId').value = clubId||'';
   document.getElementById('mEquipoTitle').textContent = 'Añadir equipo';
-  document.getElementById('eqNombre').value  = '';
+  document.getElementById('eqNombre').value = '';
   document.getElementById('eqDeporte').value = 'futbol';
   document.getElementById('eqMunicipio').value = '';
-  document.getElementById('eqEscudo').value  = '';
-  document.getElementById('eqPreview').style.display = 'none';
+  document.getElementById('eqGenero').value = '';
+  document.getElementById('eqCategoria').value = '';
   openModal('mEquipo');
 }
 
 function editarEquipo(eq){
-  document.getElementById('eqId').value      = eq.id;
+  document.getElementById('eqId').value = eq.id;
+  document.getElementById('eqClubId').value = eq.club_id||'';
   document.getElementById('mEquipoTitle').textContent = 'Editar equipo';
-  document.getElementById('eqNombre').value  = eq.nombre||'';
+  document.getElementById('eqNombre').value = eq.nombre||'';
   document.getElementById('eqDeporte').value = eq.deporte||'futbol';
   document.getElementById('eqMunicipio').value = eq.municipio||'';
   document.getElementById('eqGenero').value = eq.genero||'';
   document.getElementById('eqCategoria').value = eq.categoria||'';
-  document.getElementById('eqEscudo').value  = '';
-  if(eq.escudo_url){
-    document.getElementById('eqPreviewImg').src = eq.escudo_url;
-    document.getElementById('eqPreview').style.display = 'block';
-  } else {
-    document.getElementById('eqPreview').style.display = 'none';
-  }
   openModal('mEquipo');
 }
 
-document.getElementById('eqEscudo').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    document.getElementById('eqPreviewImg').src = ev.target.result;
-    document.getElementById('eqPreview').style.display = 'block';
-  };
-  r.readAsDataURL(file);
+document.addEventListener('change', e => {
+  if(e.target.id === 'clubEscudo'){
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => { document.getElementById('clubPreviewImg').src = ev.target.result; document.getElementById('clubPreview').style.display = 'block'; };
+    r.readAsDataURL(file);
+  }
 });
+
 
 async function subirEscudo(file){
   const ext  = file.name.split('.').pop();
@@ -495,20 +608,17 @@ async function subirEscudo(file){
 async function guardarEquipo(){
   const nombre = document.getElementById('eqNombre').value.trim();
   if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const clubId = document.getElementById('eqClubId').value;
   const datos = {
     nombre,
     deporte:    document.getElementById('eqDeporte').value,
     municipio:  document.getElementById('eqMunicipio').value.trim() || null,
     genero:     document.getElementById('eqGenero').value || null,
     categoria:  document.getElementById('eqCategoria').value || null,
+    club_id:    clubId || null,
     user_id:    user.id,
     activo:     true
   };
-  const file = document.getElementById('eqEscudo').files[0];
-  if(file){
-    try { datos.escudo_url = await subirEscudo(file); }
-    catch(e){ toast('Aviso: escudo no subido','err'); }
-  }
   const editId = document.getElementById('eqId').value;
   try {
     if(editId){
@@ -523,7 +633,7 @@ async function guardarEquipo(){
       toast('Equipo añadido','ok');
     }
     closeModal('mEquipo');
-    cargarEquipos();
+    cargarClubes();
   } catch(e){ toast('Error al guardar','err'); }
 }
 
@@ -534,7 +644,7 @@ async function borrarEquipo(id){
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
     toast('Equipo eliminado','ok');
-    cargarEquipos();
+    cargarClubes();
   } catch(e){ toast('Error','err'); }
 }
 
