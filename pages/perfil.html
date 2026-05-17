@@ -557,6 +557,9 @@ async function borrarClub(id){
     await fetch(`${SB}/rest/v1/clubes?id=eq.${id}`, {
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
+    await fetch(`${SB}/rest/v1/perfil_club?club_id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
+    });
     toast('Club eliminado','ok');
     cargarClubes();
   } catch(e){ toast('Error','err'); }
