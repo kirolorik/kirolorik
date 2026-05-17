@@ -536,16 +536,19 @@ async function guardarClub(){
       const res = await fetch(`${SB}/rest/v1/clubes`, {
         method:'POST', headers:{...H(),'Prefer':'return=representation'}, body:JSON.stringify(datos)
       });
-      const [club] = await res.json();
-      await fetch(`${SB}/rest/v1/perfil_club`, {
+      const resData = await res.json();
+      if(!res.ok) throw new Error(resData.message||resData.error||'Error al crear club');
+      const [club] = resData;
+      const res2 = await fetch(`${SB}/rest/v1/perfil_club`, {
         method:'POST', headers:{...H(),'Prefer':'return=minimal'},
         body:JSON.stringify({user_id:user.id, club_id:club.id, rol:'admin', activo:true})
       });
+      if(!res2.ok){ const e2=await res2.json(); throw new Error(e2.message||'Error al vincular perfil'); }
       toast('Club creado','ok');
     }
     closeModal('mClub');
     cargarClubes();
-  } catch(e){ toast('Error al guardar','err'); }
+  } catch(e){ toast(e.message||'Error al guardar','err'); }
 }
 
 async function borrarClub(id){
