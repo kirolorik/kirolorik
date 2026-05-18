@@ -1,0 +1,700 @@
+<!-- Kirolorik · perfil.html · v2.1 · 2026-05-17 -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<title>Kirolorik · Mi perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f8;--surface:#fff;--surface2:#eef0f3;
+  --border:#dde1e7;--text:#1a1d23;--text2:#4a5060;
+  --muted:#8a90a0;--accent:#1a6bff;--accent-bg:rgba(26,107,255,0.08);
+  --r:14px;--r2:9px;--shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);margin:0}
+a{color:var(--accent)}
+
+.wrap{max-width:500px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:40px}
+
+/* Header */
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
+.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+
+/* Hero */
+.hero{display:flex;flex-direction:column;align-items:center;padding:24px 16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
+.hero-alias{font-size:16px;font-weight:700;color:var(--text)}
+.hero-email{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Secciones */
+.section{padding:16px 16px 0}
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.row.click{cursor:pointer;transition:background 0.15s}
+.row.click:hover,.row.click:active{background:var(--surface2)}
+.rico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.rlabel{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.rval{font-size:12px;color:var(--muted)}
+.rarrow{font-size:16px;color:var(--muted)}
+
+/* Equipos */
+.club-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.club-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.club-equipos{padding-left:4px;border-left:2px solid var(--border);margin-left:20px}
+.club-equipos .eq-card{box-shadow:none;margin-bottom:4px;padding:8px 10px}
+.eq-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.eq-shield{width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.eq-shield img{width:100%;height:100%;object-fit:cover}
+.eq-info{flex:1;min-width:0}
+.eq-name{font-size:13px;font-weight:700;color:var(--text)}
+.eq-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.eq-acts{display:flex;gap:6px;flex-shrink:0}
+.eq-btn{font-size:16px;cursor:pointer;opacity:0.35;transition:opacity 0.15s;background:none;border:none;padding:4px}
+.eq-btn:hover{opacity:1}
+
+.btn-add{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--r);cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;margin-bottom:8px;transition:all 0.15s}
+.btn-add:hover{border-color:var(--accent);color:var(--accent)}
+.btn-add-ico{font-size:20px;width:40px;text-align:center}
+.btn-add-txt{font-size:13px;font-weight:600}
+
+/* Danger */
+.danger-card{background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);border-radius:var(--r);padding:14px}
+.danger-title{font-size:13px;font-weight:700;color:#dc2626;margin-bottom:4px}
+.danger-txt{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.btn-danger{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:var(--r2);padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.btn-danger:hover{background:#dc2626;color:#fff}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg);width:100%;max-width:500px;max-height:90dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);margin-bottom:16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-cancel{width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px}
+.field-err{font-size:11px;color:#dc2626;min-height:14px;margin-bottom:8px}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);border-radius:var(--r2);padding:10px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;z-index:400}
+.toast.show{opacity:1}
+.toast.ok{background:#16a34a;color:#fff}
+.toast.err{background:#dc2626;color:#fff}
+
+/* Idioma radio */
+.lang-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.lang-opt.sel{border-color:var(--accent);background:var(--accent-bg)}
+.lang-ico{font-size:20px;width:28px;text-align:center}
+.lang-name{font-size:13px;font-weight:600;flex:1}
+.lang-check{font-size:16px}
+
+/* Sin login */
+.no-login{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px 16px;text-align:center;gap:12px}
+.no-login-ico{font-size:48px}
+.no-login-title{font-size:18px;font-weight:700;color:var(--text)}
+.no-login-txt{font-size:13px;color:var(--muted);line-height:1.6}
+.btn-volver{background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+
+  <div class="hdr">
+    <a class="back" href="/">←</a>
+    <span class="hdr-title">Mi perfil</span>
+  </div>
+
+  <!-- Sin sesión -->
+  <div class="no-login" id="noLogin" style="display:none">
+    <div class="no-login-ico">🔒</div>
+    <div class="no-login-title">Acceso restringido</div>
+    <div class="no-login-txt">Necesitas iniciar sesión para ver tu perfil.</div>
+    <button class="btn-volver" onclick="window.location.href='/'">Volver al inicio</button>
+  </div>
+
+  <!-- Con sesión -->
+  <div id="perfilContent" style="display:none">
+
+    <div class="hero">
+      <div class="avatar" id="avEl">?</div>
+      <div class="hero-alias" id="aliasEl">—</div>
+      <div class="hero-email" id="emailEl">—</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Datos personales</div>
+      <div class="card">
+        <div class="row click" onclick="openModal('mAlias')">
+          <div class="rico">✏️</div><div class="rlabel">Alias</div>
+          <div class="rval" id="vAlias">—</div><div class="rarrow">›</div>
+        </div>
+        <div class="row click" onclick="openModal('mIdioma')">
+          <div class="rico">🌐</div><div class="rlabel">Idioma</div>
+          <div class="rval" id="vIdioma">CAS</div><div class="rarrow">›</div>
+        </div>
+        <div class="row">
+          <div class="rico">📧</div><div class="rlabel">Email</div>
+          <div class="rval" id="vEmail">—</div>
+        </div>
+        <div class="row click" onclick="openModal('mPass')">
+          <div class="rico">🔑</div><div class="rlabel">Contraseña</div>
+          <div class="rval">Cambiar</div><div class="rarrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Mis clubes</div>
+      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
+      <button class="btn-add" onclick="openModalClub()">
+        <div class="btn-add-ico">➕</div>
+        <div class="btn-add-txt">Añadir club</div>
+      </button>
+    </div>
+
+    <div class="section" style="margin-top:8px">
+      <div class="sec-title">Zona de riesgo</div>
+      <div class="danger-card">
+        <div class="danger-title">Eliminar perfil</div>
+        <div class="danger-txt">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Pasado ese plazo, todos tus datos se borrarán permanentemente.</div>
+        <button class="btn-danger" onclick="openModal('mBaja')">Solicitar eliminación de cuenta</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL ALIAS -->
+<div class="modal-bg" id="mAlias">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cambiar alias</div>
+    <div class="field"><label>Alias visible en la app</label><input type="text" id="inputAlias" placeholder="Tu alias..."></div>
+    <button class="btn-primary" onclick="guardarAlias()">Guardar</button>
+    <button class="btn-cancel" onclick="closeModal('mAlias')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL IDIOMA -->
+<div class="modal-bg" id="mIdioma">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Idioma</div>
+    <div id="langOpts" style="margin-bottom:16px"></div>
+    <button class="btn-cancel" onclick="closeModal('mIdioma')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CONTRASEÑA -->
+<div class="modal-bg" id="mPass">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cambiar contraseña</div>
+    <div class="field"><label>Nueva contraseña</label><input type="password" id="pass1" placeholder="Mínimo 8 caracteres"></div>
+    <div class="field"><label>Repetir contraseña</label><input type="password" id="pass2" placeholder="Repite la contraseña"></div>
+    <div class="field-err" id="passErr"></div>
+    <button class="btn-primary" onclick="guardarPass()">Cambiar contraseña</button>
+    <button class="btn-cancel" onclick="closeModal('mPass')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CLUB -->
+<div class="modal-bg" id="mClub">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mClubTitle">Añadir club</div>
+    <input type="hidden" id="clubId">
+    <div class="field"><label>Nombre del club</label><input type="text" id="clubNombre" placeholder="Club Deportivo Eibar..."></div>
+    <div class="field"><label>Municipio</label><input type="text" id="clubMunicipio" placeholder="Eibar..."></div>
+    <div class="field"><label>Descripción <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+      <input type="text" id="clubDescripcion" placeholder="Asociación deportiva municipal...">
+    </div>
+    <div class="field">
+      <label>Escudo del club (opcional)</label>
+      <input type="file" id="clubEscudo" accept="image/*" style="padding:8px">
+      <div id="clubPreview" style="margin-top:8px;display:none">
+        <img id="clubPreviewImg" src="" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="guardarClub()">Guardar club</button>
+    <button class="btn-cancel" onclick="closeModal('mClub')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL EQUIPO -->
+<div class="modal-bg" id="mEquipo">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mEquipoTitle">Añadir equipo</div>
+    <input type="hidden" id="eqId">
+    <input type="hidden" id="eqClubId">
+    <div class="field"><label>Nombre del equipo</label><input type="text" id="eqNombre" placeholder="Nombre del equipo"></div>
+    <div class="row2">
+      <div class="field"><label>Deporte</label>
+        <select id="eqDeporte">
+          <option value="futbol">⚽ Fútbol</option>
+          <option value="basket">🏀 Basket</option>
+          <option value="balonmano">🤾 Balonmano</option>
+          <option value="waterpolo">🏊 Waterpolo</option>
+          <option value="boxeo">🥊 Boxeo</option>
+          <option value="tenis">🎾 Tenis</option>
+          <option value="atletismo">🏃 Atletismo</option>
+          <option value="ciclismo">🚴 Ciclismo</option>
+          <option value="otros">🏅 Otros</option>
+        </select>
+      </div>
+      <div class="field"><label>Municipio</label><input type="text" id="eqMunicipio" placeholder="Eibar..."></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Género <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+        <select id="eqGenero">
+          <option value="">Sin especificar</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Femenino">Femenino</option>
+          <option value="Mixto">Mixto</option>
+        </select>
+      </div>
+      <div class="field"><label>Categoría <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+        <select id="eqCategoria">
+          <option value="">Sin especificar</option>
+          <option value="Benjamín">Benjamín</option>
+          <option value="Alevín">Alevín</option>
+          <option value="Infantil">Infantil</option>
+          <option value="Cadete">Cadete</option>
+          <option value="Juvenil">Juvenil</option>
+          <option value="Junior">Junior</option>
+          <option value="Senior">Senior</option>
+          <option value="Veteranos">Veteranos</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="guardarEquipo()">Guardar equipo</button>
+    <button class="btn-cancel" onclick="closeModal('mEquipo')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL BAJA -->
+<div class="modal-bg" id="mBaja">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:#dc2626">¿Eliminar tu cuenta?</div>
+    <p style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">Tu perfil se desactivará durante <strong>30 días</strong>. Pasado ese plazo, todos tus datos se eliminarán permanentemente.</p>
+    <div class="field"><label>Escribe tu email para confirmar</label><input type="email" id="bajaMail" placeholder="Tu email de acceso"></div>
+    <div class="field-err" id="bajaErr"></div>
+    <button class="btn-danger" style="width:100%;padding:12px;font-size:13px" onclick="confirmarBaja()">Sí, eliminar mi cuenta</button>
+    <button class="btn-cancel" onclick="closeModal('mBaja')">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
+const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',otros:'🏅'};
+
+let tok = null, user = null, perfil = null, idiomaActual = 'cas';
+
+function H(){ return {'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json'}; }
+function color(e){ return COLORS[(e||'').charCodeAt(0) % COLORS.length]; }
+
+function toast(msg, tipo=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (tipo ? ' '+tipo : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+}
+
+// Cerrar modales al pulsar fondo
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ── CARGAR PERFIL ──
+async function cargarPerfil(){
+  const email = user.email || '';
+  const ini   = email.charAt(0).toUpperCase();
+  const col   = color(email);
+
+  const av = document.getElementById('avEl');
+  av.textContent = ini;
+  av.style.background = col;
+
+  document.getElementById('emailEl').textContent = email;
+  document.getElementById('vEmail').textContent  = email;
+
+  try {
+    const res  = await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}&select=*`, { headers: H() });
+    const data = await res.json();
+
+    if(data && data.length > 0){
+      perfil = data[0];
+      idiomaActual = perfil.idioma || 'cas';
+    } else {
+      // Crear perfil vacío
+      await fetch(`${SB}/rest/v1/perfiles`, {
+        method:'POST',
+        headers: {...H(), 'Prefer':'return=minimal'},
+        body: JSON.stringify({id: user.id, idioma:'cas'})
+      });
+      perfil = {id: user.id, idioma:'cas', alias: null};
+    }
+
+    const alias = perfil.alias || email.split('@')[0];
+    document.getElementById('aliasEl').textContent = alias;
+    document.getElementById('vAlias').textContent  = alias;
+    document.getElementById('vIdioma').textContent = (perfil.idioma || 'cas').toUpperCase();
+
+  } catch(e) {
+    toast('Error cargando perfil', 'err');
+    console.error(e);
+  }
+
+  cargarClubes();
+}
+
+// ── ALIAS ──
+function guardarAlias(){
+  const alias = document.getElementById('inputAlias').value.trim();
+  if(!alias){ toast('El alias no puede estar vacío','err'); return; }
+  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({alias})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    document.getElementById('aliasEl').textContent = alias;
+    document.getElementById('vAlias').textContent  = alias;
+    closeModal('mAlias');
+    toast('Alias actualizado','ok');
+  }).catch(() => toast('Error al guardar','err'));
+}
+
+// ── IDIOMA ──
+function renderLangOpts(){
+  const langs = [{id:'cas',label:'Castellano',ico:'🇪🇸'},{id:'eus',label:'Euskera',ico:'🏔️'}];
+  document.getElementById('langOpts').innerHTML = langs.map(l => `
+    <div class="lang-opt ${idiomaActual===l.id?'sel':''}" onclick="selIdioma('${l.id}')">
+      <span class="lang-ico">${l.ico}</span>
+      <span class="lang-name">${l.label}</span>
+      <span class="lang-check">${idiomaActual===l.id?'✅':''}</span>
+    </div>`).join('');
+}
+
+function selIdioma(lang){
+  idiomaActual = lang;
+  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({idioma:lang})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    document.getElementById('vIdioma').textContent = lang.toUpperCase();
+    sessionStorage.setItem('kb_lang', lang);
+    closeModal('mIdioma');
+    toast('Idioma guardado','ok');
+  }).catch(() => toast('Error','err'));
+}
+
+// ── CONTRASEÑA ──
+function guardarPass(){
+  const p1 = document.getElementById('pass1').value;
+  const p2 = document.getElementById('pass2').value;
+  const err = document.getElementById('passErr');
+  err.textContent = '';
+  if(p1.length < 8){ err.textContent = 'Mínimo 8 caracteres'; return; }
+  if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
+  fetch(`${SB}/auth/v1/user`, {
+    method:'PUT', headers:H(), body:JSON.stringify({password:p1})
+  }).then(r => {
+    if(!r.ok) throw new Error();
+    closeModal('mPass');
+    document.getElementById('pass1').value = '';
+    document.getElementById('pass2').value = '';
+    toast('Contraseña actualizada','ok');
+  }).catch(() => { err.textContent = 'Error al cambiar la contraseña'; });
+}
+
+// ── EQUIPOS ──
+async function cargarClubes(){
+  const list = document.getElementById('clubesList');
+  try {
+    const res = await fetch(`${SB}/rest/v1/perfil_club?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,escudo_url,municipio,descripcion)`, {headers:H()});
+    const data = await res.json();
+    if(!data || !data.length){
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún club.</div>';
+      return;
+    }
+    let html = '';
+    for(const pc of data){
+      const club = pc.clubes;
+      if(!club) continue;
+      const resEq = await fetch(`${SB}/rest/v1/mis_equipos?club_id=eq.${club.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
+      const equipos = await resEq.json() || [];
+      const equiposHtml = equipos.map(eq => `
+        <div class="eq-card">
+          <div class="eq-shield" style="width:32px;height:32px;font-size:18px">${DEPEMOJI[eq.deporte]||'🏅'}</div>
+          <div class="eq-info">
+            <div class="eq-name">${eq.nombre}</div>
+            <div class="eq-meta">${eq.deporte}${eq.genero?' · '+eq.genero:''}${eq.categoria?' · '+eq.categoria:''}</div>
+          </div>
+          <div class="eq-acts">
+            <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
+            <button class="eq-btn" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+          </div>
+        </div>`).join('');
+      html += `
+        <div class="club-card">
+          <div class="club-header">
+            <div class="eq-shield">${club.escudo_url ? `<img src="${club.escudo_url}" alt="">` : '🏟️'}</div>
+            <div class="eq-info">
+              <div class="eq-name">${club.nombre}</div>
+              <div class="eq-meta">${club.municipio||''}${pc.rol==='editor'?' · Editor':''}</div>
+            </div>
+            <div class="eq-acts">
+              <button class="eq-btn" onclick='editarClub(${JSON.stringify(club).replace(/'/g,"&#39;")})'>✏️</button>
+              <button class="eq-btn" onclick="borrarClub('${club.id}')">🗑️</button>
+            </div>
+          </div>
+          <div class="club-equipos">${equiposHtml}</div>
+          <button class="btn-add" style="margin:8px 0 0" onclick="openModalEquipo('${club.id}')">
+            <div class="btn-add-ico">➕</div><div class="btn-add-txt">Añadir equipo</div>
+          </button>
+        </div>`;
+    }
+    list.innerHTML = html;
+  } catch(e) {
+    list.innerHTML = '<div style="font-size:12px;color:#dc2626">Error al cargar clubes</div>';
+  }
+}
+
+function openModalClub(){
+  document.getElementById('clubId').value = '';
+  document.getElementById('mClubTitle').textContent = 'Añadir club';
+  document.getElementById('clubNombre').value = '';
+  document.getElementById('clubMunicipio').value = '';
+  document.getElementById('clubDescripcion').value = '';
+  document.getElementById('clubEscudo').value = '';
+  document.getElementById('clubPreview').style.display = 'none';
+  openModal('mClub');
+}
+
+function editarClub(club){
+  document.getElementById('clubId').value = club.id;
+  document.getElementById('mClubTitle').textContent = 'Editar club';
+  document.getElementById('clubNombre').value = club.nombre||'';
+  document.getElementById('clubMunicipio').value = club.municipio||'';
+  document.getElementById('clubDescripcion').value = club.descripcion||'';
+  if(club.escudo_url){
+    document.getElementById('clubPreviewImg').src = club.escudo_url;
+    document.getElementById('clubPreview').style.display = 'block';
+  } else {
+    document.getElementById('clubPreview').style.display = 'none';
+  }
+  openModal('mClub');
+}
+
+async function guardarClub(){
+  const nombre = document.getElementById('clubNombre').value.trim();
+  if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const datos = {
+    nombre,
+    municipio: document.getElementById('clubMunicipio').value.trim()||null,
+    descripcion: document.getElementById('clubDescripcion').value.trim()||null,
+    activo: true
+  };
+  const file = document.getElementById('clubEscudo').files[0];
+  if(file){
+    try { datos.escudo_url = await subirEscudo(file); }
+    catch(e){ toast('Aviso: escudo no subido','err'); }
+  }
+  const editId = document.getElementById('clubId').value;
+  try {
+    if(editId){
+      await fetch(`${SB}/rest/v1/clubes?id=eq.${editId}`, {
+        method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
+      });
+      toast('Club actualizado','ok');
+    } else {
+      const res = await fetch(`${SB}/rest/v1/clubes`, {
+        method:'POST', headers:{...H(),'Prefer':'return=representation'}, body:JSON.stringify(datos)
+      });
+      const resData = await res.json();
+      if(!res.ok) throw new Error(resData.message||resData.error||'Error al crear club');
+      const [club] = resData;
+      const res2 = await fetch(`${SB}/rest/v1/perfil_club`, {
+        method:'POST', headers:{...H(),'Prefer':'return=minimal'},
+        body:JSON.stringify({user_id:user.id, club_id:club.id, rol:'admin', activo:true})
+      });
+      if(!res2.ok){ const e2=await res2.json(); throw new Error(e2.message||'Error al vincular perfil'); }
+      toast('Club creado','ok');
+    }
+    closeModal('mClub');
+    cargarClubes();
+  } catch(e){ toast(e.message||'Error al guardar','err'); }
+}
+
+async function borrarClub(id){
+  if(!confirm('¿Eliminar este club y todos sus equipos?')) return;
+  try {
+    await fetch(`${SB}/rest/v1/clubes?id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
+    });
+    await fetch(`${SB}/rest/v1/perfil_club?club_id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
+    });
+    toast('Club eliminado','ok');
+    cargarClubes();
+  } catch(e){ toast('Error','err'); }
+}
+
+function openModalEquipo(clubId){
+  document.getElementById('eqId').value = '';
+  document.getElementById('eqClubId').value = clubId||'';
+  document.getElementById('mEquipoTitle').textContent = 'Añadir equipo';
+  document.getElementById('eqNombre').value = '';
+  document.getElementById('eqDeporte').value = 'futbol';
+  document.getElementById('eqMunicipio').value = '';
+  document.getElementById('eqGenero').value = '';
+  document.getElementById('eqCategoria').value = '';
+  openModal('mEquipo');
+}
+
+function editarEquipo(eq){
+  document.getElementById('eqId').value = eq.id;
+  document.getElementById('eqClubId').value = eq.club_id||'';
+  document.getElementById('mEquipoTitle').textContent = 'Editar equipo';
+  document.getElementById('eqNombre').value = eq.nombre||'';
+  document.getElementById('eqDeporte').value = eq.deporte||'futbol';
+  document.getElementById('eqMunicipio').value = eq.municipio||'';
+  document.getElementById('eqGenero').value = eq.genero||'';
+  document.getElementById('eqCategoria').value = eq.categoria||'';
+  openModal('mEquipo');
+}
+
+document.addEventListener('change', e => {
+  if(e.target.id === 'clubEscudo'){
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => { document.getElementById('clubPreviewImg').src = ev.target.result; document.getElementById('clubPreview').style.display = 'block'; };
+    r.readAsDataURL(file);
+  }
+});
+
+
+async function subirEscudo(file){
+  const ext  = file.name.split('.').pop();
+  const name = `escudo_${user.id}_${Date.now()}.${ext}`;
+  const res  = await fetch(`${SB}/storage/v1/object/escudos/${name}`, {
+    method:'POST',
+    headers:{'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':file.type},
+    body:file
+  });
+  if(!res.ok) throw new Error('Error al subir escudo');
+  return `${SB}/storage/v1/object/public/escudos/${name}`;
+}
+
+async function guardarEquipo(){
+  const nombre = document.getElementById('eqNombre').value.trim();
+  if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const clubId = document.getElementById('eqClubId').value;
+  const datos = {
+    nombre,
+    deporte:    document.getElementById('eqDeporte').value,
+    municipio:  document.getElementById('eqMunicipio').value.trim() || null,
+    genero:     document.getElementById('eqGenero').value || null,
+    categoria:  document.getElementById('eqCategoria').value || null,
+    club_id:    clubId || null,
+    user_id:    user.id,
+    activo:     true
+  };
+  const editId = document.getElementById('eqId').value;
+  try {
+    if(editId){
+      await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${editId}`, {
+        method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
+      });
+      toast('Equipo actualizado','ok');
+    } else {
+      await fetch(`${SB}/rest/v1/mis_equipos`, {
+        method:'POST', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
+      });
+      toast('Equipo añadido','ok');
+    }
+    closeModal('mEquipo');
+    cargarClubes();
+  } catch(e){ toast('Error al guardar','err'); }
+}
+
+async function borrarEquipo(id){
+  if(!confirm('¿Eliminar este equipo?')) return;
+  try {
+    await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
+    });
+    toast('Equipo eliminado','ok');
+    cargarClubes();
+  } catch(e){ toast('Error','err'); }
+}
+
+// ── BAJA ──
+async function confirmarBaja(){
+  const mail = document.getElementById('bajaMail').value.trim();
+  const err  = document.getElementById('bajaErr');
+  err.textContent = '';
+  if(mail !== user.email){ err.textContent = 'El email no coincide'; return; }
+  try {
+    await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'},
+      body: JSON.stringify({activo:false, baja_solicitada_at: new Date().toISOString()})
+    });
+    closeModal('mBaja');
+    toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
+    setTimeout(() => {
+      sessionStorage.removeItem('kb_token');
+      sessionStorage.removeItem('kb_user');
+      window.location.href = '/';
+    }, 3000);
+  } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
+}
+
+// ── INIT ──
+tok  = sessionStorage.getItem('kb_token');
+const savedUser = sessionStorage.getItem('kb_user');
+
+if(!tok || !savedUser){
+  document.getElementById('noLogin').style.display    = 'flex';
+  document.getElementById('perfilContent').style.display = 'none';
+} else {
+  user = JSON.parse(savedUser);
+  document.getElementById('noLogin').style.display    = 'none';
+  document.getElementById('perfilContent').style.display = 'block';
+  cargarPerfil();
+}
+
+// Abrir idioma con opciones renderizadas
+document.querySelector('[onclick="openModal(\'mIdioma\')"]').addEventListener('click', renderLangOpts);
+document.getElementById('inputAlias').addEventListener('keydown', e => {
+  if(e.key === 'Enter') guardarAlias();
+});
+</script>
+</body>
+</html>
