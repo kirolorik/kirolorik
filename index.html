@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.1 · 2026-05-17 -->
+<!-- Kirolorik · index.html · v6.2 · 2026-05-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -148,6 +148,9 @@
     <select id="sportSel" onchange="filterSpSel(this)">
       <option value="todos">🏅 Todos los deportes</option>
     </select>
+    <select id="clubSel" onchange="filterClubSel(this)">
+      <option value="todos">👕 Todos los equipos</option>
+    </select>
   </div>
   <div class="date-strip" id="dates"><div class="date-chip date-arrow" onclick="document.getElementById('dates').scrollBy({left:-80,behavior:'smooth'})">‹</div></div>
   <div class="parrilla-wrap"><div class="parrilla" id="grid"><div class="empty-slot">Cargando...</div></div></div>
@@ -199,7 +202,7 @@ var H={'apikey':SK,'Authorization':'Bearer '+SK};
 
 var authUser=null,authToken=null;
 var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-var fechaSel=hoyISO,deporteSel='todos';
+var fechaSel=hoyISO,deporteSel='todos',clubSel='todos';
 var lang='cas';
 var muni='Eibar';
 var adList=[],adIdx=0,adOpen=true;
@@ -249,6 +252,7 @@ function buildDates(){
 }
 
 function filterSpSel(sel){deporteSel=sel.value;loadGrid()}
+function filterClubSel(sel){clubSel=sel.value;loadGrid()}
 
 function populateSpSelect(){
   var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
@@ -284,6 +288,7 @@ function loadGrid(){
   else url+='&fecha=gte.'+td();
   if(deporteSel!=='todos')url+='&deporte=eq.'+deporteSel;
   if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
+  if(clubSel!=='todos')url+='&or=(equipo_local.eq.'+encodeURIComponent(clubSel)+',equipo_visitante.eq.'+encodeURIComponent(clubSel)+')';
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!data||!data.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
     var now=new Date();
@@ -404,7 +409,26 @@ function loadMunis(){
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error</div>'});
 }
-function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();populateSpSelect();deporteSel='todos';document.getElementById('sportSel').value='todos';loadGrid()}
+function populateClubSelect(){
+  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
+    var seen={},clubs=[];
+    for(var i=0;i<data.length;i++){
+      var el=(data[i].equipo_local||'').trim();
+      var ev=(data[i].equipo_visitante||'').trim();
+      if(el&&!seen[el]){seen[el]=true;clubs.push(el);}
+      if(ev&&!seen[ev]){seen[ev]=true;clubs.push(ev);}
+    }
+    clubs.sort();
+    var sel=document.getElementById('clubSel');if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="todos">👕 Todos los equipos</option>';
+    for(var i=0;i<clubs.length;i++){var o=document.createElement('option');o.value=clubs[i];o.textContent=clubs[i];sel.appendChild(o);}
+    if(cur&&cur!=='todos')sel.value=cur;
+  }).catch(function(){});
+}
+
+function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';loadGrid()}
 
 // PERFIL
 function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -464,6 +488,7 @@ document.getElementById('langSel').value=lang;
 document.getElementById('locText').textContent=muni;
 buildDates();
 populateSpSelect();
+populateClubSelect();
 loadGrid();
 loadAds();
 renderProf();
