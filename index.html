@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.2 · 2026-05-17 -->
+<!-- Kirolorik · index.html · v6.3 · 2026-05-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -252,7 +252,28 @@ function buildDates(){
 }
 
 function filterSpSel(sel){deporteSel=sel.value;loadGrid()}
-function filterClubSel(sel){clubSel=sel.value;loadGrid()}
+function filterClubSel(sel){
+  clubSel=sel.value;
+  if(clubSel!=='todos'){
+    // Modo seguimiento: sin fecha ni municipio
+    fechaSel=null;
+    muni=null;
+    var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+    for(var i=0;i<chips.length;i++)chips[i].classList.remove('today');
+  }else{
+    // Volver al modo normal: hoy + municipio guardado
+    fechaSel=hoyISO;
+    try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm;}catch(e){}
+    if(!muni)muni='Eibar';
+    document.getElementById('locText').textContent=muni;
+    var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+    for(var i=0;i<chips.length;i++){
+      chips[i].classList.remove('today');
+      if(chips[i].getAttribute('data-fecha')===fechaSel)chips[i].classList.add('today');
+    }
+  }
+  loadGrid();
+}
 
 function populateSpSelect(){
   var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
@@ -287,7 +308,7 @@ function loadGrid(){
   if(fechaSel)url+='&fecha=eq.'+fechaSel;
   else url+='&fecha=gte.'+td();
   if(deporteSel!=='todos')url+='&deporte=eq.'+deporteSel;
-  if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
+  if(muni&&!(clubSel!=='todos'&&!fechaSel))url+='&municipio=eq.'+encodeURIComponent(muni);
   if(clubSel!=='todos')url+='&or=(equipo_local.eq.'+encodeURIComponent(clubSel)+',equipo_visitante.eq.'+encodeURIComponent(clubSel)+')';
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!data||!data.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
@@ -340,26 +361,53 @@ function loadGrid(){
       }
       g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return;
     }
-    var groups={};
-    for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e)}
-    var curTime=nm(),nowDone=false,hoy=td();
+    var curTime=nm(),hoy=td();
     g.innerHTML='';
-    var keys=Object.keys(groups).sort();
-    for(var k=0;k<keys.length;k++){
-      var hora=keys[k],evs=groups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
-      if(!nowDone&&hora>curTime&&(!fechaSel||fechaSel===hoy)){
-        nowDone=true;var nr=document.createElement('div');nr.className='now-row';nr.innerHTML='<div class="now-dot"></div><div class="now-label">Ahora</div><div class="now-time">'+curTime+'</div>';g.appendChild(nr)
+    function renderEventCard(e,evCache){
+      var d=gs(e.deporte),dl=e.deporte||'Otro';
+      var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
+      var idx=evCache.indexOf(e);
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+    }
+    if(fechaSel){
+      // Vista horaria (día seleccionado)
+      var groups={};
+      for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e);}
+      var nowDone=false;
+      var keys=Object.keys(groups).sort();
+      for(var k=0;k<keys.length;k++){
+        var hora=keys[k],evs=groups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
+        if(!nowDone&&hora>curTime&&fechaSel===hoy){nowDone=true;var nr=document.createElement('div');nr.className='now-row';nr.innerHTML='<div class="now-dot"></div><div class="now-label">Ahora</div><div class="now-time">'+curTime+'</div>';g.appendChild(nr);}
+        var row=document.createElement('div');row.className='time-row';
+        var eh='';
+        for(var j=0;j<evs.length;j++)eh+=renderEventCard(evs[j],evCache);
+        row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
+        g.appendChild(row);
       }
-      var row=document.createElement('div');row.className='time-row';
-      var eh='';
-      for(var j=0;j<evs.length;j++){
-        var e=evs[j],d=gs(e.deporte),dl=e.deporte||'Otro';
-        var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
-        var idx=evCache.indexOf(e);
-        eh+='<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+    }else{
+      // Vista agrupada por día (sin fecha seleccionada)
+      var dayGroups={};
+      for(var i=0;i<filtered.length;i++){var e=filtered[i];var f=e.fecha;if(!dayGroups[f])dayGroups[f]=[];dayGroups[f].push(e);}
+      var days=Object.keys(dayGroups).sort();
+      for(var d=0;d<days.length;d++){
+        var day=days[d],dayEvs=dayGroups[day];
+        // Separador de día
+        var sep=document.createElement('div');sep.className='day-sep';
+        sep.innerHTML='<div class="day-sep-line"></div><div class="day-sep-label">'+fd(day)+'</div><div class="day-sep-line"></div>';
+        g.appendChild(sep);
+        // Eventos del día agrupados por hora
+        var hGroups={};
+        for(var i=0;i<dayEvs.length;i++){var e=dayEvs[i];var h=(e.hora||'00:00').slice(0,5);if(!hGroups[h])hGroups[h]=[];hGroups[h].push(e);}
+        var hKeys=Object.keys(hGroups).sort();
+        for(var k=0;k<hKeys.length;k++){
+          var hora=hKeys[k],evs=hGroups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
+          var row=document.createElement('div');row.className='time-row';
+          var eh='';
+          for(var j=0;j<evs.length;j++)eh+=renderEventCard(evs[j],evCache);
+          row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
+          g.appendChild(row);
+        }
       }
-      row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
-      g.appendChild(row);
     }
   }).catch(function(err){g.innerHTML='<div class="empty-slot" style="color:#dc2626">Error: '+err.message+'</div>'});
 }
