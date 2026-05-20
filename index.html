@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.4 · 2026-05-17 -->
+<!-- Kirolorik · index.html · v6.5 · 2026-05-20 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -272,7 +272,7 @@ function filterClubSel(sel){
     fechaSel=hoyISO;
     try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm;}catch(e){}
     if(!muni)muni='Eibar';
-    document.getElementById('locText').textContent=muni;
+    document.getElementById('locText').textContent=muni||'Municipios';
     var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
     for(var i=0;i<chips.length;i++){
       chips[i].classList.remove('today');
@@ -460,6 +460,7 @@ function loadMunis(){
   fetch(SB+'/rest/v1/municipios?activo=eq.true&order=orden.asc',{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!data||!data.length){list.innerHTML='<div class="empty-slot">Sin municipios</div>';return}
     var html='';
+    html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">Todos los municipios</div><div class="mun-prov">Sin filtro de ubicación</div></div><div>'+(!muni?'✅':'')+'</div></div>';
     for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')"><div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div><div class="mun-prov">'+(m.provincia||'')+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error</div>'});
@@ -483,7 +484,7 @@ function populateClubSelect(){
   }).catch(function(){});
 }
 
-function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';loadGrid()}
+function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name||'Municipios';closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';loadGrid()}
 
 // PERFIL
 function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -540,7 +541,7 @@ try{var sl=localStorage.getItem('kb_lang');if(sl)lang=sl}catch(e){}
 try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm}catch(e){}
 try{var st=sessionStorage.getItem('kb_token'),su=sessionStorage.getItem('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
 document.getElementById('langSel').value=lang;
-document.getElementById('locText').textContent=muni;
+document.getElementById('locText').textContent=muni||'Municipios';
 buildDates();
 populateSpSelect();
 populateClubSelect();
