@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.12 · 2026-05-22 -->
+<!-- Kirolorik · eventos.html · v3.13 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -404,7 +404,7 @@ function abrirEdicion(e){
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:flex-end;justify-content:center';
   const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
   const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
-  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
+  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
   const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
   const DURACION_OPTS=[45,60,90,120,180,240,360];
@@ -456,7 +456,10 @@ function abrirEdicion(e){
   document.body.appendChild(modal);
   modal.addEventListener('click', ev => { if(ev.target===modal) cerrarEdicion(); });
   renderEditLocalField(e);
-  if(e.participantes) setParticipantes('e_parts_list', e.participantes);
+  setTimeout(function(){
+    if(e.participantes) setParticipantes('e_parts_list', e.participantes);
+    else addParticipante('e_parts_list'); // Campo vacío por defecto
+  }, 0);
 }
 
 function cerrarEdicion(){
