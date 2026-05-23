@@ -1,3 +1,4 @@
+<!-- Kirolorik · index.html · v6.11 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,8 +16,13 @@
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik — Agenda deportiva local · Eibar</title>
 <link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kirolorik">
+<link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
+<script src="/assets/js/i18n.js"></script>
 <style>
 .lang-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:var(--text);outline:none;cursor:pointer;height:32px}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.25s}
@@ -66,6 +72,7 @@
 .det-team-name{font-size:12px;font-weight:700;text-align:center;color:var(--text)}
 .det-vs-sep{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted)}
 .det-single{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);text-align:center}
+.det-escudo{width:44px;height:44px;object-fit:contain}
 .det-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 0}
 .det-cell{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
 .det-cell.click{cursor:pointer}
@@ -84,7 +91,7 @@
 .prof-btn-in{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
 .logo-wrap{display:flex;align-items:center;gap:8px}
 .logo-img{height:26px;width:auto;flex-shrink:0}
-.ad-wrap{flex-shrink:0;border-top:1px solid var(--border);background:var(--surface);overflow:hidden}
+.ad-wrap{border-top:1px solid var(--border);background:var(--surface);overflow:hidden}
 .ad-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;position:relative;min-height:54px}
 .ad-bar:hover{background:var(--surface2)}
 .ad-tag{position:absolute;top:3px;right:10px;font-size:7px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
@@ -105,12 +112,30 @@
 .ad-long{font-size:12px;color:var(--text2);line-height:1.5;flex:1;padding-right:10px}
 .ad-cta{background:var(--accent);color:var(--accent-txt);font-size:10px;font-weight:800;border-radius:var(--radius-sm);padding:7px 12px;flex-shrink:0;text-decoration:none;text-transform:uppercase}
 .ad-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:var(--muted);flex-shrink:0;margin-left:6px}
-.legal-footer{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 16px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--surface)}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;background:var(--surface)}
+.legal-footer{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:6px 16px;padding-bottom:calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--surface)}
 .legal-footer a{font-size:9px;color:var(--muted);text-decoration:none}
 .legal-footer a:hover{color:var(--accent)}
+.splash-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.4s ease}
+.splash-ov.show{opacity:1}
+.splash-card{background:var(--surface);border-radius:20px;padding:36px 28px 28px;text-align:center;max-width:320px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.25);transform:translateY(16px);transition:transform 0.4s ease}
+.splash-ov.show .splash-card{transform:translateY(0)}
+.splash-logo{width:64px;height:64px;margin:0 auto 20px;display:block}
+.splash-eus{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--accent);line-height:1.2;margin-bottom:6px}
+.splash-cas{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:24px}
+.splash-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:var(--accent-txt);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s}
+.splash-btn:hover{opacity:0.88}
 </style>
 </head>
 <body>
+<div id="splashOv" class="splash-ov" onclick="closeSplash()">
+  <div class="splash-card" onclick="event.stopPropagation()">
+    <img class="splash-logo" src="/assets/img/logo.png" alt="Kirolorik">
+    <div class="splash-eus">Kirolik ez, zalerik gabe</div>
+    <div class="splash-cas">Sin afición, no hay deporte</div>
+    <button class="splash-btn" onclick="closeSplash()">Harmailetara! 🏟️</button>
+  </div>
+</div>
 <div class="app">
   <div class="top-bar">
     <div class="logo logo-wrap"><img src="/assets/img/logo.png" alt="" class="logo-img" onerror="this.style.display='none'"> Kirolorik</div>
@@ -120,28 +145,23 @@
       <div class="prof-btn" id="profBtn" onclick="openProf()"><div class="prof-btn-in" id="profBtnIn">👤</div></div>
     </div>
   </div>
+  <div class="sport-select-wrap">
+    <select id="sportSel" onchange="filterSpSel(this)">
+      <option value="todos" data-i18n="nav.todos_deportes">🏅 Todos los deportes</option>
+    </select>
+    <select id="clubSel" onchange="filterClubSel(this)">
+      <option value="todos" data-i18n="nav.todos_equipos">👕 Todos los equipos</option>
+    </select>
+  </div>
   <div class="date-strip" id="dates"><div class="date-chip date-arrow" onclick="document.getElementById('dates').scrollBy({left:-80,behavior:'smooth'})">‹</div></div>
-  <div class="sport-filter">
-    <div class="sp active" onclick="filterSp(this,'todos')">Todos</div>
-    <div class="sp" onclick="filterSp(this,'futbol')">⚽ Fútbol</div>
-    <div class="sp" onclick="filterSp(this,'basket')">🏀 Basket</div>
-    <div class="sp" onclick="filterSp(this,'balonmano')">🤾 Balonmano</div>
-    <div class="sp" onclick="filterSp(this,'waterpolo')">🏊 Waterpolo</div>
-    <div class="sp" onclick="filterSp(this,'boxeo')">🥊 Boxeo</div>
-    <div class="sp" onclick="filterSp(this,'tenis')">🎾 Tenis</div>
-    <div class="sp" onclick="filterSp(this,'atletismo')">🏃 Atletismo</div>
-    <div class="sp" onclick="filterSp(this,'ciclismo')">🚴 Ciclismo</div>
-  </div>
   <div class="parrilla-wrap"><div class="parrilla" id="grid"><div class="empty-slot">Cargando...</div></div></div>
-  <div class="legend">
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div>Entrada</div>
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(249,115,22,0.12);font-size:11px">🎟️</div>Rifa</div>
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(22,163,74,0.1);color:#16a34a;font-size:8px;font-weight:800;font-family:'Bebas Neue',sans-serif">FREE</div>Gratis</div>
-    <div class="legend-item" style="margin-left:auto;font-size:9px">Sin icono = libre</div>
+
   </div>
+</div>
+<div class="bottom-bar">
   <div class="ad-wrap">
     <div class="ad-bar" onclick="toggleAd()">
-      <div class="ad-tag">Publicidad</div>
+      <div class="ad-tag" data-i18n="ad.tag">Publicidad</div>
       <div class="ad-logo">📣</div>
       <div class="ad-body"><div class="ad-name" id="adName">—</div><div class="ad-short" id="adShort"></div></div>
       <div class="ad-nav" onclick="event.stopPropagation()">
@@ -152,18 +172,24 @@
     </div>
     <div class="ad-panel" id="adPanel"></div>
   </div>
+  <div class="legend">
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div><span data-i18n="leg.entrada">Entrada</span></div>
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(249,115,22,0.12);font-size:11px">🎟️</div><span data-i18n="leg.rifa">Rifa</span></div>
+    <div class="legend-item"><div class="leg-icon" style="background:rgba(22,163,74,0.1);color:#16a34a;font-size:8px;font-weight:800;font-family:'Bebas Neue',sans-serif">FREE</div><span data-i18n="leg.gratis">Gratis</span></div>
+    <div class="legend-item" style="margin-left:auto;font-size:9px"><span data-i18n="leg.sin_icono">Sin icono = libre</span></div>
+  </div>
   <div class="legal-footer">
     <a href="/pages/legal.html#quienes">Kirolorik</a>
     <a href="/pages/faq.html">FAQ</a>
-    <a href="/pages/legal.html#privacidad">Privacidad</a>
-    <a href="/pages/legal.html#cookies">Cookies</a>
-    <a href="/pages/legal.html#rgpd">RGPD</a>
-    <a href="/pages/legal.html#terminos">Términos</a>
-    <a href="/pages/legal.html#publicidad">Publicidad</a>
+    <a href="/pages/legal.html#privacidad" data-i18n="footer.privacidad">Privacidad</a>
+    <a href="/pages/legal.html#cookies" data-i18n="footer.cookies">Cookies</a>
+    <a href="/pages/legal.html#rgpd" data-i18n="footer.rgpd">RGPD</a>
+    <a href="/pages/legal.html#terminos" data-i18n="footer.terminos">Términos</a>
+    <a href="/pages/legal.html#publicidad" data-i18n="footer.publicidad">Publicidad</a>
   </div>
 </div>
 <div class="overlay" id="ov" onclick="closeAll()"></div>
-<div class="mun-drawer" id="munDraw"><div class="mun-header"><div class="mun-back" onclick="closeMun()">←</div><div class="mun-title">Seleccionar municipio</div></div><div class="mun-list" id="munList"></div></div>
+<div class="mun-drawer" id="munDraw"><div class="mun-header"><div class="mun-back" onclick="closeMun()">←</div><div class="mun-title" data-i18n="nav.sel_municipio">Seleccionar municipio</div></div><div class="mun-list" id="munList"></div></div>
 <div class="prof-drawer" id="profDraw"><div class="prof-header" id="profHead"></div><div class="prof-body" id="profBody"></div></div>
 <div class="det-drawer" id="detDraw"><div class="det-top"><div class="det-back" onclick="closeDet()">←</div><div class="det-title" id="detTitle">Detalle</div></div><div class="det-scroll" id="detScroll"></div></div>
 <div class="lightbox" id="lb" onclick="closeLb()"><div class="lb-close">✕</div><img id="lbImg" src="" alt=""></div>
@@ -177,28 +203,28 @@ var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd
 var H={'apikey':SK,'Authorization':'Bearer '+SK};
 
 var authUser=null,authToken=null;
-var fechaSel=null,deporteSel='todos';
+var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+var fechaSel=hoyISO,deporteSel='todos',clubSel='todos';
 var lang='cas';
 var muni='Eibar';
 var adList=[],adIdx=0,adOpen=true;
 var modoRec=false;
 var evCache=[];
 
-var DIAS={cas:['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],eus:['Ig','Al','Ar','Az','Og','Or','La']};
-var MESES={cas:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],eus:['Urt','Ots','Mar','Api','Mai','Eka','Uzt','Abu','Ira','Urr','Aza','Abe']};
+// DIAS y MESES centralizados en i18n.js — usar t('dias') y t('meses')
 var COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'}};
 
 function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function nm(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);return(DIAS[lang]||DIAS.cas)[dt.getDay()]+' '+p[2]+' '+(MESES[lang]||MESES.cas)[p[1]-1]+' '+p[0]}
+function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);return t('dias')[dt.getDay()]+' '+p[2]+' '+t('meses')[p[1]-1]+' '+p[0]}
 function en(e){return e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'')}
-function bg(t){
-  if(t==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">Entrada</div></div>';
-  if(t==='rifa')return'<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">Rifa</div></div>';
-  if(t==='gratis')return'<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">Gratis</div></div>';
-  if(t==='puertas')return'<div class="entry-badge"><div class="entry-free" style="font-size:9px;letter-spacing:-0.5px">🚪</div><div class="entry-free-label" style="color:var(--accent)">Puertas</div></div>';
+function bg(tp){
+  if(tp==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">'+window.t('badge.entrada')+'</div></div>';
+  if(tp==='rifa')return'<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">'+window.t('badge.rifa')+'</div></div>';
+  if(tp==='gratis')return'<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">'+window.t('badge.gratis')+'</div></div>';
+  if(tp==='puertas')return'<div class="entry-badge"><div class="entry-free" style="font-size:9px;letter-spacing:-0.5px">🚪</div><div class="entry-free-label" style="color:var(--accent)">'+window.t('badge.puertas')+'</div></div>';
   return'<div class="entry-badge"><div class="entry-none"></div></div>';
 }
 
@@ -210,14 +236,21 @@ function buildDates(){
     var d=new Date(hoy);d.setDate(hoy.getDate()+i);
     var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     var chip=document.createElement('div');
-    chip.className='date-chip'; // sin 'today' por defecto
+    chip.className='date-chip'+(iso===fechaSel?' today':'');
     chip.setAttribute('data-fecha',iso);
     chip.setAttribute('data-dow',d.getDay());
-    chip.innerHTML='<span class="dn">'+(DIAS[lang]||DIAS.cas)[d.getDay()]+'</span><span class="dd">'+d.getDate()+'</span>';
+    chip.innerHTML='<span class="dn">'+t('dias')[d.getDay()]+'</span><span class="dd">'+d.getDate()+'</span>';
     (function(myIso,myChip){
       myChip.onclick=function(){
-        if(myChip.classList.contains('today')&&fechaSel===myIso){myChip.classList.remove('today');fechaSel=null;}
-        else{var all=document.querySelectorAll('.date-chip:not(.date-arrow)');for(var j=0;j<all.length;j++)all[j].classList.remove('today');myChip.classList.add('today');fechaSel=myIso;}
+        var all=document.querySelectorAll('.date-chip:not(.date-arrow)');
+        for(var j=0;j<all.length;j++)all[j].classList.remove('today');
+        if(fechaSel===myIso){
+          // Deseleccionar → vista agrupada
+          fechaSel=null;
+        }else{
+          myChip.classList.add('today');
+          fechaSel=myIso;
+        }
         loadGrid();
       };
     })(iso,chip);
@@ -225,29 +258,75 @@ function buildDates(){
   }
 }
 
-function filterSp(el,dep){var all=document.querySelectorAll('.sp');for(var i=0;i<all.length;i++)all[i].classList.remove('active');el.classList.add('active');deporteSel=dep;loadGrid()}
+function filterSpSel(sel){deporteSel=sel.value;loadGrid()}
+function filterClubSel(sel){
+  clubSel=sel.value;
+  if(clubSel!=='todos'){
+    // Modo seguimiento: sin fecha ni municipio
+    fechaSel=null;
+    muni='';
+    document.getElementById('locText').textContent='Todos';
+    var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+    for(var i=0;i<chips.length;i++)chips[i].classList.remove('today');
+  }else{
+    // Volver al modo normal: hoy + municipio guardado
+    fechaSel=hoyISO;
+    try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm;}catch(e){}
+    if(!muni)muni='Eibar';
+    document.getElementById('locText').textContent=muni||'Municipios';
+    var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+    for(var i=0;i<chips.length;i++){
+      chips[i].classList.remove('today');
+      if(chips[i].getAttribute('data-fecha')===fechaSel)chips[i].classList.add('today');
+    }
+  }
+  loadGrid();
+}
+
+function populateSpSelect(){
+  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
+    var seen={},deportes=[];
+    for(var i=0;i<data.length;i++){var d=(data[i].deporte||'').toLowerCase();if(d&&!seen[d]){seen[d]=true;deportes.push(d);}}
+    deportes.sort();
+    var sel=document.getElementById('sportSel');if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="todos">'+t('nav.todos_deportes')+'</option>';
+    for(var i=0;i<deportes.length;i++){var d=deportes[i],sp=SP[d]||{e:'🏅'};var o=document.createElement('option');o.value=d;o.textContent=sp.e+' '+d.charAt(0).toUpperCase()+d.slice(1);sel.appendChild(o);}
+    if(cur&&cur!=='todos')sel.value=cur;
+  }).catch(function(){});
+}
 function changeLang(l){
   lang=l;
   try{localStorage.setItem('kb_lang',l)}catch(e){}
+  // Actualizar textos estáticos del DOM
+  applyLang();
   // Reconstruir fechas con nuevo idioma
   var strip=document.getElementById('dates');
   var arrow=strip.querySelector('.date-arrow');
   strip.innerHTML='';
   strip.appendChild(arrow);
   buildDates();
+  // Refrescar textos dinámicos
+  populateSpSelect();
+  populateClubSelect();
+  loadGrid();
+  renderProf();
 }
 
 // GRID
 function loadGrid(){
   var g=document.getElementById('grid');
-  g.innerHTML='<div class="empty-slot">Cargando...</div>';
-  var url=SB+'/rest/v1/eventos?select=*&activo=eq.true&order=fecha.asc,hora.asc';
+  g.innerHTML='<div class="empty-slot">'+t('grid.cargando')+'</div>';
+  var _gridFechaSel=fechaSel;
+  var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre)&activo=eq.true&order=fecha.asc,hora.asc';
   if(fechaSel)url+='&fecha=eq.'+fechaSel;
   else url+='&fecha=gte.'+td();
   if(deporteSel!=='todos')url+='&deporte=eq.'+deporteSel;
   if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
+  if(clubSel!=='todos')url+='&or=(equipo_local.eq.'+encodeURIComponent(clubSel)+',equipo_visitante.eq.'+encodeURIComponent(clubSel)+')';
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
-    if(!data||!data.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
+    if(!data||!data.length){g.innerHTML='<div class="empty-slot">'+t('grid.sin_eventos')+'</div>';return}
     var now=new Date();
     var filtered=[];
     for(var i=0;i<data.length;i++){
@@ -258,30 +337,94 @@ function loadGrid(){
       var fin=new Date(st.getTime()+(e.duracion_minutos||90)*60000);
       if(fin>now)filtered.push(e);
     }
-    evCache=filtered;
-    if(!filtered.length){g.innerHTML='<div class="empty-slot">Sin eventos próximos</div>';return}
-    var groups={};
-    for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e)}
-    var curTime=nm(),nowDone=false,hoy=td();
-    g.innerHTML='';
-    var keys=Object.keys(groups).sort();
-    for(var k=0;k<keys.length;k++){
-      var hora=keys[k],evs=groups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
-      if(!nowDone&&hora>curTime&&(!fechaSel||fechaSel===hoy)){
-        nowDone=true;var nr=document.createElement('div');nr.className='now-row';nr.innerHTML='<div class="now-dot"></div><div class="now-label">Ahora</div><div class="now-time">'+curTime+'</div>';g.appendChild(nr)
+    // Si hoy no tiene eventos, avanzar al próximo día con eventos
+    if(!filtered.length && fechaSel){
+      var nextDay=null;
+      for(var i=0;i<data.length;i++){
+        var ef=data[i];
+        if(ef.fecha>fechaSel){nextDay=ef.fecha;break;}
       }
-      var row=document.createElement('div');row.className='time-row';
-      var eh='';
-      for(var j=0;j<evs.length;j++){
-        var e=evs[j],d=gs(e.deporte),dl=e.deporte||'Otro';
-        var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
-        var idx=evCache.indexOf(e);
-        eh+='<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+      if(nextDay){
+        fechaSel=nextDay;
+        var allChips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+        for(var ci=0;ci<allChips.length;ci++){
+          var c=allChips[ci];
+          if(c.getAttribute('data-fecha')===nextDay){c.classList.add('today');}
+          else{c.classList.remove('today');}
+        }
+        // re-filter with new day
+        filtered=[];
+        for(var i=0;i<data.length;i++){if(data[i].fecha===nextDay)filtered.push(data[i]);}
       }
-      row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
-      g.appendChild(row);
     }
-  }).catch(function(err){g.innerHTML='<div class="empty-slot" style="color:#dc2626">Error: '+err.message+'</div>'});
+    evCache=filtered;
+    if(!filtered.length){
+      // Si filtramos por día y no hay eventos, saltar al próximo día con eventos
+      if(_gridFechaSel&&data.length){
+        var nextDates=data.map(function(e){return e.fecha}).filter(function(f){return f>_gridFechaSel});
+        nextDates.sort();
+        if(nextDates.length){
+          var nextDate=nextDates[0];
+          var chips=document.querySelectorAll('.date-chip:not(.date-arrow)');
+          for(var i=0;i<chips.length;i++){
+            chips[i].classList.remove('today');
+            if(chips[i].getAttribute('data-fecha')===nextDate){chips[i].classList.add('today');}
+          }
+          fechaSel=nextDate;
+          loadGrid();return;
+        }
+      }
+      g.innerHTML='<div class="empty-slot">'+t('grid.sin_eventos')+'</div>';return;
+    }
+    var curTime=nm(),hoy=td();
+    g.innerHTML='';
+    function renderEventCard(e,evCache){
+      var d=gs(e.deporte),dl=e.deporte||'Otro';
+      var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
+      var idx=evCache.indexOf(e);
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+    }
+    if(fechaSel){
+      // Vista horaria (día seleccionado)
+      var groups={};
+      for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e);}
+      var nowDone=false;
+      var keys=Object.keys(groups).sort();
+      for(var k=0;k<keys.length;k++){
+        var hora=keys[k],evs=groups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
+        if(!nowDone&&hora>curTime&&fechaSel===hoy){nowDone=true;var nr=document.createElement('div');nr.className='now-row';nr.innerHTML='<div class="now-dot"></div><div class="now-label">'+t('grid.ahora')+'</div><div class="now-time">'+curTime+'</div>';g.appendChild(nr);}
+        var row=document.createElement('div');row.className='time-row';
+        var eh='';
+        for(var j=0;j<evs.length;j++)eh+=renderEventCard(evs[j],evCache);
+        row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
+        g.appendChild(row);
+      }
+    }else{
+      // Vista agrupada por día (sin fecha seleccionada)
+      var dayGroups={};
+      for(var i=0;i<filtered.length;i++){var e=filtered[i];var f=e.fecha;if(!dayGroups[f])dayGroups[f]=[];dayGroups[f].push(e);}
+      var days=Object.keys(dayGroups).sort();
+      for(var d=0;d<days.length;d++){
+        var day=days[d],dayEvs=dayGroups[day];
+        // Separador de día
+        var sep=document.createElement('div');sep.className='day-sep';
+        sep.innerHTML='<div class="day-sep-line"></div><div class="day-sep-label">'+fd(day)+'</div><div class="day-sep-line"></div>';
+        g.appendChild(sep);
+        // Eventos del día agrupados por hora
+        var hGroups={};
+        for(var i=0;i<dayEvs.length;i++){var e=dayEvs[i];var h=(e.hora||'00:00').slice(0,5);if(!hGroups[h])hGroups[h]=[];hGroups[h].push(e);}
+        var hKeys=Object.keys(hGroups).sort();
+        for(var k=0;k<hKeys.length;k++){
+          var hora=hKeys[k],evs=hGroups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
+          var row=document.createElement('div');row.className='time-row';
+          var eh='';
+          for(var j=0;j<evs.length;j++)eh+=renderEventCard(evs[j],evCache);
+          row.innerHTML='<div class="time-col"><span class="time-h">'+hh+'</span><span class="time-m">'+mm+'</span></div><div class="events-col">'+eh+'</div>';
+          g.appendChild(row);
+        }
+      }
+    }
+  }).catch(function(err){g.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+': '+err.message+'</div>'});
 }
 
 // DETALLE
@@ -289,22 +432,33 @@ function openDet(idx){
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
   var d=gs(e.deporte),dl=e.deporte||'Otro';
-  document.getElementById('detTitle').textContent=dl+' · '+fd(e.fecha);
+  var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
+  document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
   var vs;
   if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+e.nombre_evento+'</div>';
-  else vs='<div class="det-vs"><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_visitante||'—')+'</div></div></div>';
+  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+e.mis_equipos.escudo_url+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
   var ent='';
-  if(e.tipo_entrada==='gratis')ent='<div class="det-entry" style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2)"><div style="font-size:20px">🟢</div><div><div class="det-entry-title" style="color:#16a34a">Entrada libre</div></div></div>';
-  else if(e.tipo_entrada==='pago')ent='<div class="det-entry" style="background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.25)"><div style="font-size:20px">€</div><div><div class="det-entry-title" style="color:#b45309">Entrada de pago</div></div></div>';
-  else if(e.tipo_entrada==='rifa')ent='<div class="det-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div style="font-size:20px">🎟️</div><div><div class="det-entry-title" style="color:#ea580c">Entrada con rifa</div></div></div>';
-  else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">Puertas abiertas</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Acceso libre al recinto</div></div></div>';
-  var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">* Última actualización: '+fd(e.updated_at.split('T')[0])+'</div>':'';
-  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">📣 Sobre el evento</div><div style="font-size:13px;color:var(--text);line-height:1.6">'+e.info_evento+'</div></div>':'';
-  var poster=e.imagen_url?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">Cartel</div><div style="cursor:pointer" onclick="openLb(\''+e.imagen_url+'\')"><img src="'+e.imagen_url+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||'Evento')+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">Fecha</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">Instalación</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">Ver en Google Maps →</div></div><div class="det-cell"><div class="det-lbl">Municipio</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">Deporte</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
+  if(e.tipo_entrada==='gratis')ent='<div class="det-entry" style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2)"><div style="font-size:20px">🟢</div><div><div class="det-entry-title" style="color:#16a34a">'+t('det.entrada_libre')+'</div></div></div>';
+  else if(e.tipo_entrada==='pago')ent='<div class="det-entry" style="background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.25)"><div style="font-size:20px">€</div><div><div class="det-entry-title" style="color:#b45309">'+t('det.entrada_pago')+'</div></div></div>';
+  else if(e.tipo_entrada==='rifa')ent='<div class="det-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div style="font-size:20px">🎟️</div><div><div class="det-entry-title" style="color:#ea580c">'+t('det.entrada_rifa')+'</div></div></div>';
+  else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">'+t('det.puertas_abiertas')+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+t('det.acceso_libre')+'</div></div></div>';
+  var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
+  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6">'+e.info_evento+'</div></div>':'';
+  var poster=e.imagen_url?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(\''+e.imagen_url+'\')">'+'<img src="'+e.imagen_url+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
+  var partsHtml='';
+  if(e.participantes&&e.participantes.trim()){
+    var parts=e.participantes.split('\n').map(function(p){return p.trim()}).filter(function(p){return p});
+    if(parts.length){
+      partsHtml='<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px">'+t('det.participantes')+'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:6px">'
+        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+p+'</div>'}).join('')
+        +'</div></div>';
+    }
+  }
+  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||t('det.evento_fallback'))+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');
@@ -323,13 +477,33 @@ function closeMun(){document.getElementById('munDraw').classList.remove('open');
 function loadMunis(){
   var list=document.getElementById('munList');list.innerHTML='<div class="empty-slot">Cargando...</div>';
   fetch(SB+'/rest/v1/municipios?activo=eq.true&order=orden.asc',{headers:H}).then(function(r){return r.json()}).then(function(data){
-    if(!data||!data.length){list.innerHTML='<div class="empty-slot">Sin municipios</div>';return}
+    if(!data||!data.length){list.innerHTML='<div class="empty-slot">'+t('grid.sin_municipios')+'</div>';return}
     var html='';
+    html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">'+t('nav.todos_municipios')+'</div><div class="mun-prov">'+t('nav.sin_filtro_ubi')+'</div></div><div>'+(!muni?'✅':'')+'</div></div>';
     for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')"><div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div><div class="mun-prov">'+(m.provincia||'')+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
     list.innerHTML=html;
-  }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">Error</div>'});
+  }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
 }
-function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name;closeMun();loadGrid()}
+function populateClubSelect(){
+  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
+    var seen={},clubs=[];
+    for(var i=0;i<data.length;i++){
+      var el=(data[i].equipo_local||'').trim();
+      var ev=(data[i].equipo_visitante||'').trim();
+      if(el&&!seen[el]){seen[el]=true;clubs.push(el);}
+      if(ev&&!seen[ev]){seen[ev]=true;clubs.push(ev);}
+    }
+    clubs.sort();
+    var sel=document.getElementById('clubSel');if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="todos">'+t('nav.todos_equipos')+'</option>';
+    for(var i=0;i<clubs.length;i++){var o=document.createElement('option');o.value=clubs[i];o.textContent=clubs[i];sel.appendChild(o);}
+    if(cur&&cur!=='todos')sel.value=cur;
+  }).catch(function(){});
+}
+
+function selMun(name){muni=name;try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name||t('nav.municipios');closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';loadGrid()}
 
 // PERFIL
 function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -340,14 +514,14 @@ function renderProf(){
     var em=authUser.email||'',ini=em.charAt(0).toUpperCase(),col=COLORS[em.charCodeAt(0)%COLORS.length];
     document.getElementById('profBtnIn').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:'+col+';border-radius:50%">'+ini+'</div>';
     h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+em.split('@')[0]+'</div><div class="prof-sub">'+em+'</div>';
-    b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button><div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 Al vestuario</button>';
+    b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button><div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
   }else{
     document.getElementById('profBtnIn').innerHTML='👤';
     h.innerHTML='<div class="prof-avatar guest">👤</div><div class="prof-hola">Invitado</div>';
     if(modoRec){
-      b.innerHTML='<div class="prof-login"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Recuperar contraseña</div><div class="field"><label>Email</label><input type="email" id="recMail" placeholder="correo@ejemplo.com"></div><div class="login-err" id="recErr"></div><button class="btn-kick" onclick="sendRec()">Enviar enlace ⚽</button><div class="login-link" onclick="modoRec=false;renderProf()">← Volver</div></div>';
+      b.innerHTML='<div class="prof-login"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Recuperar contraseña</div><div class="field"><label>Email</label><input type="email" id="recMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="login-err" id="recErr"></div><button class="btn-kick" onclick="sendRec()">Enviar enlace ⚽</button><div class="login-link" onclick="modoRec=false;renderProf()">← Volver</div></div>';
     }else{
-      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')doLogin()"></div><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">¡Al campo! ⚽</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
+      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')doLogin()"></div><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
     }
   }
 }
@@ -355,11 +529,11 @@ function renderProf(){
 // AUTH
 function doLogin(){
   var em=document.getElementById('loginMail'),pw=document.getElementById('loginPass'),er=document.getElementById('loginErr'),bt=document.getElementById('loginBtn');
-  if(!em||!pw)return;if(!em.value.trim()||!pw.value){if(er)er.textContent='Rellena email y contraseña';return}
+  if(!em||!pw)return;if(!em.value.trim()||!pw.value){if(er)er.textContent=t('prof.error_campos');return}
   if(bt){bt.disabled=true;bt.textContent='...'}
-  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser))}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent='¡Al campo! ⚽'}});
+  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser))}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
 }
-function sendRec(){var em=document.getElementById('recMail'),er=document.getElementById('recErr');if(!em||!em.value.trim()){if(er)er.textContent='Introduce tu email';return}fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim()})}).then(function(){if(er){er.style.color='#16a34a';er.textContent='Revisa tu correo'}}).catch(function(e){if(er)er.textContent=e.message})}
+function sendRec(){var em=document.getElementById('recMail'),er=document.getElementById('recErr');if(!em||!em.value.trim()){if(er)er.textContent='Introduce tu email';return}fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim()})}).then(function(){if(er){er.style.color='#16a34a';er.textContent=t('prof.check_correo')}}).catch(function(e){if(er)er.textContent=e.message})}
 function doLogout(){fetch(SB+'/auth/v1/logout',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+authToken}}).catch(function(){});authUser=null;authToken=null;try{sessionStorage.removeItem('kb_token');sessionStorage.removeItem('kb_user')}catch(e){}renderProf();closeProf()}
 function goTo(url){closeProf();window.location.href=url}
 
@@ -369,12 +543,12 @@ function loadAds(){
     adList=data||[];
     // Orden aleatorio
     for(var i=adList.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=adList[i];adList[i]=adList[j];adList[j]=tmp}
-    if(adList.length){renderAdBar();renderAdDots();document.getElementById('adPanel').classList.add('open')}
+    if(adList.length){renderAdBar();renderAdDots();if(adOpen){renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
   }).catch(function(){});
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
 function renderAdDots(){var html='';for(var i=0;i<adList.length;i++)html+='<div class="ad-dot'+(i===adIdx?' on':'')+'" onclick="goAd('+i+')"></div>';document.getElementById('adDots').innerHTML=html}
-function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';var textoExpandido=b.texto||b.descripcion||'';p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+textoExpandido+'</div><a class="ad-cta" href="'+dest+'">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
+function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+(b.texto||b.descripcion||'')+'</div><a class="ad-cta" href="'+dest+'">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
 function toggleAd(){adOpen=!adOpen;var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
@@ -386,11 +560,29 @@ try{var sl=localStorage.getItem('kb_lang');if(sl)lang=sl}catch(e){}
 try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm}catch(e){}
 try{var st=sessionStorage.getItem('kb_token'),su=sessionStorage.getItem('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
 document.getElementById('langSel').value=lang;
-document.getElementById('locText').textContent=muni;
+document.getElementById('locText').textContent=muni||t('nav.municipios');
+applyLang();
 buildDates();
+populateSpSelect();
+populateClubSelect();
 loadGrid();
 loadAds();
 renderProf();
+// SPLASH
+function closeSplash(){
+  var ov=document.getElementById('splashOv');
+  ov.style.opacity='0';
+  setTimeout(function(){ov.style.display='none'},400);
+  try{sessionStorage.setItem('kb_splash','1');}catch(e){}
+}
+window.addEventListener('load',function(){
+  try{if(sessionStorage.getItem('kb_splash'))return;}catch(e){}
+  var ov=document.getElementById('splashOv');
+  ov.style.display='flex';
+  setTimeout(function(){ov.classList.add('show')},30);
+});
+
+// SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 </script>
 </body>

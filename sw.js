@@ -1,10 +1,10 @@
-const CACHE = 'kirolorik-v4';
-const ASSETS = [
-  '/',
-  '/index.html',
+/* Kirolorik · sw.js · v6 · 2026-05-17 */
+
+const CACHE = 'kirolorik-v6';
+
+// Solo se cachean agresivamente los assets estáticos que casi nunca cambian
+const CACHE_FIRST = [
   '/manifest.json',
-  '/assets/css/style.css',
-  '/assets/js/i18n.js',
   '/assets/img/logo.png',
   '/assets/img/icon-192.png',
   '/assets/img/icon-512.png'
@@ -13,7 +13,7 @@ const ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(ASSETS.map(a => new Request(a, {cache:'reload'}))))
+      .then(c => c.addAll(CACHE_FIRST.map(a => new Request(a, {cache:'reload'}))))
       .catch(() => {})
   );
   self.skipWaiting();
@@ -33,22 +33,36 @@ self.addEventListener('fetch', e => {
     e.request.url.includes('supabase.co') ||
     e.request.url.includes('googleapis.com') ||
     e.request.url.includes('google.com/maps') ||
-    e.request.url.includes('unsplash.com') ||
     e.request.method !== 'GET'
   ) return;
 
-  e.respondWith(
-    caches.match(e.request)
-      .then(cached => {
+  const url = new URL(e.request.url);
+  const isHtml = url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '';
+  const isCacheFirst = CACHE_FIRST.some(p => url.pathname === p);
+
+  if (isHtml) {
+    // NETWORK FIRST — todos los HTML siempre frescos
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res.ok) {
+            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request).then(r => r || caches.match('/index.html')))
+    );
+  } else if (isCacheFirst) {
+    // CACHE FIRST — imágenes y manifest
+    e.respondWith(
+      caches.match(e.request).then(cached => {
         if (cached) return cached;
         return fetch(e.request).then(res => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then(c => c.put(e.request, copy));
-          }
+          if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           return res;
         });
       })
-      .catch(() => caches.match('/index.html'))
-  );
+    );
+  }
+  // El resto (CSS, JS, fuentes) — sin interceptar, van directo a la red
 });
