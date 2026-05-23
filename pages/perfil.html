@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.1 · 2026-05-17 -->
+<!-- Kirolorik · perfil.html · v2.10 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -245,7 +245,8 @@ a{color:var(--accent)}
     <div class="field"><label>Nombre del equipo</label><input type="text" id="eqNombre" placeholder="Nombre del equipo"></div>
     <div class="row2">
       <div class="field"><label>Deporte</label>
-        <select id="eqDeporte">
+        <input type="text" id="eqDeporte" list="eqDeporteList" placeholder="Fútbol, basket, natación...">
+        <datalist id="eqDeporteList">
           <option value="futbol">⚽ Fútbol</option>
           <option value="basket">🏀 Basket</option>
           <option value="balonmano">🤾 Balonmano</option>
@@ -254,8 +255,14 @@ a{color:var(--accent)}
           <option value="tenis">🎾 Tenis</option>
           <option value="atletismo">🏃 Atletismo</option>
           <option value="ciclismo">🚴 Ciclismo</option>
+          <option value="voley">🏐 Voley</option>
+          <option value="natacion">🏊 Natación</option>
+          <option value="padel">🎾 Pádel</option>
+          <option value="ajedrez">♟️ Ajedrez</option>
+          <option value="rugby">🏉 Rugby</option>
+          <option value="hockey">🏒 Hockey</option>
           <option value="otros">🏅 Otros</option>
-        </select>
+        </datalist>
       </div>
       <div class="field"><label>Municipio</label><input type="text" id="eqMunicipio" placeholder="Eibar..."></div>
     </div>
@@ -279,6 +286,7 @@ a{color:var(--accent)}
           <option value="Junior">Junior</option>
           <option value="Senior">Senior</option>
           <option value="Veteranos">Veteranos</option>
+          <option value="Todas">Todas</option>
         </select>
       </div>
     </div>
@@ -306,7 +314,7 @@ a{color:var(--accent)}
 const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
-const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',otros:'🏅'};
+const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',voley:'🏐',natacion:'🏊',padel:'🎾',ajedrez:'♟️',rugby:'🏉',hockey:'🏒',otros:'🏅'};
 
 let tok = null, user = null, perfil = null, idiomaActual = 'cas';
 
