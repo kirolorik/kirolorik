@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.11 · 2026-05-22 -->
+<!-- Kirolorik · eventos.html · v3.12 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -149,12 +149,17 @@ tbody td select{cursor:pointer}
     </div>
     <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
     <div class="row2">
-      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Junior</option><option>Juvenil</option><option>Élite</option><option>Absoluto</option><option>Senior</option><option>Master</option><option>Veteranos</option><option>Todas</option></select></div>
+      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Junior</option><option>Senior</option><option>Veteranos</option><option>Todas</option></select></div>
       <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
     </div>
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
     <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
     <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
+    <div class="field" id="f_parts_wrap" style="display:none">
+      <label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(hasta 10 · uno por línea)</span></label>
+      <div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <button type="button" onclick="addParticipante('f_parts_list')" style="background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:7px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;width:100%">+ Añadir participante</button>
+    </div>
     <div class="row2">
       <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
       <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
@@ -399,7 +404,7 @@ function abrirEdicion(e){
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:flex-end;justify-content:center';
   const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
   const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
-  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
+  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
   const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
   const DURACION_OPTS=[45,60,90,120,180,240,360];
@@ -441,11 +446,17 @@ function abrirEdicion(e){
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${e.info_evento||''}</textarea></div>
+      <div class="field" id="e_parts_wrap">
+        <label>Participantes <span style="font-weight:400;font-size:11px">(hasta 10 · uno por línea)</span></label>
+        <div id="e_parts_list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+        <button type="button" onclick="addParticipante('e_parts_list')" style="background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:7px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;width:100%">+ Añadir participante</button>
+      </div>
       <button class="btn-primary" onclick="guardarEdicion()">Guardar cambios ⚽</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', ev => { if(ev.target===modal) cerrarEdicion(); });
   renderEditLocalField(e);
+  if(e.participantes) setParticipantes('e_parts_list', e.participantes);
 }
 
 function cerrarEdicion(){
@@ -472,6 +483,7 @@ async function guardarEdicion(){
     tipo_entrada:document.getElementById('e_entrada').value,
     duracion_minutos:parseInt(document.getElementById('e_duracion').value)||90,
     info_evento:document.getElementById('e_info').value.trim()||null,
+    participantes:getParticipantes('e_parts_list'),
   };
   // Subir imagen si hay una nueva
   const imgFile = document.getElementById('e_imagen')?.files[0];
@@ -491,6 +503,37 @@ async function guardarEdicion(){
 }
 
 // ── FORMULARIO ──
+function addParticipante(listId){
+  const list=document.getElementById(listId);
+  if(!list) return;
+  const count=list.querySelectorAll('input').length;
+  if(count>=10) return;
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;gap:6px;align-items:center';
+  wrap.innerHTML='<input type="text" placeholder="Nombre del equipo o participante" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;color:var(--text);outline:none">'
+    +'<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);padding:4px;opacity:0.5">✕</button>';
+  list.appendChild(wrap);
+}
+
+function getParticipantes(listId){
+  const list=document.getElementById(listId);
+  if(!list) return null;
+  const vals=Array.from(list.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
+  return vals.length ? vals.join('\n') : null;
+}
+
+function setParticipantes(listId, text){
+  const list=document.getElementById(listId);
+  if(!list) return;
+  list.innerHTML='';
+  if(!text) return;
+  text.split('\n').filter(Boolean).forEach(p=>{
+    addParticipante(listId);
+    const inputs=list.querySelectorAll('input');
+    inputs[inputs.length-1].value=p;
+  });
+}
+
 function buildEvento(d){
   return {
     deporte:d.deporte||'otros', genero:d.genero||'Sin especificar',
@@ -504,7 +547,8 @@ function buildEvento(d){
     duracion_minutos:parseInt(d.duracion)||90,
     imagen_url:d.imagen_url||null,
     info_evento:d.info||null,
-    activo:true, user_id:authUser?.id||null
+    activo:true, user_id:authUser?.id||null,
+    participantes:d.participantes||null
   };
 }
 
@@ -530,7 +574,8 @@ async function guardarForm(){
     entrada:document.getElementById('f_entrada').value,
     duracion:document.getElementById('f_duracion').value,
     imagen_url, equipo_id:selectedEquipoId||null,
-    municipio_equipo:selectedEquipoId?userTeams.find(function(t){return t.id===selectedEquipoId})?.municipio||null:null
+    municipio_equipo:selectedEquipoId?userTeams.find(function(t){return t.id===selectedEquipoId})?.municipio||null:null,
+    participantes:getParticipantes('f_parts_list')
   });
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
@@ -547,7 +592,7 @@ async function guardarForm(){
 // ── HOJA DE CÁLCULO ──
 const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
 const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
-const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
+const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
 const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
 const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
 
@@ -716,6 +761,14 @@ async function borrar(id){
     toast('Evento eliminado');cargarLista();
   }catch{toast('Error al borrar',true);}
 }
+
+// ── TOGGLE PARTICIPANTES ──
+document.addEventListener('input', function(e){
+  if(e.target.id==='f_nombre'){
+    var wrap=document.getElementById('f_parts_wrap');
+    if(wrap) wrap.style.display=e.target.value.trim()?'block':'none';
+  }
+});
 
 // ── INIT ──
 const savedToken=sessionStorage.getItem('kb_token');
