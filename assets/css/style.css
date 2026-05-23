@@ -1,4 +1,4 @@
-/* Kirolorik · style.css · v2.8 · 2026-05-17 */
+/* Kirolorik · style.css · v2.9 · 2026-05-17 */
 /* ═══════════════════════════════════════
    KIROLORIK · style.css
    Estilos compartidos — index + adminEvento
@@ -244,7 +244,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
 .day-sep-label{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 
 /* Parrilla */
-.parrilla-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:var(--bg);padding-bottom:100px}
+.parrilla-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:var(--bg);padding-bottom:145px}
 .parrilla-wrap::-webkit-scrollbar{display:none}
 .parrilla{display:flex;flex-direction:column}
 
