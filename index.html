@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.7 · 2026-05-22 -->
+<!-- Kirolorik · index.html · v6.8 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -468,7 +468,7 @@ function loadMunis(){
   fetch(SB+'/rest/v1/municipios?activo=eq.true&order=orden.asc',{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!data||!data.length){list.innerHTML='<div class="empty-slot">'+t('grid.sin_municipios')+'</div>';return}
     var html='';
-    html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">Todos los municipios</div><div class="mun-prov">Sin filtro de ubicación</div></div><div>'+(!muni?'✅':'')+'</div></div>';
+    html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">'+t('nav.todos_municipios')+'</div><div class="mun-prov">'+t('nav.sin_filtro_ubi')+'</div></div><div>'+(!muni?'✅':'')+'</div></div>';
     for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')"><div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div><div class="mun-prov">'+(m.provincia||'')+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
