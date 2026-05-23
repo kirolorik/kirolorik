@@ -1,4 +1,4 @@
-// Kirolorik · i18n.js · v1.0 · 2026-05-22
+// Kirolorik · i18n.js · v1.1 · 2026-05-22
 // Sistema de traducciones centralizado.
 // Añadir un idioma nuevo = añadir un bloque más en I18N.
 // Uso: t('key') → string en el idioma activo (var lang debe existir globalmente)
@@ -50,6 +50,7 @@ var I18N = {
     'det.ultima_act':          '* Última actualización:',
     'det.sobre_evento':        '📣 Sobre el evento',
     'det.cartel':              'Cartel',
+    'det.participantes':        'Participantes',
     'det.evento_fallback':     'Evento',
     'det.hora_min':            'h · ~',
     'det.min':                 'min',
@@ -135,6 +136,7 @@ var I18N = {
     'det.ultima_act':          '* Azken eguneraketa:',
     'det.sobre_evento':        '📣 Gertaerari buruz',
     'det.cartel':              'Kartela',
+    'det.participantes':        'Parte-hartzaileak',
     'det.evento_fallback':     'Gertaera',
     'det.hora_min':            'h · ~',
     'det.min':                 'min',
