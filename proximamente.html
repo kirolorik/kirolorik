@@ -1,25 +1,24 @@
-<!-- Kirolorik · proximamente.html · v1.14 · 2026-05-22 -->
+<!-- Kirolorik · proximamente.html · v1.00 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kirolorik — Tu agenda deportiva local</title>
-<meta name="description" content="La parrilla de eventos deportivos de tu municipio. Fútbol, basket, natación y mucho más.">
+<meta name="description" content="La parrilla de eventos deportivos de tu municipio. Fútbol, basket, natación y mucho más. Próximamente en Eibar.">
 <meta property="og:title" content="Kirolorik — Tu agenda deportiva local">
-<meta property="og:description" content="Todos los eventos deportivos locales en un solo lugar.">
-<meta property="og:image" content="assets/img/logo3d.jpg">
-<meta name="theme-color" content="#1a1d23">
+<meta property="og:description" content="¿Qué hay esta tarde en Eibar? Kirolorik reúne todos los eventos deportivos locales en un solo lugar.">
+<meta name="theme-color" content="#1a6bff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
   --accent:   #1a6bff;
   --accent2:  #0d47d4;
-  --bg:       #f0f2f5;
+  --bg:       #f4f6f8;
   --surface:  #ffffff;
   --text:     #1a1d23;
   --text2:    #4a5060;
@@ -36,95 +35,90 @@ html,body{
   overflow-x:hidden;
 }
 
+/* ── FONDO ── */
+.bg-blobs{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.blob{
+  position:absolute;border-radius:50%;filter:blur(80px);opacity:0.12;
+  animation:drift 12s ease-in-out infinite alternate;
+}
+.blob-1{width:500px;height:500px;background:var(--accent);top:-100px;right:-100px;animation-delay:0s}
+.blob-2{width:400px;height:400px;background:#06b6d4;bottom:100px;left:-100px;animation-delay:-4s}
+.blob-3{width:300px;height:300px;background:#8b5cf6;bottom:-50px;right:30%;animation-delay:-8s}
+
+@keyframes drift{
+  from{transform:translate(0,0) scale(1)}
+  to{transform:translate(30px,20px) scale(1.05)}
+}
+
+/* ── LAYOUT ── */
 .page{
-  max-width:480px;
-  margin:0 auto;
-  padding:0 20px 60px;
+  position:relative;z-index:1;
+  min-height:100vh;
   display:flex;flex-direction:column;align-items:center;
+  padding:0 20px 60px;
+  max-width:480px;margin:0 auto;
+}
+
+/* ── HEADER ── */
+.header{
+  width:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:28px 0 0;
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;letter-spacing:2px;color:var(--text);
+  text-decoration:none;
+}
+.logo svg{width:32px;height:32px}
+.badge-prox{
+  background:var(--accent);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  padding:5px 10px;border-radius:20px;
+  text-transform:uppercase;
 }
 
 /* ── HERO ── */
 .hero{
   width:100%;
-  min-height:100svh;
-  display:flex;flex-direction:column;
-  padding-top:40px;
-}
-
-/* Logo texto arriba */
-.wordmark{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:15px;letter-spacing:4px;
-  color:var(--muted);
   text-align:center;
-  margin-bottom:0;
-  opacity:0;
-  animation:fadeIn 0.6s 0.1s ease forwards;
+  padding:52px 0 40px;
+  animation:fadeUp 0.7s ease both;
 }
-
-/* Imagen protagonista */
-.hero-img-wrap{
-  position:relative;
-  width:100%;
-  flex:1;
-  display:flex;align-items:center;justify-content:center;
-  padding:20px 0;
-  opacity:0;
-  animation:fadeIn 0.8s 0.3s ease forwards;
-  background:linear-gradient(160deg,#1a1d23 0%,#1e2a3a 100%);
-  border-radius:24px;
-  margin:16px 0;
-  min-height:280px;
-  flex:none;
-}
-.hero-img{
-  width:min(320px,82vw);
-  height:auto;
-  display:block;
-  filter:drop-shadow(0 20px 40px rgba(0,0,0,0.4));
-  animation:float 6s ease-in-out infinite;
-  mix-blend-mode:lighten;
-}
-@keyframes float{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-10px)}
-}
-
-/* Claim debajo de la imagen */
-.hero-claim{
-  text-align:center;
-  padding-bottom:32px;
-  opacity:0;
-  animation:fadeUp 0.7s 0.6s ease forwards;
+.hero-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--accent);
+  margin-bottom:16px;
 }
 .hero-title{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(52px,14vw,76px);
-  line-height:0.92;
-  letter-spacing:1px;
+  font-size:clamp(48px,12vw,72px);
+  line-height:0.95;letter-spacing:1px;
   color:var(--text);
-  margin-bottom:14px;
+  margin-bottom:20px;
 }
-.hero-title .accent{color:var(--accent)}
+.hero-title span{color:var(--accent)}
 .hero-sub{
-  font-size:16px;font-weight:400;
+  font-size:17px;font-weight:400;
   color:var(--text2);line-height:1.6;
-  max-width:300px;margin:0 auto 28px;
+  max-width:320px;margin:0 auto 36px;
 }
 
 /* ── FORM ── */
 .form-wrap{
+  width:100%;
   background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:18px;
-  box-shadow:0 4px 32px rgba(26,107,255,0.1);
-  width:100%;
-  margin-bottom:6px;
+  padding:20px;
+  box-shadow:0 4px 24px rgba(26,107,255,0.08);
+  margin-bottom:8px;
 }
 .form-label{
-  font-size:12px;font-weight:700;
-  letter-spacing:0.5px;color:var(--text2);
+  font-size:13px;font-weight:600;color:var(--text2);
   margin-bottom:10px;display:block;
 }
 .form-row{display:flex;gap:8px}
@@ -132,8 +126,8 @@ html,body{
   flex:1;
   background:var(--bg);
   border:1.5px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
+  border-radius:12px;
+  padding:13px 16px;
   font-size:14px;font-family:'DM Sans',sans-serif;
   color:var(--text);outline:none;
   transition:border-color 0.2s;
@@ -142,213 +136,215 @@ html,body{
 .form-input::placeholder{color:var(--muted)}
 .form-btn{
   background:var(--accent);color:#fff;
-  border:none;border-radius:10px;
-  padding:12px 18px;
-  font-size:14px;font-weight:700;
-  font-family:'DM Sans',sans-serif;
+  border:none;border-radius:12px;
+  padding:13px 20px;
+  font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;
   cursor:pointer;white-space:nowrap;
   transition:background 0.2s,transform 0.1s;
 }
 .form-btn:hover{background:var(--accent2)}
 .form-btn:active{transform:scale(0.97)}
 .form-note{
-  font-size:11px;color:var(--muted);
-  text-align:center;
+  font-size:11px;color:var(--muted);text-align:center;
+  padding:0 4px;
 }
+
 .form-success{
-  display:none;text-align:center;
-  padding:12px 0 4px;
+  display:none;
+  text-align:center;padding:16px 0 8px;
   animation:fadeUp 0.4s ease both;
 }
-.form-success .tick{font-size:28px;margin-bottom:6px}
-.form-success strong{font-size:14px;font-weight:700;display:block;margin-bottom:4px}
+.form-success .tick{font-size:32px;margin-bottom:8px}
+.form-success p{font-size:14px;font-weight:600;color:var(--text)}
 .form-success small{font-size:12px;color:var(--muted)}
 
-/* ── SEPARADOR ── */
-.divider{
-  width:100%;
-  height:1px;
-  background:var(--border);
-  margin:48px 0;
+/* ── PREVIEW ── */
+.preview-section{
+  width:100%;margin-top:48px;
+  animation:fadeUp 0.7s 0.2s ease both;
+}
+.section-label{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:16px;text-align:center;
+}
+.preview-phone{
+  position:relative;
+  border-radius:24px;overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 20px 60px rgba(0,0,0,0.12);
+}
+.preview-phone img{
+  width:100%;display:block;
+}
+.preview-overlay{
+  position:absolute;bottom:0;left:0;right:0;height:80px;
+  background:linear-gradient(to top,var(--bg),transparent);
 }
 
 /* ── FEATURES ── */
 .features{
-  width:100%;
-  display:flex;flex-direction:column;gap:10px;
+  width:100%;margin-top:48px;
+  display:flex;flex-direction:column;gap:12px;
+  animation:fadeUp 0.7s 0.35s ease both;
 }
 .feat{
   background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:16px 18px;
+  padding:18px 20px;
   display:flex;align-items:flex-start;gap:14px;
-  transition:box-shadow 0.2s;
 }
-.feat:hover{box-shadow:0 4px 20px rgba(0,0,0,0.06)}
 .feat-icon{
-  font-size:20px;flex-shrink:0;
-  width:40px;height:40px;
-  background:var(--bg);border-radius:10px;
+  font-size:24px;flex-shrink:0;
+  width:44px;height:44px;
+  background:var(--bg);border-radius:12px;
   display:flex;align-items:center;justify-content:center;
 }
-.feat-title{font-size:13px;font-weight:700;margin-bottom:3px}
-.feat-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.feat-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.5}
 
-/* ── PREVIEW APP ── */
-.preview-section{
-  width:100%;margin-top:48px;
+/* ── MUNICIPIO ── */
+.muni-section{
+  width:100%;margin-top:48px;text-align:center;
+  animation:fadeUp 0.7s 0.45s ease both;
 }
-.section-eyebrow{
-  font-size:10px;font-weight:700;letter-spacing:2.5px;
-  text-transform:uppercase;color:var(--muted);
-  text-align:center;margin-bottom:16px;
+.muni-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:8px 16px;
+  font-size:13px;font-weight:600;
+  margin-bottom:20px;
 }
-.preview-frame{
-  border-radius:20px;overflow:hidden;
-  border:1px solid var(--border);
-  box-shadow:0 16px 48px rgba(0,0,0,0.1);
-  position:relative;
+.muni-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  animation:pulse 2s ease-in-out infinite;
 }
-.preview-frame img{width:100%;display:block}
-.preview-grad{
-  position:absolute;bottom:0;left:0;right:0;height:80px;
-  background:linear-gradient(to top,var(--bg),transparent);
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.5;transform:scale(0.8)}
 }
+.muni-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:32px;letter-spacing:1px;
+  color:var(--text);margin-bottom:8px;
+}
+.muni-sub{font-size:14px;color:var(--text2);line-height:1.5}
 
-/* ── MUNICIPIO / PILOT ── */
-.pilot{
+/* ── CONTACTO ── */
+.contact-section{
   width:100%;margin-top:48px;
   background:var(--text);
   border-radius:var(--radius);
-  padding:32px 24px;
-  position:relative;overflow:hidden;
+  padding:28px 24px;
+  text-align:center;
+  animation:fadeUp 0.7s 0.5s ease both;
 }
-.pilot::before{
-  content:'';position:absolute;
-  top:-60px;right:-60px;
-  width:200px;height:200px;
-  border-radius:50%;
-  background:var(--accent);
-  opacity:0.12;
-}
-.pilot-top{
-  display:flex;align-items:center;gap:10px;
-  margin-bottom:20px;
-}
-.pilot-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:#22c55e;
-  box-shadow:0 0 0 3px rgba(34,197,94,0.2);
-  animation:pulse 2s infinite;
-}
-@keyframes pulse{
-  0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,0.2)}
-  50%{box-shadow:0 0 0 6px rgba(34,197,94,0.05)}
-}
-.pilot-status{
-  font-size:11px;font-weight:700;letter-spacing:1.5px;
-  text-transform:uppercase;color:#22c55e;
-}
-.pilot-title{
+.contact-section .contact-title{
   font-family:'Bebas Neue',sans-serif;
-  font-size:34px;letter-spacing:1px;
-  color:#fff;line-height:1;
-  margin-bottom:8px;
+  font-size:26px;letter-spacing:1px;
+  color:#fff;margin-bottom:8px;
 }
-.pilot-sub{
-  font-size:13px;color:rgba(255,255,255,0.55);
-  line-height:1.6;margin-bottom:24px;
+.contact-section p{
+  font-size:13px;color:rgba(255,255,255,0.6);
+  margin-bottom:20px;line-height:1.5;
 }
-.pilot-link{
+.contact-link{
   display:inline-flex;align-items:center;gap:8px;
   background:var(--accent);color:#fff;
-  font-size:13px;font-weight:700;
-  padding:12px 20px;border-radius:10px;
+  font-size:14px;font-weight:700;
+  padding:13px 24px;border-radius:12px;
   text-decoration:none;
   transition:background 0.2s,transform 0.1s;
 }
-.pilot-link:hover{background:var(--accent2)}
-.pilot-link:active{transform:scale(0.97)}
+.contact-link:hover{background:var(--accent2)}
+.contact-link:active{transform:scale(0.97)}
 
 /* ── FOOTER ── */
 .footer{
   width:100%;margin-top:48px;
   text-align:center;
-  font-size:11px;color:var(--muted);line-height:2;
+  font-size:11px;color:var(--muted);
+  line-height:1.8;
 }
 .footer a{color:var(--muted);text-decoration:none}
 .footer a:hover{color:var(--text)}
 
-/* ── ANIMS ── */
-@keyframes fadeIn{
-  from{opacity:0}to{opacity:1}
-}
+/* ── ANIM ── */
 @keyframes fadeUp{
-  from{opacity:0;transform:translateY(16px)}
+  from{opacity:0;transform:translateY(20px)}
   to{opacity:1;transform:translateY(0)}
 }
 
 /* ── TOAST ── */
 .toast{
-  position:fixed;bottom:24px;left:50%;
-  transform:translateX(-50%) translateY(12px);
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--text);color:#fff;
   font-size:13px;font-weight:600;
-  padding:11px 18px;border-radius:10px;
-  opacity:0;transition:all 0.25s;
+  padding:12px 20px;border-radius:12px;
+  opacity:0;transition:all 0.3s;
   white-space:nowrap;z-index:999;pointer-events:none;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* Scroll reveal */
-.reveal{
-  opacity:0;transform:translateY(20px);
-  transition:opacity 0.6s ease, transform 0.6s ease;
-}
-.reveal.visible{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
 
+<div class="bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
 <div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <a class="logo" href="#">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="10" fill="#1a6bff"/>
+        <path d="M10 28 L10 16 L16 16 L16 22 L20 18 L24 22 L24 16 L30 16 L30 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="20" cy="12" r="3" fill="white"/>
+      </svg>
+      KIROLORIK
+    </a>
+    <div class="badge-prox">Próximamente</div>
+  </header>
 
   <!-- HERO -->
   <section class="hero">
-    <div class="wordmark">KIROLORIK</div>
+    <div class="hero-eyebrow">Agenda deportiva local</div>
+    <h1 class="hero-title">¿Qué hay<br>esta <span>tarde</span>?</h1>
+    <p class="hero-sub">Todos los eventos deportivos de tu municipio en un solo lugar. Fútbol, basket, natación y mucho más.</p>
 
-    <div class="hero-img-wrap">
-      <img class="hero-img"
-        src="assets/img/logo3d.jpg"
-        alt="Logo Kirolorik en 3D"
-        onerror="this.style.display='none'">
-    </div>
-
-    <div class="hero-claim">
-      <h1 class="hero-title">¿Qué hay<br>esta <span class="accent">tarde</span>?</h1>
-      <p class="hero-sub">Todos los eventos deportivos de tu municipio en un solo lugar.</p>
-
-      <div class="form-wrap">
-        <label class="form-label">Avísame cuando esté disponible</label>
-        <div class="form-row" id="formRow">
-          <input class="form-input" type="email" id="emailInput"
-            placeholder="tu@email.com" autocomplete="email">
-          <button class="form-btn" onclick="submitEmail()">Entrar 🏟️</button>
-        </div>
-        <div class="form-success" id="formSuccess">
-          <div class="tick">✅</div>
-          <strong>¡Apuntado!</strong>
-          <small>Te avisaremos cuando Kirolorik esté listo en tu municipio.</small>
-        </div>
+    <!-- FORM -->
+    <div class="form-wrap">
+      <label class="form-label">Avísame cuando esté disponible</label>
+      <div class="form-row">
+        <input class="form-input" type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email">
+        <button class="form-btn" onclick="submitEmail()">Entrar 🏟️</button>
       </div>
-      <p class="form-note">Sin spam · Solo un aviso cuando lancemos</p>
+      <div class="form-success" id="formSuccess">
+        <div class="tick">✅</div>
+        <p>¡Apuntado!</p>
+        <small>Te avisaremos cuando Kirolorik esté listo en tu municipio.</small>
+      </div>
+    </div>
+    <p class="form-note">Sin spam. Solo un aviso cuando lancemos.</p>
+  </section>
+
+  <!-- PREVIEW -->
+  <section class="preview-section">
+    <div class="section-label">El producto</div>
+    <div class="preview-phone">
+      <img src="assets/img/preview.jpg" alt="Captura de Kirolorik mostrando eventos de natación en Eibar" onerror="this.parentElement.style.display='none'">
+      <div class="preview-overlay"></div>
     </div>
   </section>
 
-  <div class="divider"></div>
-
   <!-- FEATURES -->
-  <section class="features reveal">
+  <section class="features">
     <div class="feat">
       <div class="feat-icon">📺</div>
       <div>
@@ -359,7 +355,7 @@ html,body{
     <div class="feat">
       <div class="feat-icon">📍</div>
       <div>
-        <div class="feat-title">Todos los deportes</div>
+        <div class="feat-title">Tu municipio, todos los deportes</div>
         <div class="feat-desc">Fútbol, basket, natación, ajedrez, atletismo... Todos los clubs y categorías en un solo sitio.</div>
       </div>
     </div>
@@ -374,38 +370,33 @@ html,body{
       <div class="feat-icon">📱</div>
       <div>
         <div class="feat-title">Sin descargas</div>
-        <div class="feat-desc">Abre desde el navegador del móvil. Sin instalar nada.</div>
+        <div class="feat-desc">Abre desde el navegador. Funciona en cualquier móvil, sin instalar nada.</div>
       </div>
     </div>
   </section>
 
-  <!-- PREVIEW APP -->
-  <section class="preview-section reveal">
-    <div class="section-eyebrow">El producto</div>
-    <div class="preview-frame">
-      <img src="assets/img/preview.jpg"
-        alt="Parrilla de eventos de Kirolorik"
-        onerror="this.parentElement.style.display='none'">
-      <div class="preview-grad"></div>
+  <!-- MUNICIPIO -->
+  <section class="muni-section">
+    <div class="muni-chip">
+      <div class="muni-dot"></div>
+      Lanzamiento · Eibar, Gipuzkoa
     </div>
+    <div class="muni-title">Empieza en Eibar</div>
+    <p class="muni-sub">El piloto arranca en Eibar. Después, el resto del País Vasco. ¿Quieres Kirolorik en tu municipio?</p>
   </section>
 
-  <!-- PILOT / CLUBS -->
-  <section class="pilot reveal">
-    <div class="pilot-top">
-      <div class="pilot-dot"></div>
-      <div class="pilot-status">En desarrollo · Eibar, Gipuzkoa</div>
-    </div>
-    <div class="pilot-title">¿Tienes un club?</div>
-    <p class="pilot-sub">Publica tus eventos gratis y llega a todos los vecinos que quieran ir a verte. Sin complicaciones.</p>
-    <a class="pilot-link" href="mailto:kirolorik.info@gmail.com">
+  <!-- CONTACTO CLUBS -->
+  <section class="contact-section">
+    <div class="contact-title">¿Tienes un club?</div>
+    <p>Publica tus eventos gratis y llega a todos los vecinos que quieran ir a verte. Sin complicaciones.</p>
+    <a class="contact-link" href="mailto:kirolorik.info@gmail.com">
       📩 Escríbenos
     </a>
   </section>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div>
+    <div style="margin-bottom:8px">
       <a href="/pages/legal.html#privacidad">Privacidad</a> ·
       <a href="/pages/legal.html#cookies">Cookies</a> ·
       <a href="/pages/legal.html#terminos">Términos</a>
@@ -418,17 +409,24 @@ html,body{
 <div class="toast" id="toast"></div>
 
 <script>
-// ── FORM ──
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},3000);
+}
+
 function submitEmail(){
   var input=document.getElementById('emailInput');
   var email=input.value.trim();
-  if(!email||!email.includes('@')||!email.includes('.')){
+  if(!email||!email.includes('@')){
     showToast('Introduce un email válido');
     input.focus();return;
   }
+  // Enviar a mailto como fallback — en producción sustituir por Supabase
   var btn=document.querySelector('.form-btn');
   btn.textContent='...';btn.disabled=true;
 
+  // Guardar en Supabase waitlist (tabla a crear) o fallback mailto
   fetch('https://glscnwctcvrosmbrljns.supabase.co/rest/v1/waitlist',{
     method:'POST',
     headers:{
@@ -439,46 +437,24 @@ function submitEmail(){
     },
     body:JSON.stringify({email:email})
   }).then(function(r){
-    if(r.ok||r.status===201||r.status===409){
-      document.getElementById('formRow').style.display='none';
+    if(r.ok||r.status===201){
+      document.querySelector('.form-row').style.display='none';
       document.getElementById('formSuccess').style.display='block';
     } else {
-      fallbackMailto(email,btn);
+      // Fallback: mailto
+      window.location.href='mailto:kirolorik.info@gmail.com?subject=Quiero%20saber%20cuando%20lance%20Kirolorik&body=Email%3A%20'+encodeURIComponent(email);
+      btn.textContent='Entrar 🏟️';btn.disabled=false;
     }
   }).catch(function(){
-    fallbackMailto(email,btn);
+    window.location.href='mailto:kirolorik.info@gmail.com?subject=Quiero%20saber%20cuando%20lance%20Kirolorik&body=Email%3A%20'+encodeURIComponent(email);
+    btn.textContent='Entrar 🏟️';btn.disabled=false;
   });
 }
 
-function fallbackMailto(email,btn){
-  window.location.href='mailto:kirolorik.info@gmail.com'
-    +'?subject=Quiero%20saber%20cuando%20lance%20Kirolorik'
-    +'&body=Email%3A%20'+encodeURIComponent(email);
-  btn.textContent='Entrar 🏟️';btn.disabled=false;
-}
-
+// Enter en el input
 document.getElementById('emailInput').addEventListener('keydown',function(e){
   if(e.key==='Enter') submitEmail();
 });
-
-// ── TOAST ──
-function showToast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show')},3000);
-}
-
-// ── SCROLL REVEAL ──
-var revealEls=document.querySelectorAll('.reveal');
-var observer=new IntersectionObserver(function(entries){
-  entries.forEach(function(entry){
-    if(entry.isIntersecting){
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
-    }
-  });
-},{threshold:0.1});
-revealEls.forEach(function(el){observer.observe(el)});
 </script>
 
 </body>
