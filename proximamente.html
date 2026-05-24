@@ -1,4 +1,4 @@
-<!-- Kirolorik · proximamente.html · v1.16 · 2026-05-22 -->
+<!-- Kirolorik · proximamente.html · v1.17 · 2026-05-22 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -19,7 +19,7 @@
 :root{
   --accent:   #1a6bff;
   --accent2:  #0d47d4;
-  --bg:       #f0f2f5;
+  --bg:       #ffffff;
   --surface:  #ffffff;
   --text:     #1a1d23;
   --text2:    #4a5060;
@@ -82,13 +82,13 @@ html,body{
   width:min(320px,82vw);
   height:auto;
   display:block;
-  filter:drop-shadow(0 20px 40px rgba(0,0,0,0.4));
-  animation:breathe 5s ease-in-out infinite;
+  filter:none;
+  animation:breathe 20s ease-in-out infinite;
   mix-blend-mode:lighten;
 }
 @keyframes breathe{
   0%,100%{transform:scale(1)}
-  50%{transform:scale(1.07)}
+  50%{transform:scale(1.03)}
 }
 
 /* Claim debajo de la imagen */
@@ -179,7 +179,7 @@ html,body{
   display:flex;flex-direction:column;gap:10px;
 }
 .feat{
-  background:var(--surface);
+  background:#f4f6f9;
   border:1px solid var(--border);
   border-radius:var(--radius);
   padding:16px 18px;
@@ -208,7 +208,6 @@ html,body{
 .preview-frame{
   border-radius:20px;overflow:hidden;
   border:1px solid var(--border);
-  box-shadow:0 16px 48px rgba(0,0,0,0.1);
   position:relative;
 }
 .preview-frame img{width:100%;display:block}
@@ -220,19 +219,12 @@ html,body{
 /* ── MUNICIPIO / PILOT ── */
 .pilot{
   width:100%;margin-top:48px;
-  background:var(--text);
+  background:#f4f6f9;
   border-radius:var(--radius);
   padding:32px 24px;
   position:relative;overflow:hidden;
 }
-.pilot::before{
-  content:'';position:absolute;
-  top:-60px;right:-60px;
-  width:200px;height:200px;
-  border-radius:50%;
-  background:var(--accent);
-  opacity:0.12;
-}
+
 .pilot-top{
   display:flex;align-items:center;gap:10px;
   margin-bottom:20px;
@@ -254,11 +246,11 @@ html,body{
 .pilot-title{
   font-family:'Bebas Neue',sans-serif;
   font-size:34px;letter-spacing:1px;
-  color:#fff;line-height:1;
+  color:var(--text);line-height:1;
   margin-bottom:8px;
 }
 .pilot-sub{
-  font-size:13px;color:rgba(255,255,255,0.55);
+  font-size:13px;color:var(--text2);
   line-height:1.6;margin-bottom:24px;
 }
 .pilot-link{
@@ -354,7 +346,7 @@ html,body{
       <div class="feat-icon">📺</div>
       <div>
         <div class="feat-title">Parrilla deportiva</div>
-        <div class="feat-desc">Como la guía de la tele pero para el deporte local. Ve de un vistazo qué pasa hoy y esta semana.</div>
+        <div class="feat-desc">Ve de un vistazo qué pasa hoy y esta semana.</div>
       </div>
     </div>
     <div class="feat">
@@ -364,13 +356,7 @@ html,body{
         <div class="feat-desc">Fútbol, basket, natación, ajedrez, atletismo... Todos los clubs y categorías en un solo sitio.</div>
       </div>
     </div>
-    <div class="feat">
-      <div class="feat-icon">🎟️</div>
-      <div>
-        <div class="feat-title">Entrada, precio y horario</div>
-        <div class="feat-desc">Sabes antes de salir si es gratis, hay rifa o cuesta entrada. Sin sorpresas.</div>
-      </div>
-    </div>
+    
     <div class="feat">
       <div class="feat-icon">📱</div>
       <div>
