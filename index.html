@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.11 · 2026-05-22 -->
+<!-- Kirolorik · index.html · v6.15 · 2026-05-31 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -219,7 +219,8 @@ function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function nm(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);return t('dias')[dt.getDay()]+' '+p[2]+' '+t('meses')[p[1]-1]+' '+p[0]}
-function en(e){return e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'')}
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function en(e){return esc(e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''))}
 function bg(tp){
   if(tp==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">'+window.t('badge.entrada')+'</div></div>';
   if(tp==='rifa')return'<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">'+window.t('badge.rifa')+'</div></div>';
@@ -382,7 +383,7 @@ function loadGrid(){
       var d=gs(e.deporte),dl=e.deporte||'Otro';
       var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
       var idx=evCache.indexOf(e);
-      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+esc(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
     }
     if(fechaSel){
       // Vista horaria (día seleccionado)
@@ -436,8 +437,8 @@ function openDet(idx){
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
   var vs;
-  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+e.nombre_evento+'</div>';
-  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+e.mis_equipos.escudo_url+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_visitante||'—')+'</div></div></div>';}
+  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+esc(e.nombre_evento)+'</div>';
+  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+esc(e.mis_equipos.escudo_url)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
   var ent='';
@@ -446,7 +447,7 @@ function openDet(idx){
   else if(e.tipo_entrada==='rifa')ent='<div class="det-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div style="font-size:20px">🎟️</div><div><div class="det-entry-title" style="color:#ea580c">'+t('det.entrada_rifa')+'</div></div></div>';
   else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">'+t('det.puertas_abiertas')+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+t('det.acceso_libre')+'</div></div></div>';
   var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
-  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6">'+e.info_evento+'</div></div>':'';
+  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">'+esc(e.info_evento)+'</div></div>':'';
   var poster=e.imagen_url?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(\''+e.imagen_url+'\')">'+'<img src="'+e.imagen_url+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
   var partsHtml='';
   if(e.participantes&&e.participantes.trim()){
@@ -454,11 +455,11 @@ function openDet(idx){
     if(parts.length){
       partsHtml='<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px">'+t('det.participantes')+'</div>'
         +'<div style="display:flex;flex-direction:column;gap:6px">'
-        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+p+'</div>'}).join('')
+        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+esc(p)+'</div>'}).join('')
         +'</div></div>';
     }
   }
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||t('det.evento_fallback'))+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
+  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+partsHtml+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');
@@ -521,7 +522,7 @@ function renderProf(){
     if(modoRec){
       b.innerHTML='<div class="prof-login"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Recuperar contraseña</div><div class="field"><label>Email</label><input type="email" id="recMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="login-err" id="recErr"></div><button class="btn-kick" onclick="sendRec()">Enviar enlace ⚽</button><div class="login-link" onclick="modoRec=false;renderProf()">← Volver</div></div>';
     }else{
-      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')doLogin()"></div><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
+      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="" onkeydown="if(event.key===\'Enter\')doLogin()"></div><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
     }
   }
 }
