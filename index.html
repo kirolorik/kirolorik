@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.17 · 2026-06-12 -->
+<!-- Kirolorik · index.html · v6.18 · 2026-06-12 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -219,7 +219,8 @@ function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function nm(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);return t('dias')[dt.getDay()]+' '+p[2]+' '+t('meses')[p[1]-1]+' '+p[0]}
-function en(e){return e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:'')}
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function en(e){return esc(e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''))}
 function bg(tp){
   if(tp==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">'+window.t('badge.entrada')+'</div></div>';
   if(tp==='rifa')return'<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">'+window.t('badge.rifa')+'</div></div>';
