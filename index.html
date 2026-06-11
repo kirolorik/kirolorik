@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.15 · 2026-05-31 -->
+<!-- Kirolorik · index.html · v6.18 · 2026-06-12 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -477,11 +477,17 @@ function openMun(){closeProf();closeDet();document.getElementById('munDraw').cla
 function closeMun(){document.getElementById('munDraw').classList.remove('open');document.getElementById('ov').classList.remove('open')}
 function loadMunis(){
   var list=document.getElementById('munList');list.innerHTML='<div class="empty-slot">Cargando...</div>';
-  fetch(SB+'/rest/v1/municipios?activo=eq.true&order=orden.asc',{headers:H}).then(function(r){return r.json()}).then(function(data){
+  var today=new Date().toISOString().split('T')[0];
+  fetch(SB+'/rest/v1/eventos?select=municipio&activo=eq.true&test=eq.false&fecha=gte.'+today,{headers:H}).then(function(r){return r.json()}).then(function(data){
+    // Extraer municipios únicos y ordenarlos
+    var seen={};var unique=[];
+    (data||[]).forEach(function(e){if(e.municipio&&!seen[e.municipio]){seen[e.municipio]=true;unique.push({nombre:e.municipio})}});
+    unique.sort(function(a,b){return a.nombre.localeCompare(b.nombre)});
+    data=unique;
     if(!data||!data.length){list.innerHTML='<div class="empty-slot">'+t('grid.sin_municipios')+'</div>';return}
     var html='';
     html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">'+t('nav.todos_municipios')+'</div><div class="mun-prov">'+t('nav.sin_filtro_ubi')+'</div></div><div>'+(!muni?'✅':'')+'</div></div>';
-    for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')"><div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div><div class="mun-prov">'+(m.provincia||'')+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
+    for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')">'+'<div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
 }
