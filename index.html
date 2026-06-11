@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.16 · 2026-06-12 -->
+<!-- Kirolorik · index.html · v6.17 · 2026-06-12 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -446,7 +446,7 @@ function openDet(idx){
   else if(e.tipo_entrada==='rifa')ent='<div class="det-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div style="font-size:20px">🎟️</div><div><div class="det-entry-title" style="color:#ea580c">'+t('det.entrada_rifa')+'</div></div></div>';
   else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">'+t('det.puertas_abiertas')+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+t('det.acceso_libre')+'</div></div></div>';
   var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
-  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6">'+e.info_evento+'</div></div>':'';
+  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">'+esc(e.info_evento)+'</div></div>':'';
   var poster=e.imagen_url?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(\''+e.imagen_url+'\')">'+'<img src="'+e.imagen_url+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
   var partsHtml='';
   if(e.participantes&&e.participantes.trim()){
