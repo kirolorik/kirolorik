@@ -1,6 +1,6 @@
-/* Kirolorik · sw.js · v6 · 2026-05-17 */
+/* Kirolorik · sw.js · v7 · 2026-05-17 */
 
-const CACHE = 'kirolorik-v6';
+const CACHE = 'kirolorik-v7';
 
 // Solo se cachean agresivamente los assets estáticos que casi nunca cambian
 const CACHE_FIRST = [
