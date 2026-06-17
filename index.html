@@ -1,20 +1,20 @@
-<!-- Kirolorik · index.html · v6.19 · 2026-06-12 -->
+<!-- Kirolorik · index.html · v6.21 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Kirolorik — Agenda de eventos deportivos locales en Eibar y Gipuzkoa.">
+<meta name="description" content="Kirolorik — Tu agenda de eventos deportivos locales. Fútbol, basket, natación y mucho más. Consulta qué hay esta tarde en tu municipio.">
 <meta name="robots" content="index, follow">
 <meta name="geo.region" content="ES-PV">
-<meta property="og:title" content="Kirolorik — Agenda deportiva local · Eibar">
+<meta property="og:title" content="Kirolorik — Tu agenda deportiva local">
 <meta property="og:description" content="Todos los eventos deportivos de tu municipio en un solo sitio.">
 <meta property="og:image" content="https://kirolorik.app/assets/img/icon-512.png">
 <meta property="og:url" content="https://kirolorik.app/">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://kirolorik.app/">
 <meta name="theme-color" content="#1a6bff">
-<title>Kirolorik — Agenda deportiva local · Eibar</title>
+<title>Kirolorik — Tu agenda deportiva local</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -213,7 +213,7 @@ var evCache=[];
 
 // DIAS y MESES centralizados en i18n.js — usar t('dias') y t('meses')
 var COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
-var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'}};
+var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'},'artes marciales':{c:'#B45309',e:'🥋'},bjj:{c:'#7C3AED',e:'🥋'},grappling:{c:'#6D28D9',e:'🥋'}};
 
 function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
