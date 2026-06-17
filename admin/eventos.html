@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.14 · 2026-06-12 -->
+<!-- Kirolorik · eventos.html · v3.17 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -134,6 +134,9 @@ tbody td select{cursor:pointer}
           <option value="ajedrez">♟️ Ajedrez</option>
           <option value="rugby">🏉 Rugby</option>
           <option value="hockey">🏒 Hockey</option>
+          <option value="artes marciales">🥋 Artes Marciales</option>
+          <option value="bjj">🥋 BJJ</option>
+          <option value="grappling">🥋 Grappling</option>
           <option value="otros">🏅 Otros</option>
         </datalist>
       </div>
@@ -231,10 +234,9 @@ function toast(msg,err=false){
 function mostrarAdmin(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
-  document.getElementById('adminSubtitle').textContent=authUser?.email||'Panel de eventos';
+  document.getElementById('adminSubtitle').textContent=(authUser&&authUser.email)||'Panel de eventos';
   document.getElementById('f_fecha').value=new Date().toISOString().split('T')[0];
   loadUserTeams();
-  addRow(); addRow(); addRow();
 }
 
 async function login(){
@@ -361,7 +363,7 @@ function getEditLocalValue(){
   const sel=document.getElementById('e_local');
   if(!sel) return '';
   if(sel.tagName==='SELECT'){
-    if(sel.value==='__manual__') return document.getElementById('e_local_manual')?.value.trim()||'';
+    if(sel.value==='__manual__') return (document.getElementById('e_local_manual')||{value:''}).value.trim()||'';
     return sel.value;
   }
   return sel.value.trim();
@@ -371,7 +373,7 @@ function getLocalValue(){
   const sel=document.getElementById('f_local');
   if(!sel) return '';
   if(sel.tagName==='SELECT'){
-    if(sel.value==='__manual__') return document.getElementById('f_local_manual')?.value.trim()||'';
+    if(sel.value==='__manual__') return (document.getElementById('f_local_manual')||{value:''}).value.trim()||'';
     return sel.value;
   }
   return sel.value.trim();
@@ -441,15 +443,39 @@ function abrirEdicion(e){
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${e.info_evento||''}</textarea></div>
+      <div class="field">
+        <label>Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · deja vacío para mantener la actual)</span></label>
+        <input type="file" id="e_imagen" accept="image/*" style="padding:8px">
+        <div id="e_imagen_preview" style="margin-top:8px;display:none">
+          <img id="e_imagen_img" src="" alt="Preview" style="width:100%;max-height:120px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        </div>
+      </div>
       <button class="btn-primary" onclick="guardarEdicion()">Guardar cambios ⚽</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', ev => { if(ev.target===modal) cerrarEdicion(); });
+  // Preview imagen edición
+  setTimeout(function(){
+    var imgInput=document.getElementById('e_imagen');
+    if(imgInput) imgInput.addEventListener('change',function(){
+      var file=this.files[0];
+      if(!file) return;
+      var prev=document.getElementById('e_imagen_preview');
+      var img=document.getElementById('e_imagen_img');
+      if(prev&&img){prev.style.display='block';img.src=URL.createObjectURL(file);}
+    });
+    // Mostrar imagen actual si existe
+    if(e.imagen_url){
+      var prev=document.getElementById('e_imagen_preview');
+      var img=document.getElementById('e_imagen_img');
+      if(prev&&img){prev.style.display='block';img.src=e.imagen_url;}
+    }
+  }, 50);
   renderEditLocalField(e);
 }
 
 function cerrarEdicion(){
-  document.getElementById('editModal')?.remove();
+  var _em=document.getElementById('editModal');if(_em)_em.remove();
   eventoEditando=null;
   selectedEditEquipoId=null;
 }
@@ -474,7 +500,7 @@ async function guardarEdicion(){
     info_evento:document.getElementById('e_info').value.trim()||null,
   };
   // Subir imagen si hay una nueva
-  const imgFile = document.getElementById('e_imagen')?.files[0];
+  const imgFile = (document.getElementById('e_imagen')||{files:[]}).files[0];
   if(imgFile){
     try{ updates.imagen_url = await subirImagen(imgFile); }
     catch(e){ toast('Aviso: imagen no subida','true'); }
@@ -504,9 +530,40 @@ function buildEvento(d){
     duracion_minutos:parseInt(d.duracion)||90,
     imagen_url:d.imagen_url||null,
     info_evento:d.info||null,
-    activo:true, user_id:authUser?.id||null,
-    participantes:d.participantes||null
+    activo:true, user_id:(authUser&&authUser.id)||null
   };
+}
+
+
+function addParticipante(listId){
+  var list=document.getElementById(listId);
+  if(!list) return;
+  var count=list.querySelectorAll('input').length;
+  if(count>=10) return;
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;gap:6px;align-items:center';
+  wrap.innerHTML='<input type="text" placeholder="Nombre del equipo o participante" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;color:var(--text);outline:none">'
+    +'<button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);padding:4px;opacity:0.5">✕</button>';
+  list.appendChild(wrap);
+}
+
+function getParticipantes(listId){
+  var list=document.getElementById(listId);
+  if(!list) return null;
+  var vals=Array.from(list.querySelectorAll('input')).map(function(i){return i.value.trim()}).filter(Boolean);
+  return vals.length ? vals.join('\n') : null;
+}
+
+function setParticipantes(listId, text){
+  var list=document.getElementById(listId);
+  if(!list) return;
+  list.innerHTML='';
+  if(!text) return;
+  text.split('\n').filter(Boolean).forEach(function(p){
+    addParticipante(listId);
+    var inputs=list.querySelectorAll('input');
+    inputs[inputs.length-1].value=p;
+  });
 }
 
 async function guardarForm(){
@@ -518,7 +575,7 @@ async function guardarForm(){
   if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
   if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
   let imagen_url=null;
-  const imgFile=document.getElementById('f_imagen')?.files[0];
+  const imgFile=(document.getElementById('f_imagen')||{files:[]}).files[0];
   if(imgFile){try{imagen_url=await subirImagen(imgFile);}catch(e){toast('Error subiendo imagen: '+e.message,true);return;}}
   const ev=buildEvento({
     deporte:document.getElementById('f_deporte').value,
@@ -531,7 +588,7 @@ async function guardarForm(){
     entrada:document.getElementById('f_entrada').value,
     duracion:document.getElementById('f_duracion').value,
     imagen_url, equipo_id:selectedEquipoId||null,
-    municipio_equipo:selectedEquipoId?userTeams.find(function(t){return t.id===selectedEquipoId})?.municipio||null:null,
+    municipio_equipo:selectedEquipoId?(userTeams.find(function(t){return t.id===selectedEquipoId})||{}).municipio||null:null,
     info:document.getElementById('f_info').value.trim()||null,
     participantes:getParticipantes('f_parts_list')
   });
@@ -541,9 +598,7 @@ async function guardarForm(){
     });
     if(!res.ok) throw new Error(await res.text());
     toast('✅ Evento guardado');
-    ['f_visitante','f_instalacion','f_hora','f_nombre','f_info'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f_parts_list').innerHTML='';
-    document.getElementById('f_parts_wrap').style.display='none';
+    ['f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
     selectedEquipoId=null;
     renderLocalField();
   }catch(e){toast('Error: '+e.message,true);}
@@ -562,6 +617,7 @@ function sel(opts,val){
 
 function addRow(d={}){
   const body=document.getElementById('sheetBody');
+  if(!body) return;
   const n=body.rows.length+1;
   const tr=document.createElement('tr');
   tr.innerHTML=`
