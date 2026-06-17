@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.18 · 2026-06-12 -->
+<!-- Kirolorik · index.html · v6.20 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -207,13 +207,13 @@ var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getM
 var fechaSel=hoyISO,deporteSel='todos',clubSel='todos';
 var lang='cas';
 var muni='Eibar';
-var adList=[],adIdx=0,adOpen=true;
+var adList=[],adIdx=0,adOpen=(localStorage.getItem('kb_ad_seen')!=='1');
 var modoRec=false;
 var evCache=[];
 
 // DIAS y MESES centralizados en i18n.js — usar t('dias') y t('meses')
 var COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
-var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'}};
+var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'},'artes marciales':{c:'#B45309',e:'🥋'},bjj:{c:'#7C3AED',e:'🥋'},grappling:{c:'#6D28D9',e:'🥋'}};
 
 function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -383,7 +383,7 @@ function loadGrid(){
       var d=gs(e.deporte),dl=e.deporte||'Otro';
       var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
       var idx=evCache.indexOf(e);
-      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+esc(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
     }
     if(fechaSel){
       // Vista horaria (día seleccionado)
@@ -437,8 +437,8 @@ function openDet(idx){
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
   var vs;
-  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+esc(e.nombre_evento)+'</div>';
-  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+esc(e.mis_equipos.escudo_url)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
+  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+e.nombre_evento+'</div>';
+  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+e.mis_equipos.escudo_url+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
   var ent='';
@@ -455,11 +455,11 @@ function openDet(idx){
     if(parts.length){
       partsHtml='<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px">'+t('det.participantes')+'</div>'
         +'<div style="display:flex;flex-direction:column;gap:6px">'
-        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+esc(p)+'</div>'}).join('')
+        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+p+'</div>'}).join('')
         +'</div></div>';
     }
   }
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+partsHtml+'<div style="height:24px"></div>';
+  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||t('det.evento_fallback'))+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');
@@ -550,13 +550,13 @@ function loadAds(){
     adList=data||[];
     // Orden aleatorio
     for(var i=adList.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=adList[i];adList[i]=adList[j];adList[j]=tmp}
-    if(adList.length){renderAdBar();renderAdDots();if(adOpen){renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
+    if(adList.length){renderAdBar();renderAdDots();if(adOpen){try{localStorage.setItem('kb_ad_seen','1')}catch(e){};renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
   }).catch(function(){});
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
 function renderAdDots(){var html='';for(var i=0;i<adList.length;i++)html+='<div class="ad-dot'+(i===adIdx?' on':'')+'" onclick="goAd('+i+')"></div>';document.getElementById('adDots').innerHTML=html}
 function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+(b.texto||b.descripcion||'')+'</div><a class="ad-cta" href="'+dest+'">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
-function toggleAd(){adOpen=!adOpen;var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
+function toggleAd(){adOpen=!adOpen;if(!adOpen)try{localStorage.setItem('kb_ad_seen','1')}catch(e){};var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
 
@@ -580,10 +580,10 @@ function closeSplash(){
   var ov=document.getElementById('splashOv');
   ov.style.opacity='0';
   setTimeout(function(){ov.style.display='none'},400);
-  try{sessionStorage.setItem('kb_splash','1');}catch(e){}
+  try{localStorage.setItem('kb_splash','1');}catch(e){}
 }
 window.addEventListener('load',function(){
-  try{if(sessionStorage.getItem('kb_splash'))return;}catch(e){}
+  try{if(localStorage.getItem('kb_splash'))return;}catch(e){}
   var ov=document.getElementById('splashOv');
   ov.style.display='flex';
   setTimeout(function(){ov.classList.add('show')},30);
