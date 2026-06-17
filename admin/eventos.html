@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.16 · 2026-06-17 -->
+<!-- Kirolorik · eventos.html · v3.17 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -134,6 +134,9 @@ tbody td select{cursor:pointer}
           <option value="ajedrez">♟️ Ajedrez</option>
           <option value="rugby">🏉 Rugby</option>
           <option value="hockey">🏒 Hockey</option>
+          <option value="artes marciales">🥋 Artes Marciales</option>
+          <option value="bjj">🥋 BJJ</option>
+          <option value="grappling">🥋 Grappling</option>
           <option value="otros">🏅 Otros</option>
         </datalist>
       </div>
@@ -440,10 +443,34 @@ function abrirEdicion(e){
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${e.info_evento||''}</textarea></div>
+      <div class="field">
+        <label>Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · deja vacío para mantener la actual)</span></label>
+        <input type="file" id="e_imagen" accept="image/*" style="padding:8px">
+        <div id="e_imagen_preview" style="margin-top:8px;display:none">
+          <img id="e_imagen_img" src="" alt="Preview" style="width:100%;max-height:120px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        </div>
+      </div>
       <button class="btn-primary" onclick="guardarEdicion()">Guardar cambios ⚽</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', ev => { if(ev.target===modal) cerrarEdicion(); });
+  // Preview imagen edición
+  setTimeout(function(){
+    var imgInput=document.getElementById('e_imagen');
+    if(imgInput) imgInput.addEventListener('change',function(){
+      var file=this.files[0];
+      if(!file) return;
+      var prev=document.getElementById('e_imagen_preview');
+      var img=document.getElementById('e_imagen_img');
+      if(prev&&img){prev.style.display='block';img.src=URL.createObjectURL(file);}
+    });
+    // Mostrar imagen actual si existe
+    if(e.imagen_url){
+      var prev=document.getElementById('e_imagen_preview');
+      var img=document.getElementById('e_imagen_img');
+      if(prev&&img){prev.style.display='block';img.src=e.imagen_url;}
+    }
+  }, 50);
   renderEditLocalField(e);
 }
 
