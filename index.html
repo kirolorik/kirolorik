@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.22 · 2026-06-17 -->
+<!-- Kirolorik · index.html · v6.23 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -492,7 +492,8 @@ function loadMunis(){
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
 }
 function populateClubSelect(){
-  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  var today=new Date().toISOString().split('T')[0];
+  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true&test=eq.false&fecha=gte.'+today+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     var seen={},clubs=[];
     for(var i=0;i<data.length;i++){
