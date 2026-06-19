@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.17 · 2026-06-17 -->
+<!-- Kirolorik · eventos.html · v3.18 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -735,7 +735,9 @@ document.addEventListener('paste',e=>{
 async function cargarLista(){
   const list=document.getElementById('eventosList');
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*&order=fecha.asc,hora.asc`,{headers:H()});
+    var isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
+  var filtroUrl=isAdmin?'':'&user_id=eq.'+(authUser?authUser.id:'');
+  const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&order=fecha.asc,hora.asc`,{headers:H()});
     const data=await res.json();
     if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
     list.innerHTML=data.map(e=>{
