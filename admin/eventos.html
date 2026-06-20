@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.19 · 2026-06-17 -->
+<!-- Kirolorik · eventos.html · v3.20 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -74,6 +74,17 @@ tbody td select{cursor:pointer}
 .ev-btn:hover{opacity:1}
 .badge-activo{font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700}
 .badge-inactivo{font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700}
+
+/* ── ESTADÍSTICAS CLUB ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent);line-height:1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+.stats-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:24px 0 10px}
+.rank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
+.rank-name{font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.rank-meta{font-size:10px;color:var(--muted)}
+.rank-value{font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -109,6 +120,7 @@ tbody td select{cursor:pointer}
   <div class="tabs">
     <div class="tab" onclick="switchTab('list',this)">📋 Lista</div>
     <div class="tab active" onclick="switchTab('form',this)">➕ Nuevo</div>
+    <div class="tab" onclick="switchTab('stats',this)">📊 Vistas</div>
     <div class="tab tab-disabled" onclick="switchTab('sheet',this)">📊 Hoja</div>
   </div>
 
@@ -205,6 +217,10 @@ tbody td select{cursor:pointer}
     <div id="eventosList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
+  <div id="tabStats" style="display:none">
+    <div id="statsClubContent"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
 </div>
 </div>
 
@@ -223,6 +239,7 @@ let selectedEditEquipoId = null;
 const COLORES = {futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b'};
 
 function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
 function toast(msg,err=false){
   const t=document.getElementById('toast');
@@ -381,13 +398,14 @@ function getLocalValue(){
 
 // ── TABS ──
 function switchTab(name,el){
-  ['Form','Sheet','List'].forEach(t=>{
+  ['Form','Sheet','List','Stats'].forEach(t=>{
     document.getElementById('tab'+t).style.display='none';
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).style.display='block';
   el.classList.add('active');
   if(name==='list') cargarLista();
+  if(name==='stats') cargarStatsClub();
 }
 
 // ── EDICIÓN ──
@@ -745,6 +763,55 @@ document.addEventListener('paste',e=>{
 });
 
 // ── LISTA ──
+async function cargarStatsClub(){
+  var box=document.getElementById('statsClubContent');
+  box.innerHTML='<div class="empty-slot">Cargando...</div>';
+  try{
+    var isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
+    var filtroUrl=isAdmin?'':'&user_id=eq.'+(authUser?authUser.id:'');
+    var res=await fetch(`${SB_URL}/rest/v1/eventos?select=id,nombre_evento,equipo_local,equipo_visitante,deporte,municipio,created_at${filtroUrl}`,{headers:H()});
+    var misEventos=await res.json()||[];
+
+    if(!misEventos.length){
+      box.innerHTML='<div class="empty-slot">Aún no tienes eventos publicados</div>';
+      return;
+    }
+
+    var ids=misEventos.map(function(e){return e.id});
+    var idsParam=ids.join(',');
+    var vres=await fetch(`${SB_URL}/rest/v1/evento_views?select=evento_id&evento_id=in.(${idsParam})`,{headers:H()});
+    var views=await vres.json()||[];
+
+    var countByEvento={};
+    views.forEach(function(v){countByEvento[v.evento_id]=(countByEvento[v.evento_id]||0)+1});
+
+    var hoy=new Date();
+    var totalVistas=views.length;
+
+    var ranking=misEventos.map(function(e){
+      var nombre=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
+      var vistas=countByEvento[e.id]||0;
+      var dias=Math.max(1,Math.floor((hoy-new Date(e.created_at))/86400000));
+      var tasa=vistas/dias;
+      return {nombre:nombre,municipio:e.municipio,vistas:vistas,dias:dias,tasa:tasa};
+    }).sort(function(a,b){return b.tasa-a.tasa});
+
+    var html='<div class="stats-grid">'
+      +'<div class="stat-card"><div class="stat-num">'+misEventos.length+'</div><div class="stat-label">Tus eventos</div></div>'
+      +'<div class="stat-card"><div class="stat-num">'+totalVistas+'</div><div class="stat-label">Vistas totales</div></div>'
+      +'</div>';
+
+    html+='<div class="stats-section-title">Vistas por evento (vistas/día desde su creación)</div>';
+    html+=ranking.map(function(e){
+      return '<div class="rank-row"><div><div class="rank-name">'+esc(e.nombre)+'</div><div class="rank-meta">'+esc(e.municipio||'')+' · '+e.dias+' día'+(e.dias===1?'':'s')+' · '+e.vistas+' vista'+(e.vistas===1?'':'s')+'</div></div><div class="rank-value">'+e.tasa.toFixed(1)+'/día</div></div>';
+    }).join('');
+
+    box.innerHTML=html;
+  }catch(e){
+    box.innerHTML='<div class="empty-slot" style="color:#dc2626">Error cargando estadísticas</div>';
+  }
+}
+
 async function cargarLista(){
   const list=document.getElementById('eventosList');
   try{
