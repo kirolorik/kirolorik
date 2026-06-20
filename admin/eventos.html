@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.18 · 2026-06-17 -->
+<!-- Kirolorik · eventos.html · v3.19 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -152,7 +152,7 @@ tbody td select{cursor:pointer}
     </div>
     <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
     <div class="row2">
-      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Juvenil</option><option>Junior</option><option>Senior</option><option>Veteranos</option><option>Todas</option></select></div>
+      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Junior</option><option>Juvenil</option><option>Élite</option><option>Absoluto</option><option>Senior</option><option>Master</option><option>Veteranos</option><option>Todas</option></select></div>
       <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
     </div>
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
@@ -401,7 +401,7 @@ function abrirEdicion(e){
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:flex-end;justify-content:center';
   const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
   const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
-  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
+  const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
   const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
   const DURACION_OPTS=[45,60,90,120,180,240,360];
@@ -416,11 +416,24 @@ function abrirEdicion(e){
         <div class="field"><label>Deporte</label>
           <input type="text" id="e_deporte" list="deportes-list-edit" value="${e.deporte||''}">
           <datalist id="deportes-list-edit">
-            <option value="futbol"><option value="basket"><option value="balonmano">
-            <option value="waterpolo"><option value="boxeo"><option value="tenis">
-            <option value="atletismo"><option value="ciclismo"><option value="voley">
-            <option value="natacion"><option value="padel"><option value="ajedrez">
-            <option value="rugby"><option value="hockey"><option value="otros">
+            <option value="futbol">⚽ Fútbol</option>
+            <option value="basket">🏀 Basket</option>
+            <option value="balonmano">🤾 Balonmano</option>
+            <option value="waterpolo">🏊 Waterpolo</option>
+            <option value="boxeo">🥊 Boxeo</option>
+            <option value="tenis">🎾 Tenis</option>
+            <option value="atletismo">🏃 Atletismo</option>
+            <option value="ciclismo">🚴 Ciclismo</option>
+            <option value="voley">🏐 Voley</option>
+            <option value="natacion">🏊 Natación</option>
+            <option value="padel">🎾 Pádel</option>
+            <option value="ajedrez">♟️ Ajedrez</option>
+            <option value="rugby">🏉 Rugby</option>
+            <option value="hockey">🏒 Hockey</option>
+            <option value="artes marciales">🥋 Artes Marciales</option>
+            <option value="bjj">🥋 BJJ</option>
+            <option value="grappling">🥋 Grappling</option>
+            <option value="otros">🏅 Otros</option>
           </datalist>
         </div>
         <div class="field"><label>Género</label><select id="e_genero">${selOpt(GENERO_OPTS,e.genero)}</select></div>
@@ -607,7 +620,7 @@ async function guardarForm(){
 // ── HOJA DE CÁLCULO ──
 const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
 const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
-const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Juvenil','Junior','Senior','Veteranos','Todas'];
+const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
 const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
 const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
 
@@ -737,7 +750,8 @@ async function cargarLista(){
   try{
     var isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
   var filtroUrl=isAdmin?'':'&user_id=eq.'+(authUser?authUser.id:'');
-  const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&order=fecha.asc,hora.asc`,{headers:H()});
+  var hoy=new Date().toISOString().split('T')[0];
+  const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&fecha=gte.${hoy}&order=fecha.asc,hora.asc`,{headers:H()});
     const data=await res.json();
     if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
     list.innerHTML=data.map(e=>{
