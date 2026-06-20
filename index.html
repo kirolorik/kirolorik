@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.23 · 2026-06-17 -->
+<!-- Kirolorik · index.html · v6.24 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -432,6 +432,7 @@ function loadGrid(){
 function openDet(idx){
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
+  try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
   var d=gs(e.deporte),dl=e.deporte||'Otro';
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
@@ -592,6 +593,9 @@ window.addEventListener('load',function(){
 
 // SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
+
+// ANALYTICS PROPIOS — registro de visita anónima a la parrilla
+try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
 </body>
 </html>
