@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.21 · 2026-06-17 -->
+<!-- Kirolorik · index.html · v6.24 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -432,6 +432,7 @@ function loadGrid(){
 function openDet(idx){
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
+  try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
   var d=gs(e.deporte),dl=e.deporte||'Otro';
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
@@ -492,7 +493,8 @@ function loadMunis(){
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
 }
 function populateClubSelect(){
-  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  var today=new Date().toISOString().split('T')[0];
+  var url=SB+'/rest/v1/eventos?select=equipo_local,equipo_visitante&activo=eq.true&test=eq.false&fecha=gte.'+today+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     var seen={},clubs=[];
     for(var i=0;i<data.length;i++){
@@ -521,7 +523,7 @@ function renderProf(){
     var em=authUser.email||'',ini=em.charAt(0).toUpperCase(),col=COLORS[em.charCodeAt(0)%COLORS.length];
     document.getElementById('profBtnIn').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:'+col+';border-radius:50%">'+ini+'</div>';
     h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+em.split('@')[0]+'</div><div class="prof-sub">'+em+'</div>';
-    b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button><div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
+    var isAdm=(em==='kirolorik.app@gmail.com');b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button>'+(isAdm?'<div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/usuarios.html\')">🛠️ Administrar usuarios</button>':'')+'<div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
   }else{
     document.getElementById('profBtnIn').innerHTML='👤';
     h.innerHTML='<div class="prof-avatar guest">👤</div><div class="prof-hola">Invitado</div>';
@@ -591,6 +593,9 @@ window.addEventListener('load',function(){
 
 // SERVICE WORKER
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
+
+// ANALYTICS PROPIOS — registro de visita anónima a la parrilla
+try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
 </body>
 </html>
