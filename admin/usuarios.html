@@ -1,4 +1,4 @@
-<!-- Kirolorik · admin/usuarios.html · v1.10 · 2026-06-17 -->
+<!-- Kirolorik · admin/usuarios.html · v1.11 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -83,11 +83,11 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" id="tabBtnUsers" onclick="switchAdminTab('users')">👥 Usuarios</div>
-    <div class="tab" id="tabBtnStats" onclick="switchAdminTab('stats')">📊 Estadísticas</div>
+    <div class="tab" id="tabBtnUsers" onclick="switchAdminTab('users')">👥 Usuarios</div>
+    <div class="tab active" id="tabBtnStats" onclick="switchAdminTab('stats')">📊 Estadísticas</div>
   </div>
 
-  <div id="panelUsers">
+  <div id="panelUsers" style="display:none">
     <div class="field" style="margin-bottom:16px">
       <input type="text" id="searchUser" placeholder="Buscar por email..." oninput="renderUsers()" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);width:100%;outline:none">
     </div>
@@ -95,7 +95,7 @@
     <div id="usersList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
-  <div id="panelStats" style="display:none">
+  <div id="panelStats">
     <div id="statsContent"><div class="empty-slot">Cargando...</div></div>
   </div>
 
@@ -156,7 +156,7 @@ function mostrarAdmin(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('deniedScreen').style.display='none';
   document.getElementById('adminScreen').style.display='block';
-  loadUsers();
+  loadStats();
 }
 
 function mostrarDenegado(){
@@ -327,6 +327,7 @@ function switchAdminTab(name){
   document.getElementById('panelUsers').style.display=(name==='users'?'block':'none');
   document.getElementById('panelStats').style.display=(name==='stats'?'block':'none');
   if(name==='stats') loadStats();
+  if(name==='users'&&!allUsers.length) loadUsers();
 }
 
 // ── ESTADÍSTICAS GLOBALES (admin) ──
