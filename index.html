@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.24 · 2026-06-17 -->
+<!-- Kirolorik · index.html · v6.25 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -285,7 +285,8 @@ function filterClubSel(sel){
 }
 
 function populateSpSelect(){
-  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true'+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
+  var today=new Date().toISOString().split('T')[0];
+  var url=SB+'/rest/v1/eventos?select=deporte&activo=eq.true&test=eq.false&fecha=gte.'+today+(muni?'&municipio=eq.'+encodeURIComponent(muni):'');
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     var seen={},deportes=[];
     for(var i=0;i<data.length;i++){var d=(data[i].deporte||'').toLowerCase();if(d&&!seen[d]){seen[d]=true;deportes.push(d);}}
