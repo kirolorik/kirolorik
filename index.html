@@ -1,4 +1,4 @@
-<!-- Kirolorik · index.html · v6.25 · 2026-06-17 -->
+<!-- Kirolorik · index.html · v6.26 · 2026-06-17 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -524,7 +524,7 @@ function renderProf(){
     var em=authUser.email||'',ini=em.charAt(0).toUpperCase(),col=COLORS[em.charCodeAt(0)%COLORS.length];
     document.getElementById('profBtnIn').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:'+col+';border-radius:50%">'+ini+'</div>';
     h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+em.split('@')[0]+'</div><div class="prof-sub">'+em+'</div>';
-    var isAdm=(em==='kirolorik.app@gmail.com');b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button>'+(isAdm?'<div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/usuarios.html\')">🛠️ Administrar usuarios</button>':'')+'<div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
+    var isAdm=(em==='kirolorik.app@gmail.com');b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button>'+(isAdm?'<div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/panel.html\')">🛠️ Panel de control</button>':'')+'<div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
   }else{
     document.getElementById('profBtnIn').innerHTML='👤';
     h.innerHTML='<div class="prof-avatar guest">👤</div><div class="prof-hola">Invitado</div>';
