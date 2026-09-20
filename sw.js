@@ -1,14 +1,21 @@
-/* Kirolorik · sw.js · v6 · 2026-05-17 */
+/* Kirolorik · sw.js · v8 · 2026-09-20 */
 
-const CACHE = 'kirolorik-v6';
+const CACHE = 'kirolorik-v8';
 
-// Solo se cachean agresivamente los assets estáticos que casi nunca cambian
 const CACHE_FIRST = [
   '/manifest.json',
   '/assets/img/logo.png',
   '/assets/img/icon-192.png',
   '/assets/img/icon-512.png'
 ];
+
+// Timeout para network-first: si la red no responde en 4s, usa caché
+function fetchWithTimeout(request, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    fetch(request).then(res => { clearTimeout(timer); resolve(res); }, err => { clearTimeout(timer); reject(err); });
+  });
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -41,16 +48,20 @@ self.addEventListener('fetch', e => {
   const isCacheFirst = CACHE_FIRST.some(p => url.pathname === p);
 
   if (isHtml) {
-    // NETWORK FIRST — todos los HTML siempre frescos
+    // NETWORK FIRST con timeout — si la red falla o tarda, cae al caché
     e.respondWith(
-      fetch(e.request)
+      fetchWithTimeout(e.request, 4000)
         .then(res => {
           if (res.ok) {
             caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           }
           return res;
         })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('/index.html')))
+        .catch(() =>
+          caches.match(e.request)
+            .then(r => r || caches.match('/index.html'))
+            .then(r => r || new Response('Sin conexión', {status: 503, headers: {'Content-Type': 'text/plain'}}))
+        )
     );
   } else if (isCacheFirst) {
     // CACHE FIRST — imágenes y manifest
@@ -60,9 +71,9 @@ self.addEventListener('fetch', e => {
         return fetch(e.request).then(res => {
           if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           return res;
-        });
+        }).catch(() => new Response('', {status: 503}));
       })
     );
   }
-  // El resto (CSS, JS, fuentes) — sin interceptar, van directo a la red
+  // CSS, JS, fuentes — sin interceptar, red directa
 });
