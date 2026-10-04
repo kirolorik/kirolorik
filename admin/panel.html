@@ -1,10 +1,10 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/panel.html
-Versión: v1.14
+Versión: v1.15
 Fecha: 2026-10-04
-Descripción: Panel de control (admin). v1.14: la pestaña Estadísticas incluye la sección
-"Clics en banners", que lee la vista banner_clicks_resumen de Supabase.
+Descripción: Panel de control (admin). v1.14: sección de clics en banners (vista banner_clicks_resumen).
+v1.15: los clics pasan a una pestaña propia "Publicidad" (totales + clics por banner); se quitan de Estadísticas.
 -->
 
 <!DOCTYPE html>
@@ -415,6 +415,38 @@ async function loadStats(){
     box.innerHTML=html;
   }catch(e){
     box.innerHTML='<div class="empty-slot" style="color:#dc2626">Error cargando estadísticas: '+esc(e.message)+'</div>';
+  }
+}
+
+// ── PUBLICIDAD: CLICS EN BANNERS (vista banner_clicks_resumen) ──
+async function loadPubli(){
+  var box=document.getElementById('adsContent');
+  box.innerHTML='<div class="empty-slot">Cargando...</div>';
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banner_clicks_resumen?select=*&order=clics_total.desc',{headers:H()});
+    var data=await res.json();
+    if(!res.ok||!Array.isArray(data)) throw new Error((data&&data.message)||'Error');
+
+    var tot=0,t7=0,t30=0;
+    data.forEach(function(c){tot+=(c.clics_total||0);t7+=(c.clics_7_dias||0);t30+=(c.clics_30_dias||0)});
+
+    var html='<div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr">'
+      +'<div class="stat-card"><div class="stat-num">'+tot+'</div><div class="stat-label">Clics totales</div></div>'
+      +'<div class="stat-card"><div class="stat-num">'+t7+'</div><div class="stat-label">Últimos 7 días</div></div>'
+      +'<div class="stat-card"><div class="stat-num">'+t30+'</div><div class="stat-label">Últimos 30 días</div></div>'
+      +'</div>';
+
+    html+='<div class="stats-section-title">Clics por banner</div>';
+    if(!data.length){
+      html+='<div class="empty-slot">Sin banners</div>';
+    }else{
+      html+=data.map(function(c){
+        return '<div class="rank-row"><div><div class="rank-name">'+esc(c.banner)+'</div><div class="rank-meta">'+esc(c.anunciante||'')+' · 7 días: '+(c.clics_7_dias||0)+' · 30 días: '+(c.clics_30_dias||0)+'</div></div><div class="rank-value">'+(c.clics_total||0)+' clic'+(c.clics_total===1?'':'s')+'</div></div>';
+      }).join('');
+    }
+    box.innerHTML=html;
+  }catch(e){
+    box.innerHTML='<div class="empty-slot" style="color:#dc2626">Error cargando publicidad: '+esc(e.message)+'</div>';
   }
 }
 
