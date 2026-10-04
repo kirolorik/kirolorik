@@ -1,4 +1,12 @@
-<!-- Kirolorik · admin/panel.html · v1.13 · 2026-06-17 -->
+<!--
+Proyecto: Kirolorik
+Archivo: admin/panel.html
+Versión: v1.14
+Fecha: 2026-10-04
+Descripción: Panel de control (admin). v1.14: la pestaña Estadísticas incluye la sección
+"Clics en banners", que lee la vista banner_clicks_resumen de Supabase.
+-->
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -84,6 +92,7 @@
 
   <div class="tabs">
     <div class="tab active" id="tabBtnStats" onclick="switchAdminTab('stats')">📊 Estadísticas</div>
+    <div class="tab" id="tabBtnAds" onclick="switchAdminTab('ads')">📣 Publicidad</div>
     <div class="tab" id="tabBtnUsers" onclick="switchAdminTab('users')">👥 Usuarios</div>
   </div>
 
@@ -97,6 +106,10 @@
 
   <div id="panelStats">
     <div id="statsContent"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="panelAds" style="display:none">
+    <div id="adsContent"><div class="empty-slot">Cargando...</div></div>
   </div>
 
 </div>
@@ -324,9 +337,12 @@ async function unbanUser(userId){
 function switchAdminTab(name){
   document.getElementById('tabBtnUsers').classList.toggle('active',name==='users');
   document.getElementById('tabBtnStats').classList.toggle('active',name==='stats');
+  document.getElementById('tabBtnAds').classList.toggle('active',name==='ads');
   document.getElementById('panelUsers').style.display=(name==='users'?'block':'none');
   document.getElementById('panelStats').style.display=(name==='stats'?'block':'none');
+  document.getElementById('panelAds').style.display=(name==='ads'?'block':'none');
   if(name==='stats') loadStats();
+  if(name==='ads') loadPubli();
   if(name==='users'&&!allUsers.length) loadUsers();
 }
 
