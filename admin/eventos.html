@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.20 · 2026-06-17 -->
+<!-- Kirolorik · eventos.html · v3.21 · 2026-10-14 · seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -305,7 +305,7 @@ function renderLocalField(){
   if(!wrap) return;
   selectedEquipoId=null;
   if(userTeams.length){
-    const opts=userTeams.map(t=>`<option value="${t.nombre}" data-id="${t.id}">${t.nombre}${t.deporte?' · '+t.deporte:''}</option>`).join('');
+    const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}">${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
     wrap.innerHTML=`<select id="f_local" onchange="onLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="f_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
     // Si solo hay un equipo, seleccionarlo automáticamente
     if(userTeams.length===1){
@@ -348,7 +348,7 @@ function renderEditLocalField(e){
     const opts=userTeams.map(t=>{
       const sel=(t.id===e.equipo_id||t.nombre===e.equipo_local)?' selected':'';
       if(sel) selectedEditEquipoId=t.id;
-      return `<option value="${t.nombre}" data-id="${t.id}"${sel}>${t.nombre}${t.deporte?' · '+t.deporte:''}</option>`;
+      return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${sel}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`;
     }).join('');
     wrap.innerHTML=`<select id="e_local" onchange="onEditLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="e_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
     // Si no coincide ninguno pero hay valor, mostrar manual
@@ -359,7 +359,7 @@ function renderEditLocalField(e){
       selectedEditEquipoId=null;
     }
   }else{
-    wrap.innerHTML=`<input type="text" id="e_local" value="${e.equipo_local||''}" placeholder="Nombre del equipo local">`;
+    wrap.innerHTML=`<input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local">`;
   }
 }
 
@@ -423,7 +423,7 @@ function abrirEdicion(e){
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
   const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
   const DURACION_OPTS=[45,60,90,120,180,240,360];
-  function selOpt(opts,val){return opts.map(o=>`<option value="${o}"${String(o)===String(val)?' selected':''}>${o}</option>`).join('');}
+  function selOpt(opts,val){return opts.map(o=>`<option value="${esc(o)}"${String(o)===String(val)?' selected':''}>${esc(o)}</option>`).join('');}
   modal.innerHTML=`
     <div style="background:var(--bg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px 40px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -432,7 +432,7 @@ function abrirEdicion(e){
       </div>
       <div class="row2">
         <div class="field"><label>Deporte</label>
-          <input type="text" id="e_deporte" list="deportes-list-edit" value="${e.deporte||''}">
+          <input type="text" id="e_deporte" list="deportes-list-edit" value="${esc(e.deporte||'')}">
           <datalist id="deportes-list-edit">
             <option value="futbol">⚽ Fútbol</option>
             <option value="basket">🏀 Basket</option>
@@ -456,24 +456,24 @@ function abrirEdicion(e){
         </div>
         <div class="field"><label>Género</label><select id="e_genero">${selOpt(GENERO_OPTS,e.genero)}</select></div>
       </div>
-      <div class="field"><label>Nombre evento</label><input type="text" id="e_nombre" value="${e.nombre_evento||''}"></div>
+      <div class="field"><label>Nombre evento</label><input type="text" id="e_nombre" value="${esc(e.nombre_evento||'')}"></div>
       <div class="row2">
         <div class="field"><label>Categoría</label><select id="e_cat">${selOpt(CAT_OPTS,e.categoria)}</select></div>
         <div class="field"><label>Competición</label><select id="e_comp">${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
       </div>
-      <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${e.equipo_local||''}" placeholder="Nombre del equipo local"></div></div>
-      <div class="field"><label>Equipo visitante</label><input type="text" id="e_visitante" value="${e.equipo_visitante||''}"></div>
+      <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
+      <div class="field"><label>Equipo visitante</label><input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
       <div class="row2">
-        <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${e.fecha||''}"></div>
-        <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${(e.hora||'').slice(0,5)}"></div>
+        <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${esc(e.fecha||'')}"></div>
+        <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${esc((e.hora||'').slice(0,5))}"></div>
       </div>
-      <div class="field"><label>Municipio</label><input type="text" id="e_municipio" value="${e.municipio||''}"></div>
-      <div class="field"><label>Instalación</label><input type="text" id="e_instalacion" value="${e.instalacion||''}"></div>
+      <div class="field"><label>Municipio</label><input type="text" id="e_municipio" value="${esc(e.municipio||'')}"></div>
+      <div class="field"><label>Instalación</label><input type="text" id="e_instalacion" value="${esc(e.instalacion||'')}"></div>
       <div class="row2">
         <div class="field"><label>Entrada</label>        <select id="e_entrada">${selOpt(ENTRADA_OPTS,e.tipo_entrada)}</select></div>
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
-      <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${e.info_evento||''}</textarea></div>
+      <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${esc(e.info_evento||'')}</textarea></div>
       <div class="field">
         <label>Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · deja vacío para mantener la actual)</span></label>
         <input type="file" id="e_imagen" accept="image/*" style="padding:8px">
@@ -722,7 +722,10 @@ document.addEventListener('change', e => {
 
 async function subirImagen(file) {
   if(!file) return null;
-  const ext = file.name.split('.').pop();
+  const TIPOS = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+  const ext = TIPOS[file.type];
+  if(!ext) throw new Error('Formato no permitido (usa JPG, PNG, WEBP o GIF)');
+  if(file.size > 5*1024*1024) throw new Error('Imagen demasiado grande (máx. 5 MB)');
   const nombre = `evento_${Date.now()}.${ext}`;
   const res = await fetch(`${SB_URL}/storage/v1/object/eventos/${nombre}`, {
     method: 'POST',
@@ -812,6 +815,13 @@ async function cargarStatsClub(){
   }
 }
 
+// Eventos de la lista: el botón Editar los busca por id (no se mete el JSON en el HTML)
+let listaEventos=[];
+function abrirEdicionId(id){
+  const e=listaEventos.find(x=>Number(x.id)===id);
+  if(e) abrirEdicion(e);
+}
+
 async function cargarLista(){
   const list=document.getElementById('eventosList');
   try{
@@ -821,22 +831,23 @@ async function cargarLista(){
   const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&fecha=gte.${hoy}&order=fecha.asc,hora.asc`,{headers:H()});
     const data=await res.json();
     if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
+    listaEventos=data;
     list.innerHTML=data.map(e=>{
       const titulo=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
       const color=COLORES[e.deporte]||'#64748b';
       return `<div class="evento-card">
         <div class="evento-bar" style="background:${color}"></div>
         <div class="evento-info">
-          <div class="evento-teams">${titulo}</div>
-          <div class="evento-meta">${e.deporte} · ${e.categoria||''} · ${e.fecha} ${(e.hora||'').slice(0,5)} · ${e.municipio||''}</div>
+          <div class="evento-teams">${esc(titulo)}</div>
+          <div class="evento-meta">${esc(e.deporte)} · ${esc(e.categoria||'')} · ${esc(e.fecha)} ${esc((e.hora||'').slice(0,5))} · ${esc(e.municipio||'')}</div>
           <div style="margin-top:4px">
             <span class="${e.activo?'badge-activo':'badge-inactivo'}">${e.activo?'Activo':'Inactivo'}</span>
           </div>
         </div>
         <div class="ev-actions">
-          <button class="ev-btn" title="Editar" onclick='abrirEdicion(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
-          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${e.id},${e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
-          <button class="ev-btn" title="Borrar" onclick="borrar(${e.id})">🗑️</button>
+          <button class="ev-btn" title="Editar" onclick="abrirEdicionId(${Number(e.id)})">✏️</button>
+          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
+          <button class="ev-btn" title="Borrar" onclick="borrar(${Number(e.id)})">🗑️</button>
         </div>
       </div>`;
     }).join('');
