@@ -1,13 +1,15 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.29
-Fecha: 2026-10-14
+Versión: v6.30
+Fecha: 2026-10-16
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
 v6.29: seguridad. Escapado con esc() de todo texto de Supabase insertado como HTML (tarjetas, detalle,
 municipios, banners); solo se aceptan URLs http(s) en imágenes y enlaces; la parrilla excluye eventos test.
+v6.30: el salto al siguiente día con eventos funciona (la consulta trae desde el día elegido en adelante y se
+filtra el día en cliente); el detalle muestra la lista de participantes.
 -->
 
 <!DOCTYPE html>
@@ -333,8 +335,7 @@ function loadGrid(){
   g.innerHTML='<div class="empty-slot">'+t('grid.cargando')+'</div>';
   var _gridFechaSel=fechaSel;
   var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre)&activo=eq.true&order=fecha.asc,hora.asc';
-  if(fechaSel)url+='&fecha=eq.'+fechaSel;
-  else url+='&fecha=gte.'+td();
+  url+='&fecha=gte.'+(fechaSel||td());
   if(deporteSel!=='todos')url+='&deporte=eq.'+encodeURIComponent(deporteSel);
   url+='&test=eq.false';
   if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
@@ -345,7 +346,7 @@ function loadGrid(){
     var filtered=[];
     for(var i=0;i<data.length;i++){
       var e=data[i];
-      if(fechaSel){filtered.push(e);continue}
+      if(fechaSel){if(e.fecha===fechaSel)filtered.push(e);continue}
       var hp=(e.hora||'00:00').split(':');
       var st=new Date(e.fecha+'T'+hp[0].padStart(2,'0')+':'+hp[1].padStart(2,'0')+':00');
       var fin=new Date(st.getTime()+(e.duracion_minutos||90)*60000);
@@ -475,7 +476,7 @@ function openDet(idx){
         +'</div></div>';
     }
   }
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
+  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+partsHtml+poster+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');

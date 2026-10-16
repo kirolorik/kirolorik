@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.21 · 2026-10-14 · seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.22 · 2026-10-16 · campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -170,6 +170,7 @@ tbody td select{cursor:pointer}
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
     <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
     <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
+    <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
       <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
       <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
@@ -474,6 +475,7 @@ function abrirEdicion(e){
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${esc(e.info_evento||'')}</textarea></div>
+      <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="e_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('e_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
       <div class="field">
         <label>Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · deja vacío para mantener la actual)</span></label>
         <input type="file" id="e_imagen" accept="image/*" style="padding:8px">
@@ -502,6 +504,7 @@ function abrirEdicion(e){
       if(prev&&img){prev.style.display='block';img.src=e.imagen_url;}
     }
   }, 50);
+  setParticipantes('e_parts_list',e.participantes);
   renderEditLocalField(e);
 }
 
@@ -529,6 +532,7 @@ async function guardarEdicion(){
     tipo_entrada:document.getElementById('e_entrada').value,
     duracion_minutos:parseInt(document.getElementById('e_duracion').value)||90,
     info_evento:document.getElementById('e_info').value.trim()||null,
+    participantes:getParticipantes('e_parts_list')
   };
   // Subir imagen si hay una nueva
   const imgFile = (document.getElementById('e_imagen')||{files:[]}).files[0];
@@ -561,6 +565,7 @@ function buildEvento(d){
     duracion_minutos:parseInt(d.duracion)||90,
     imagen_url:d.imagen_url||null,
     info_evento:d.info||null,
+    participantes:d.participantes||null,
     activo:true, user_id:(authUser&&authUser.id)||null
   };
 }
@@ -630,6 +635,7 @@ async function guardarForm(){
     if(!res.ok) throw new Error(await res.text());
     toast('✅ Evento guardado');
     ['f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f_parts_list').innerHTML='';
     selectedEquipoId=null;
     renderLocalField();
   }catch(e){toast('Error: '+e.message,true);}
