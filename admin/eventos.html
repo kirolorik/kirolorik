@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.26 · 2026-10-16 · etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.27 · 2026-10-16 · equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -324,10 +324,19 @@ function renderLocalField(){
   }
 }
 
-function visitantePickHtml(prefix, actual){
+function visitantePickHtml(prefix, actual, actualId){
   if(!userTeams.length) return '';
-  const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}"${t.nombre===actual?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
+  const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${(actualId?t.id===actualId:t.nombre===actual)?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
   return `<select id="${prefix}vis_pick" onchange="onVisitantePick('${prefix}')" style="margin-bottom:6px"><option value="">— Rival externo (escribe abajo) —</option>${opts}</select>`;
+}
+
+// id de mi equipo si el visitante escrito es el elegido en el desplegable; si se retoca el texto, es un rival externo
+function getVisitanteId(prefix){
+  const sel=document.getElementById(prefix+'vis_pick');
+  const inp=document.getElementById(prefix+'visitante');
+  if(!sel||!inp||!sel.value) return null;
+  if(inp.value.trim()!==sel.value) return null;
+  return sel.options[sel.selectedIndex].getAttribute('data-id')||null;
 }
 
 function onVisitantePick(prefix){
@@ -483,7 +492,7 @@ function abrirEdicion(e){
         <div class="field"><label>Competición</label><select id="e_comp">${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
       </div>
       <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
-      <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
+      <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante,e.equipo_visitante_id)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
       <div class="row2">
         <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${esc(e.fecha||'')}"></div>
         <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${esc((e.hora||'').slice(0,5))}"></div>
@@ -544,6 +553,7 @@ async function guardarEdicion(){
     tipo_competicion:document.getElementById('e_comp').value,
     equipo_local:getEditLocalValue()||null,
     equipo_visitante:document.getElementById('e_visitante').value.trim()||null,
+    equipo_visitante_id:getVisitanteId('e_'),
     equipo_id:selectedEditEquipoId||null,
     fecha:document.getElementById('e_fecha').value,
     hora:document.getElementById('e_hora').value,
@@ -554,6 +564,8 @@ async function guardarEdicion(){
     info_evento:document.getElementById('e_info').value.trim()||null,
     participantes:getParticipantes('e_parts_list')
   };
+  // Si el admin edita un evento ajeno (sin ese equipo en su desplegable), se conserva el id si el nombre no cambia
+  if(!updates.equipo_visitante_id && updates.equipo_visitante===eventoEditando.equipo_visitante) updates.equipo_visitante_id=eventoEditando.equipo_visitante_id||null;
   // Subir imagen si hay una nueva
   const imgFile = (document.getElementById('e_imagen')||{files:[]}).files[0];
   if(imgFile){
@@ -630,6 +642,7 @@ function buildEvento(d){
     nombre_evento:d.nombre||null, categoria:d.cat||'Senior',
     tipo_competicion:d.comp||'Liga',
     equipo_local:d.local||null, equipo_visitante:d.visitante||null,
+    equipo_visitante_id:d.equipo_visitante_id||null,
     equipo_id:d.equipo_id||null,
     municipio_equipo:d.municipio_equipo||null,
     fecha:d.fecha, hora:d.hora, municipio:d.municipio||null,
@@ -690,7 +703,7 @@ async function guardarForm(){
     genero:document.getElementById('f_genero').value,
     nombre, cat:document.getElementById('f_cat').value,
     comp:document.getElementById('f_comp').value,
-    local, visitante:document.getElementById('f_visitante').value.trim(),
+    local, visitante:document.getElementById('f_visitante').value.trim(), equipo_visitante_id:getVisitanteId('f_'),
     fecha, hora, municipio,
     instalacion:document.getElementById('f_instalacion').value.trim(),
     entrada:document.getElementById('f_entrada').value,
@@ -966,7 +979,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.26</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.27</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
