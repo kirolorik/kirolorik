@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.13 · 2026-10-14 · seguridad: esc() en la lista de clubes y equipos -->
+<!-- Kirolorik · perfil.html · v2.14 · 2026-10-16 · etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -712,5 +712,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.14</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
