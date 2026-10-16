@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.12 · 2026-05-22 -->
+<!-- Kirolorik · perfil.html · v2.13 · 2026-10-14 · seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -323,6 +323,8 @@ let tok = null, user = null, perfil = null, idiomaActual = 'cas';
 
 function H(){ return {'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json'}; }
 function color(e){ return COLORS[(e||'').charCodeAt(0) % COLORS.length]; }
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function safeUrl(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:''}
 
 function toast(msg, tipo=''){
   const t = document.getElementById('toast');
@@ -464,29 +466,29 @@ async function cargarClubes(){
         <div class="eq-card">
           <div class="eq-shield" style="width:32px;height:32px;font-size:18px">${DEPEMOJI[eq.deporte]||'🏅'}</div>
           <div class="eq-info">
-            <div class="eq-name">${eq.nombre}</div>
-            <div class="eq-meta">${eq.deporte}${eq.genero?' · '+eq.genero:''}${eq.categoria?' · '+eq.categoria:''}</div>
+            <div class="eq-name">${esc(eq.nombre)}</div>
+            <div class="eq-meta">${esc(eq.deporte)}${eq.genero?' · '+esc(eq.genero):''}${eq.categoria?' · '+esc(eq.categoria):''}</div>
           </div>
           <div class="eq-acts">
             <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
-            <button class="eq-btn" onclick="borrarEquipo('${eq.id}')">🗑️</button>
+            <button class="eq-btn" onclick="borrarEquipo('${esc(eq.id)}')">🗑️</button>
           </div>
         </div>`).join('');
       html += `
         <div class="club-card">
           <div class="club-header">
-            <div class="eq-shield">${club.escudo_url ? `<img src="${club.escudo_url}" alt="">` : '🏟️'}</div>
+            <div class="eq-shield">${safeUrl(club.escudo_url) ? `<img src="${esc(safeUrl(club.escudo_url))}" alt="">` : '🏟️'}</div>
             <div class="eq-info">
-              <div class="eq-name">${club.nombre}</div>
-              <div class="eq-meta">${club.municipio||''}${pc.rol==='editor'?' · Editor':''}</div>
+              <div class="eq-name">${esc(club.nombre)}</div>
+              <div class="eq-meta">${esc(club.municipio||'')}${pc.rol==='editor'?' · Editor':''}</div>
             </div>
             <div class="eq-acts">
               <button class="eq-btn" onclick='editarClub(${JSON.stringify(club).replace(/'/g,"&#39;")})'>✏️</button>
-              <button class="eq-btn" onclick="borrarClub('${club.id}')">🗑️</button>
+              <button class="eq-btn" onclick="borrarClub('${esc(club.id)}')">🗑️</button>
             </div>
           </div>
           <div class="club-equipos">${equiposHtml}</div>
-          <button class="btn-add" style="margin:8px 0 0" onclick="openModalEquipo('${club.id}')">
+          <button class="btn-add" style="margin:8px 0 0" onclick="openModalEquipo('${esc(club.id)}')">
             <div class="btn-add-ico">➕</div><div class="btn-add-txt">Añadir equipo</div>
           </button>
         </div>`;
@@ -612,7 +614,10 @@ document.addEventListener('change', e => {
 
 
 async function subirEscudo(file){
-  const ext  = file.name.split('.').pop();
+  const TIPOS = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+  const ext  = TIPOS[file.type];
+  if(!ext) throw new Error('Formato no permitido (usa JPG, PNG, WEBP o GIF)');
+  if(file.size > 5*1024*1024) throw new Error('Imagen demasiado grande (máx. 5 MB)');
   const name = `escudo_${user.id}_${Date.now()}.${ext}`;
   const res  = await fetch(`${SB}/storage/v1/object/escudos/${name}`, {
     method:'POST',
