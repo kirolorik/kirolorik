@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.21 · 2026-10-14 · seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.26 · 2026-10-16 · etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -72,6 +72,8 @@ tbody td select{cursor:pointer}
 .ev-actions{display:flex;gap:8px;flex-shrink:0}
 .ev-btn{font-size:14px;cursor:pointer;opacity:0.35;transition:opacity 0.15s;background:none;border:none;padding:2px}
 .ev-btn:hover{opacity:1}
+.ev-btn.on{opacity:1}
+.ev-btn.off{opacity:0.5;filter:grayscale(1)}
 .badge-activo{font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700}
 .badge-inactivo{font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700}
 
@@ -168,8 +170,9 @@ tbody td select{cursor:pointer}
       <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
     </div>
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
-    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_vis_pick_wrap"></div><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
     <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
+    <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
       <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
       <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
@@ -304,6 +307,8 @@ function renderLocalField(){
   const wrap=document.getElementById('f_local_wrap');
   if(!wrap) return;
   selectedEquipoId=null;
+  const vw=document.getElementById('f_vis_pick_wrap');
+  if(vw) vw.innerHTML=visitantePickHtml('f_','');
   if(userTeams.length){
     const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}">${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
     wrap.innerHTML=`<select id="f_local" onchange="onLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="f_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
@@ -317,6 +322,22 @@ function renderLocalField(){
   }else{
     wrap.innerHTML=`<input type="text" id="f_local" placeholder="Nombre del equipo local">`;
   }
+}
+
+function visitantePickHtml(prefix, actual){
+  if(!userTeams.length) return '';
+  const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}"${t.nombre===actual?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
+  return `<select id="${prefix}vis_pick" onchange="onVisitantePick('${prefix}')" style="margin-bottom:6px"><option value="">— Rival externo (escribe abajo) —</option>${opts}</select>`;
+}
+
+function onVisitantePick(prefix){
+  const sel=document.getElementById(prefix+'vis_pick');
+  const inp=document.getElementById(prefix+'visitante');
+  if(!sel||!inp||!sel.value) return;
+  inp.value=sel.value;
+  const local=document.getElementById(prefix+'local');
+  // Si el local no es uno de mis equipos (juego fuera de casa), la ficha deporte/género/categoría sale del visitante
+  if(!local||!local.value||local.value==='__manual__') fillDeporte(sel.value,prefix);
 }
 
 function fillDeporte(teamNombre, prefix){
@@ -462,7 +483,7 @@ function abrirEdicion(e){
         <div class="field"><label>Competición</label><select id="e_comp">${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
       </div>
       <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
-      <div class="field"><label>Equipo visitante</label><input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
+      <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
       <div class="row2">
         <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${esc(e.fecha||'')}"></div>
         <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${esc((e.hora||'').slice(0,5))}"></div>
@@ -474,6 +495,7 @@ function abrirEdicion(e){
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${esc(e.info_evento||'')}</textarea></div>
+      <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="e_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('e_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
       <div class="field">
         <label>Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · deja vacío para mantener la actual)</span></label>
         <input type="file" id="e_imagen" accept="image/*" style="padding:8px">
@@ -502,6 +524,7 @@ function abrirEdicion(e){
       if(prev&&img){prev.style.display='block';img.src=e.imagen_url;}
     }
   }, 50);
+  setParticipantes('e_parts_list',e.participantes);
   renderEditLocalField(e);
 }
 
@@ -529,6 +552,7 @@ async function guardarEdicion(){
     tipo_entrada:document.getElementById('e_entrada').value,
     duracion_minutos:parseInt(document.getElementById('e_duracion').value)||90,
     info_evento:document.getElementById('e_info').value.trim()||null,
+    participantes:getParticipantes('e_parts_list')
   };
   // Subir imagen si hay una nueva
   const imgFile = (document.getElementById('e_imagen')||{files:[]}).files[0];
@@ -536,6 +560,7 @@ async function guardarEdicion(){
     try{ updates.imagen_url = await subirImagen(imgFile); }
     catch(e){ toast('Aviso: imagen no subida','true'); }
   }
+  if(claveEvento(updates)!==claveEvento(eventoEditando) && !(await confirmarDuplicados([updates],eventoEditando.id,'Guardar'))) return;
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${eventoEditando.id}`,{
       method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(updates)
@@ -545,6 +570,57 @@ async function guardarEdicion(){
     cerrarEdicion();
     cargarLista();
   }catch(e){toast('Error: '+e.message,true);}
+}
+
+// ── DUPLICADOS ──
+// Mismo día + mismos equipos (en cualquier orden) o mismo nombre de evento. Solo avisa: cada equipo puede
+// publicar su versión con su imagen y su texto, y la decisión es de quien guarda.
+function normTxt(s){
+  return String(s||'').toLowerCase()
+    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
+    .replace(/[^a-z0-9]/g,'');
+}
+function claveEvento(e){
+  const l=normTxt(e.equipo_local), v=normTxt(e.equipo_visitante), n=normTxt(e.nombre_evento);
+  if(!e.fecha) return '';
+  if(l&&v){ const p=[l,v].sort(); return e.fecha+'|'+p[0]+'|'+p[1]; }
+  if(n) return e.fecha+'|n|'+n;
+  return '';
+}
+function tituloEvento(e){
+  return e.nombre_evento||((e.equipo_local||'—')+' vs '+(e.equipo_visitante||'—'));
+}
+async function buscarDuplicados(nuevos, excludeId){
+  try{
+    const fechas=[];
+    nuevos.forEach(function(n){ if(/^\d{4}-\d{2}-\d{2}$/.test(n.fecha||'') && fechas.indexOf(n.fecha)<0) fechas.push(n.fecha); });
+    if(!fechas.length) return [];
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?select=id,nombre_evento,equipo_local,equipo_visitante,fecha,hora,user_id&activo=eq.true&fecha=in.(${fechas.join(',')})`,{headers:H()});
+    if(!res.ok) return [];
+    const existentes=await res.json()||[];
+    const porClave={};
+    existentes.forEach(function(e){
+      if(excludeId!=null && Number(e.id)===Number(excludeId)) return;
+      const k=claveEvento(e); if(k) (porClave[k]=porClave[k]||[]).push(e);
+    });
+    const dups=[];
+    nuevos.forEach(function(n){
+      const k=claveEvento(n);
+      if(k && porClave[k]) dups.push({nuevo:n, existente:porClave[k][0]});
+    });
+    return dups;
+  }catch(err){ return []; }
+}
+async function confirmarDuplicados(nuevos, excludeId, verbo){
+  const dups=await buscarDuplicados(nuevos, excludeId);
+  if(!dups.length) return true;
+  const mio=(authUser&&authUser.id)||null;
+  const lineas=dups.slice(0,5).map(function(d){
+    const e=d.existente;
+    return '• '+tituloEvento(e)+' · '+e.fecha+' '+(e.hora||'').slice(0,5)+(e.user_id===mio?' (publicado por ti)':' (publicado por otro organizador)');
+  });
+  const mas=dups.length>5?'\n… y '+(dups.length-5)+' más':'';
+  return confirm('Parece que este evento ya está publicado:\n\n'+lineas.join('\n')+mas+'\n\nSi es el mismo partido, no hace falta repetirlo. ¿'+verbo+' igualmente?');
 }
 
 // ── FORMULARIO ──
@@ -561,6 +637,7 @@ function buildEvento(d){
     duracion_minutos:parseInt(d.duracion)||90,
     imagen_url:d.imagen_url||null,
     info_evento:d.info||null,
+    participantes:d.participantes||null,
     activo:true, user_id:(authUser&&authUser.id)||null
   };
 }
@@ -623,6 +700,7 @@ async function guardarForm(){
     info:document.getElementById('f_info').value.trim()||null,
     participantes:getParticipantes('f_parts_list')
   });
+  if(!(await confirmarDuplicados([ev],null,'Crear'))) return;
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
       method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(ev)
@@ -630,6 +708,7 @@ async function guardarForm(){
     if(!res.ok) throw new Error(await res.text());
     toast('✅ Evento guardado');
     ['f_visitante','f_instalacion','f_hora','f_nombre'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f_parts_list').innerHTML='';
     selectedEquipoId=null;
     renderLocalField();
   }catch(e){toast('Error: '+e.message,true);}
@@ -693,6 +772,7 @@ async function guardarHoja(){
 
   if(!eventos.length){toast('Sin filas válidas — revisa fecha, hora y municipio',true);return;}
   const status=document.getElementById('sheetStatus');
+  if(!(await confirmarDuplicados(eventos,null,'Guardar'))){status.textContent='';return;}
   status.textContent='Guardando '+eventos.length+' eventos...';
 
   try{
@@ -846,7 +926,7 @@ async function cargarLista(){
         </div>
         <div class="ev-actions">
           <button class="ev-btn" title="Editar" onclick="abrirEdicionId(${Number(e.id)})">✏️</button>
-          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
+          <button class="ev-btn ${e.activo?'on':'off'}" title="${e.activo?'Visible · pulsa para ocultar':'Oculto · pulsa para mostrar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'🙈'}</button>
           <button class="ev-btn" title="Borrar" onclick="borrar(${Number(e.id)})">🗑️</button>
         </div>
       </div>`;
@@ -856,12 +936,15 @@ async function cargarLista(){
 
 async function toggleActivo(id,actual){
   try{
-    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({activo:!actual})
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify({activo:!actual})
     });
+    if(!res.ok) throw new Error(await res.text());
+    const rows=await res.json();
+    if(!rows||!rows.length) throw new Error('sin permiso para cambiar este evento');
     toast(actual?'Evento desactivado':'Evento activado');
     cargarLista();
-  }catch{toast('Error',true);}
+  }catch(err){toast('Error: '+err.message,true);}
 }
 
 async function borrar(id){
@@ -869,7 +952,7 @@ async function borrar(id){
   try{
     await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
     toast('Evento eliminado');cargarLista();
-  }catch{toast('Error al borrar',true);}
+  }catch(err){toast('Error al borrar',true);}
 }
 
 // ── INIT ──
@@ -883,5 +966,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.26</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
