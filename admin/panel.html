@@ -1,11 +1,12 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/panel.html
-Versión: v1.16
+Versión: v1.17
 Fecha: 2026-10-16
 Descripción: Panel de control (admin). v1.14: sección de clics en banners (vista banner_clicks_resumen).
 v1.15: los clics pasan a una pestaña propia "Publicidad" (totales + clics por banner); se quitan de Estadísticas.
 v1.16: etiqueta de versión en la esquina inferior derecha.
+v1.17: etiqueta más corta (#v9).
 -->
 
 <!DOCTYPE html>
@@ -467,7 +468,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.16</div>
-<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.join(",")}).catch(function(){})}catch(e){}})();</script>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.17</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
