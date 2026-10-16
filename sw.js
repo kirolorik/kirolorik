@@ -1,6 +1,6 @@
-/* Kirolorik · sw.js · v8 · 2026-09-20 */
+/* Kirolorik · sw.js · v9 · 2026-10-16 · cache v9 para forzar la recarga de las páginas nuevas */
 
-const CACHE = 'kirolorik-v8';
+const CACHE = 'kirolorik-v9';
 
 const CACHE_FIRST = [
   '/manifest.json',
