@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.22 · 2026-10-16 · campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.23 · 2026-10-16 · ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -72,6 +72,8 @@ tbody td select{cursor:pointer}
 .ev-actions{display:flex;gap:8px;flex-shrink:0}
 .ev-btn{font-size:14px;cursor:pointer;opacity:0.35;transition:opacity 0.15s;background:none;border:none;padding:2px}
 .ev-btn:hover{opacity:1}
+.ev-btn.on{opacity:1}
+.ev-btn.off{opacity:0.5;filter:grayscale(1)}
 .badge-activo{font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700}
 .badge-inactivo{font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700}
 
@@ -168,7 +170,7 @@ tbody td select{cursor:pointer}
       <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
     </div>
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
-    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_vis_pick_wrap"></div><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
     <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
     <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
@@ -305,6 +307,8 @@ function renderLocalField(){
   const wrap=document.getElementById('f_local_wrap');
   if(!wrap) return;
   selectedEquipoId=null;
+  const vw=document.getElementById('f_vis_pick_wrap');
+  if(vw) vw.innerHTML=visitantePickHtml('f_','');
   if(userTeams.length){
     const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}">${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
     wrap.innerHTML=`<select id="f_local" onchange="onLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="f_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
@@ -318,6 +322,22 @@ function renderLocalField(){
   }else{
     wrap.innerHTML=`<input type="text" id="f_local" placeholder="Nombre del equipo local">`;
   }
+}
+
+function visitantePickHtml(prefix, actual){
+  if(!userTeams.length) return '';
+  const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}"${t.nombre===actual?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
+  return `<select id="${prefix}vis_pick" onchange="onVisitantePick('${prefix}')" style="margin-bottom:6px"><option value="">— Rival externo (escribe abajo) —</option>${opts}</select>`;
+}
+
+function onVisitantePick(prefix){
+  const sel=document.getElementById(prefix+'vis_pick');
+  const inp=document.getElementById(prefix+'visitante');
+  if(!sel||!inp||!sel.value) return;
+  inp.value=sel.value;
+  const local=document.getElementById(prefix+'local');
+  // Si el local no es uno de mis equipos (juego fuera de casa), la ficha deporte/género/categoría sale del visitante
+  if(!local||!local.value||local.value==='__manual__') fillDeporte(sel.value,prefix);
 }
 
 function fillDeporte(teamNombre, prefix){
@@ -463,7 +483,7 @@ function abrirEdicion(e){
         <div class="field"><label>Competición</label><select id="e_comp">${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
       </div>
       <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
-      <div class="field"><label>Equipo visitante</label><input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
+      <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
       <div class="row2">
         <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${esc(e.fecha||'')}"></div>
         <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${esc((e.hora||'').slice(0,5))}"></div>
@@ -852,7 +872,7 @@ async function cargarLista(){
         </div>
         <div class="ev-actions">
           <button class="ev-btn" title="Editar" onclick="abrirEdicionId(${Number(e.id)})">✏️</button>
-          <button class="ev-btn" title="${e.activo?'Desactivar':'Activar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'👁️‍🗨️'}</button>
+          <button class="ev-btn ${e.activo?'on':'off'}" title="${e.activo?'Visible · pulsa para ocultar':'Oculto · pulsa para mostrar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'🙈'}</button>
           <button class="ev-btn" title="Borrar" onclick="borrar(${Number(e.id)})">🗑️</button>
         </div>
       </div>`;
@@ -862,12 +882,15 @@ async function cargarLista(){
 
 async function toggleActivo(id,actual){
   try{
-    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
-      method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({activo:!actual})
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{
+      method:'PATCH',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify({activo:!actual})
     });
+    if(!res.ok) throw new Error(await res.text());
+    const rows=await res.json();
+    if(!rows||!rows.length) throw new Error('sin permiso para cambiar este evento');
     toast(actual?'Evento desactivado':'Evento activado');
     cargarLista();
-  }catch{toast('Error',true);}
+  }catch(err){toast('Error: '+err.message,true);}
 }
 
 async function borrar(id){
@@ -875,7 +898,7 @@ async function borrar(id){
   try{
     await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
     toast('Evento eliminado');cargarLista();
-  }catch{toast('Error al borrar',true);}
+  }catch(err){toast('Error al borrar',true);}
 }
 
 // ── INIT ──
