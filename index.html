@@ -1,11 +1,17 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.28
-Fecha: 2026-10-04
+Versión: v6.32
+Fecha: 2026-10-16
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
+v6.29: seguridad. Escapado con esc() de todo texto de Supabase insertado como HTML (tarjetas, detalle,
+municipios, banners); solo se aceptan URLs http(s) en imágenes y enlaces; la parrilla excluye eventos test.
+v6.30: el salto al siguiente día con eventos funciona (la consulta trae desde el día elegido en adelante y se
+filtra el día en cliente); el detalle muestra la lista de participantes.
+v6.31: etiqueta de versión en la esquina inferior derecha (página y caché del Service Worker).
+v6.32: etiqueta más corta (índice v6.32 · #v9).
 -->
 
 <!DOCTYPE html>
@@ -227,6 +233,8 @@ function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1)
 function nm(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p[2]);return t('dias')[dt.getDay()]+' '+p[2]+' '+t('meses')[p[1]-1]+' '+p[0]}
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+// Solo URLs http(s): evita javascript: y similares en src/href
+function safeUrl(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:''}
 function en(e){return esc(e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''))}
 function bg(tp){
   if(tp==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">'+window.t('badge.entrada')+'</div></div>';
@@ -329,9 +337,9 @@ function loadGrid(){
   g.innerHTML='<div class="empty-slot">'+t('grid.cargando')+'</div>';
   var _gridFechaSel=fechaSel;
   var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre)&activo=eq.true&order=fecha.asc,hora.asc';
-  if(fechaSel)url+='&fecha=eq.'+fechaSel;
-  else url+='&fecha=gte.'+td();
-  if(deporteSel!=='todos')url+='&deporte=eq.'+deporteSel;
+  url+='&fecha=gte.'+(fechaSel||td());
+  if(deporteSel!=='todos')url+='&deporte=eq.'+encodeURIComponent(deporteSel);
+  url+='&test=eq.false';
   if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
   if(clubSel!=='todos')url+='&or=(equipo_local.eq.'+encodeURIComponent(clubSel)+',equipo_visitante.eq.'+encodeURIComponent(clubSel)+')';
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
@@ -340,7 +348,7 @@ function loadGrid(){
     var filtered=[];
     for(var i=0;i<data.length;i++){
       var e=data[i];
-      if(fechaSel){filtered.push(e);continue}
+      if(fechaSel){if(e.fecha===fechaSel)filtered.push(e);continue}
       var hp=(e.hora||'00:00').split(':');
       var st=new Date(e.fecha+'T'+hp[0].padStart(2,'0')+':'+hp[1].padStart(2,'0')+':00');
       var fin=new Date(st.getTime()+(e.duracion_minutos||90)*60000);
@@ -388,10 +396,10 @@ function loadGrid(){
     var curTime=nm(),hoy=td();
     g.innerHTML='';
     function renderEventCard(e,evCache){
-      var d=gs(e.deporte),dl=e.deporte||'Otro';
-      var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
+      var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
+      var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
       var idx=evCache.indexOf(e);
-      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+esc(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
     }
     if(fechaSel){
       // Vista horaria (día seleccionado)
@@ -433,7 +441,7 @@ function loadGrid(){
         }
       }
     }
-  }).catch(function(err){g.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+': '+err.message+'</div>'});
+  }).catch(function(err){g.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+': '+esc(err.message)+'</div>'});
 }
 
 // DETALLE
@@ -441,13 +449,14 @@ function openDet(idx){
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
   try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
-  var d=gs(e.deporte),dl=e.deporte||'Otro';
+  var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
-  var gen=e.genero&&e.genero!=='Sin especificar'?' · '+e.genero:'';
+  var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
   var vs;
-  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+e.nombre_evento+'</div>';
-  else{var escLocal=e.mis_equipos&&e.mis_equipos.escudo_url?'<img class="det-escudo" src="'+e.mis_equipos.escudo_url+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+(e.equipo_visitante||'—')+'</div></div></div>';}
+  var escudo=e.mis_equipos?safeUrl(e.mis_equipos.escudo_url):'';
+  if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+esc(e.nombre_evento)+'</div>';
+  else{var escLocal=escudo?'<img class="det-escudo" src="'+esc(escudo)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
   var ent='';
@@ -457,18 +466,19 @@ function openDet(idx){
   else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">'+t('det.puertas_abiertas')+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+t('det.acceso_libre')+'</div></div></div>';
   var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
   var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">'+esc(e.info_evento)+'</div></div>':'';
-  var poster=e.imagen_url?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(\''+e.imagen_url+'\')">'+'<img src="'+e.imagen_url+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
+  var cartel=safeUrl(e.imagen_url);
+  var poster=cartel?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(evCache['+idx+'].imagen_url)">'+'<img src="'+esc(cartel)+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
   var partsHtml='';
   if(e.participantes&&e.participantes.trim()){
     var parts=e.participantes.split('\n').map(function(p){return p.trim()}).filter(function(p){return p});
     if(parts.length){
       partsHtml='<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px">'+t('det.participantes')+'</div>'
         +'<div style="display:flex;flex-direction:column;gap:6px">'
-        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+p+'</div>'}).join('')
+        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+esc(p)+'</div>'}).join('')
         +'</div></div>';
     }
   }
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+(e.tipo_competicion||t('det.evento_fallback'))+' · '+(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+poster+'<div style="height:24px"></div>';
+  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+partsHtml+poster+'<div style="height:24px"></div>';
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');
@@ -478,7 +488,7 @@ function closeDet(){
   document.getElementById('detDraw').classList.remove('open');
   document.getElementById('ov').classList.remove('open');
 }
-function openLb(u){document.getElementById('lbImg').src=u;document.getElementById('lb').classList.add('open')}
+function openLb(u){u=safeUrl(u);if(!u)return;document.getElementById('lbImg').src=u;document.getElementById('lb').classList.add('open')}
 function closeLb(){document.getElementById('lb').classList.remove('open')}
 
 // MUNICIPIO
@@ -496,7 +506,7 @@ function loadMunis(){
     if(!data||!data.length){list.innerHTML='<div class="empty-slot">'+t('grid.sin_municipios')+'</div>';return}
     var html='';
     html+='<div class="mun-item'+(!muni?' sel':'')+'" onclick="selMun(\'\')" ><div style="font-size:18px;width:28px;text-align:center">🗺️</div><div style="flex:1"><div class="mun-name">'+t('nav.todos_municipios')+'</div><div class="mun-prov">'+t('nav.sin_filtro_ubi')+'</div></div><div>'+(!muni?'✅':'')+'</div></div>';
-    for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" onclick="selMun(\''+m.nombre+'\')">'+'<div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+m.nombre+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
+    for(var i=0;i<data.length;i++){var m=data[i];html+='<div class="mun-item'+(m.nombre===muni?' sel':'')+'" data-mun="'+esc(m.nombre)+'" onclick="selMun(this.getAttribute(\'data-mun\'))">'+'<div style="font-size:18px;width:28px;text-align:center">📍</div><div style="flex:1"><div class="mun-name">'+esc(m.nombre)+'</div></div><div>'+(m.nombre===muni?'✅':'')+'</div></div>'}
     list.innerHTML=html;
   }).catch(function(){list.innerHTML='<div class="empty-slot" style="color:#dc2626">'+t('grid.error')+'</div>'});
 }
@@ -530,7 +540,7 @@ function renderProf(){
   if(authUser){
     var em=authUser.email||'',ini=em.charAt(0).toUpperCase(),col=COLORS[em.charCodeAt(0)%COLORS.length];
     document.getElementById('profBtnIn').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:'+col+';border-radius:50%">'+ini+'</div>';
-    h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+em.split('@')[0]+'</div><div class="prof-sub">'+em+'</div>';
+    h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+esc(em.split('@')[0])+'</div><div class="prof-sub">'+esc(em)+'</div>';
     var isAdm=(em==='kirolorik.app@gmail.com');b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button>'+(isAdm?'<div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/panel.html\')">🛠️ Panel de control</button>':'')+'<div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
   }else{
     document.getElementById('profBtnIn').innerHTML='👤';
@@ -565,7 +575,7 @@ function loadAds(){
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
 function renderAdDots(){var html='';for(var i=0;i<adList.length;i++)html+='<div class="ad-dot'+(i===adIdx?' on':'')+'" onclick="goAd('+i+')"></div>';document.getElementById('adDots').innerHTML=html}
-function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var img=b.imagen_url?'<img class="ad-img" src="'+b.imagen_url+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';var ext=(dest.indexOf('mailto:')!==0&&dest.indexOf('tel:')!==0);p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+(b.texto||b.descripcion||'')+'</div><a class="ad-cta" href="'+esc(dest)+'"'+(ext?' target="_blank" rel="noopener noreferrer"':'')+' onclick="registrarClicBanner(\''+b.id+'\')">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
+function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPanel');var adImg=safeUrl(b.imagen_url);var img=adImg?'<img class="ad-img" src="'+esc(adImg)+'" alt="" loading="lazy">':'<div class="ad-ph"><div style="font-size:32px;opacity:0.4">📣</div><div style="font-size:11px;color:var(--muted)">Espacio publicitario</div></div>';var dest=b.url_destino||'';if(!safeUrl(dest)&&dest.indexOf('mailto:')!==0&&dest.indexOf('tel:')!==0)dest='mailto:kirolorik.info@gmail.com?subject=Publicidad en Kirolorik';var ext=(dest.indexOf('mailto:')!==0&&dest.indexOf('tel:')!==0);p.innerHTML=img+'<div class="ad-footer"><div class="ad-long">'+esc(b.texto||b.descripcion||'')+'</div><a class="ad-cta" href="'+esc(dest)+'"'+(ext?' target="_blank" rel="noopener noreferrer"':'')+' onclick="registrarClicBanner('+JSON.stringify(String(b.id)).replace(/"/g,'&quot;')+')">Contactar</a><div class="ad-close" onclick="toggleAd()">✕</div></div>'}
 function toggleAd(){adOpen=!adOpen;if(!adOpen)try{localStorage.setItem('kb_ad_seen','1')}catch(e){};var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
@@ -609,5 +619,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.32</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
