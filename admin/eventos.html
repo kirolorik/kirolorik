@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.23 · 2026-10-16 · ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.24 · 2026-10-16 · aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -560,6 +560,7 @@ async function guardarEdicion(){
     try{ updates.imagen_url = await subirImagen(imgFile); }
     catch(e){ toast('Aviso: imagen no subida','true'); }
   }
+  if(claveEvento(updates)!==claveEvento(eventoEditando) && !(await confirmarDuplicados([updates],eventoEditando.id,'Guardar'))) return;
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${eventoEditando.id}`,{
       method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(updates)
@@ -569,6 +570,57 @@ async function guardarEdicion(){
     cerrarEdicion();
     cargarLista();
   }catch(e){toast('Error: '+e.message,true);}
+}
+
+// ── DUPLICADOS ──
+// Mismo día + mismos equipos (en cualquier orden) o mismo nombre de evento. Solo avisa: cada equipo puede
+// publicar su versión con su imagen y su texto, y la decisión es de quien guarda.
+function normTxt(s){
+  return String(s||'').toLowerCase()
+    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
+    .replace(/[^a-z0-9]/g,'');
+}
+function claveEvento(e){
+  const l=normTxt(e.equipo_local), v=normTxt(e.equipo_visitante), n=normTxt(e.nombre_evento);
+  if(!e.fecha) return '';
+  if(l&&v){ const p=[l,v].sort(); return e.fecha+'|'+p[0]+'|'+p[1]; }
+  if(n) return e.fecha+'|n|'+n;
+  return '';
+}
+function tituloEvento(e){
+  return e.nombre_evento||((e.equipo_local||'—')+' vs '+(e.equipo_visitante||'—'));
+}
+async function buscarDuplicados(nuevos, excludeId){
+  try{
+    const fechas=[];
+    nuevos.forEach(function(n){ if(/^\d{4}-\d{2}-\d{2}$/.test(n.fecha||'') && fechas.indexOf(n.fecha)<0) fechas.push(n.fecha); });
+    if(!fechas.length) return [];
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?select=id,nombre_evento,equipo_local,equipo_visitante,fecha,hora,user_id&activo=eq.true&fecha=in.(${fechas.join(',')})`,{headers:H()});
+    if(!res.ok) return [];
+    const existentes=await res.json()||[];
+    const porClave={};
+    existentes.forEach(function(e){
+      if(excludeId!=null && Number(e.id)===Number(excludeId)) return;
+      const k=claveEvento(e); if(k) (porClave[k]=porClave[k]||[]).push(e);
+    });
+    const dups=[];
+    nuevos.forEach(function(n){
+      const k=claveEvento(n);
+      if(k && porClave[k]) dups.push({nuevo:n, existente:porClave[k][0]});
+    });
+    return dups;
+  }catch(err){ return []; }
+}
+async function confirmarDuplicados(nuevos, excludeId, verbo){
+  const dups=await buscarDuplicados(nuevos, excludeId);
+  if(!dups.length) return true;
+  const mio=(authUser&&authUser.id)||null;
+  const lineas=dups.slice(0,5).map(function(d){
+    const e=d.existente;
+    return '• '+tituloEvento(e)+' · '+e.fecha+' '+(e.hora||'').slice(0,5)+(e.user_id===mio?' (publicado por ti)':' (publicado por otro organizador)');
+  });
+  const mas=dups.length>5?'\n… y '+(dups.length-5)+' más':'';
+  return confirm('Parece que este evento ya está publicado:\n\n'+lineas.join('\n')+mas+'\n\nSi es el mismo partido, no hace falta repetirlo. ¿'+verbo+' igualmente?');
 }
 
 // ── FORMULARIO ──
@@ -648,6 +700,7 @@ async function guardarForm(){
     info:document.getElementById('f_info').value.trim()||null,
     participantes:getParticipantes('f_parts_list')
   });
+  if(!(await confirmarDuplicados([ev],null,'Crear'))) return;
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
       method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(ev)
@@ -719,6 +772,7 @@ async function guardarHoja(){
 
   if(!eventos.length){toast('Sin filas válidas — revisa fecha, hora y municipio',true);return;}
   const status=document.getElementById('sheetStatus');
+  if(!(await confirmarDuplicados(eventos,null,'Guardar'))){status.textContent='';return;}
   status.textContent='Guardando '+eventos.length+' eventos...';
 
   try{
