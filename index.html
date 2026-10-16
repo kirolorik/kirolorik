@@ -1,7 +1,7 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.32
+Versión: v6.34
 Fecha: 2026-10-16
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
@@ -12,6 +12,8 @@ v6.30: el salto al siguiente día con eventos funciona (la consulta trae desde e
 filtra el día en cliente); el detalle muestra la lista de participantes.
 v6.31: etiqueta de versión en la esquina inferior derecha (página y caché del Service Worker).
 v6.32: etiqueta más corta (índice v6.32 · #v9).
+v6.33: el detalle muestra el escudo del visitante cuando es un equipo de mis_equipos (equipo_visitante_id).
+v6.34: el escudo sale del club (clubes.escudo_url) y no del equipo, para local y visitante; si el equipo no tiene club, se usa el suyo.
 -->
 
 <!DOCTYPE html>
@@ -336,7 +338,7 @@ function loadGrid(){
   var g=document.getElementById('grid');
   g.innerHTML='<div class="empty-slot">'+t('grid.cargando')+'</div>';
   var _gridFechaSel=fechaSel;
-  var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre)&activo=eq.true&order=fecha.asc,hora.asc';
+  var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre,clubes(escudo_url))&activo=eq.true&order=fecha.asc,hora.asc';
   url+='&fecha=gte.'+(fechaSel||td());
   if(deporteSel!=='todos')url+='&deporte=eq.'+encodeURIComponent(deporteSel);
   url+='&test=eq.false';
@@ -445,7 +447,15 @@ function loadGrid(){
 }
 
 // DETALLE
+// El escudo es del club; si el equipo no tiene club o este no tiene escudo, se usa el del propio equipo
+function escudoEq(eq){
+  if(!eq)return '';
+  var c=eq.clubes?safeUrl(eq.clubes.escudo_url):'';
+  return c||safeUrl(eq.escudo_url);
+}
+var detSeq=0;
 function openDet(idx){
+  var mySeq=++detSeq;
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
   try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
@@ -454,9 +464,9 @@ function openDet(idx){
   document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
   var vs;
-  var escudo=e.mis_equipos?safeUrl(e.mis_equipos.escudo_url):'';
+  var escudo=escudoEq(e.mis_equipos);
   if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+esc(e.nombre_evento)+'</div>';
-  else{var escLocal=escudo?'<img class="det-escudo" src="'+esc(escudo)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
+  else{var escLocal=escudo?'<img class="det-escudo" src="'+esc(escudo)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div id="detVisEsc" style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
   var ent='';
@@ -479,6 +489,13 @@ function openDet(idx){
     }
   }
   document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+info+partsHtml+poster+'<div style="height:24px"></div>';
+  if(e.equipo_visitante_id&&!e.nombre_evento){
+    fetch(SB+'/rest/v1/mis_equipos?id=eq.'+encodeURIComponent(e.equipo_visitante_id)+'&select=escudo_url,clubes(escudo_url)',{headers:H}).then(function(r){return r.json()}).then(function(rows){
+      var u=rows&&rows[0]?escudoEq(rows[0]):'';
+      var box=document.getElementById('detVisEsc');
+      if(u&&box&&mySeq===detSeq)box.innerHTML='<img class="det-escudo" src="'+esc(u)+'" alt="">';
+    }).catch(function(){});
+  }
   document.getElementById('detDraw').classList.add('open');
   document.getElementById('profDraw').classList.remove('open');
   document.getElementById('profBtn').classList.remove('open');
@@ -619,7 +636,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.32</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.34</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
