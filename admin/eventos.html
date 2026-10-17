@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.29 · 2026-10-17 · pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (eventos extraídos de Telegram para revisar y publicar); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.30 · 2026-10-17 · borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -249,7 +249,7 @@ tbody td select{cursor:pointer}
   </div>
 
   <div id="tabBorr" style="display:none">
-    <div class="admin-section-title">Borradores de Telegram</div>
+    <div class="admin-section-title">Borradores</div>
     <div id="borrList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
@@ -762,8 +762,8 @@ async function guardarForm(){
   }catch(e){toast('Error: '+e.message,true);}
 }
 
-// ── BORRADORES (Telegram) ──
-// El bot de Telegram guarda aquí lo que extrae de carteles y textos; se revisa y se publica con un clic.
+// ── BORRADORES ──
+// Eventos guardados como borrador (p. ej. desde el chat de claude.ai); se revisan y se publican con un clic.
 const BORR_DEPORTES=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','otros'];
 const BORR_GENEROS=['Sin especificar','Masculino','Femenino','Mixto'];
 const BORR_CATS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
@@ -831,7 +831,7 @@ async function cargarBorradores(){
     listaBorradores=data;
     const n=data.length, badge=document.getElementById('borrCount');
     if(badge){badge.textContent=n;badge.style.display=n?'':'none';}
-    if(!n){list.innerHTML='<div class="empty-slot">No hay borradores pendientes.<br><span style="font-size:11px">Manda un cartel o un texto al bot de Telegram y aparecerán aquí.</span></div>';return;}
+    if(!n){list.innerHTML='<div class="empty-slot">No hay borradores pendientes.<br><span style="font-size:11px">Aquí aparecen los eventos que se guardan como borrador para revisarlos antes de publicar.</span></div>';return;}
     list.innerHTML=data.map(borradorHtml).join('');
   }catch(err){ list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar: ${esc(err.message)}</div>`; }
 }
@@ -1236,7 +1236,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.29</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.30</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

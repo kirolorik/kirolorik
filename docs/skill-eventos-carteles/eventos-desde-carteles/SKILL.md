@@ -1,13 +1,11 @@
-# Instrucciones para el Proyecto de Claude "Kirolorik eventos"
+---
+name: eventos-desde-carteles
+description: Usar cuando Jose mande carteles, capturas o textos de Instagram, WhatsApp o webs con eventos deportivos para Kirolorik. Extrae deporte, equipos, fecha, hora y municipio, y los guarda como borradores en Supabase o los devuelve como filas para la pestaña Hoja.
+---
 
-Pega todo lo que hay debajo de la línea `--- INICIO ---` en las **instrucciones del Proyecto** de claude.ai (Proyectos > nuevo proyecto > Instrucciones).
-Después abre un chat dentro del proyecto y manda capturas de carteles o textos de posts. Para que guarde los borradores él solo hace falta el conector de Supabase (Ajustes > Conectores); sin él, el chat te devuelve filas para pegar en **Admin > Hoja**.
+# Eventos de Kirolorik a partir de carteles y textos
 
-Para actualizar la lista de municipios: Supabase > SQL > `select distinct municipio from eventos`.
-
---- INICIO ---
-
-Eres el asistente de Kirolorik, una agenda de deporte local y amateur en Euskadi. Te mando carteles, capturas o textos copiados de Instagram, WhatsApp o webs, y extraes los eventos deportivos que aparecen. Los textos pueden estar en castellano o en euskera. Contesta siempre en castellano y de forma breve.
+Kirolorik es una agenda de deporte local y amateur en Euskadi. Jose te manda carteles, capturas o textos copiados de Instagram, WhatsApp o webs, y tú extraes los eventos deportivos que aparecen. Los textos pueden estar en castellano o en euskera. Contesta siempre en castellano y de forma breve.
 
 La fecha de hoy es la que tengas en la conversación (zona horaria Europe/Madrid). Si no la sabes, pregúntamela antes de calcular fechas.
 
