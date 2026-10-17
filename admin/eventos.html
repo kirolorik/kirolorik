@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.27 · 2026-10-16 · equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.30 · 2026-10-17 · borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -74,6 +74,15 @@ tbody td select{cursor:pointer}
 .ev-btn:hover{opacity:1}
 .ev-btn.on{opacity:1}
 .ev-btn.off{opacity:0.5;filter:grayscale(1)}
+.borr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px}
+.borr-top{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.borr-thumb{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+.borr-aviso{font-size:11px;line-height:1.4;color:#b45309;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:6px;padding:6px 8px;flex:1}
+.borr-ok{font-size:11px;color:#16a34a;flex:1}
+.borr-acc{display:flex;gap:8px;margin-top:10px}
+.borr-acc button{flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;color:var(--text)}
+.borr-acc button.pub{background:var(--accent);border-color:var(--accent);color:#fff}
+#borrCount{background:#dc2626;color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:5px}
 .badge-activo{font-size:9px;background:rgba(22,163,74,0.1);color:#16a34a;padding:2px 7px;border-radius:20px;font-weight:700}
 .badge-inactivo{font-size:9px;background:rgba(220,38,38,0.1);color:#dc2626;padding:2px 7px;border-radius:20px;font-weight:700}
 
@@ -122,8 +131,9 @@ tbody td select{cursor:pointer}
   <div class="tabs">
     <div class="tab" onclick="switchTab('list',this)">📋 Lista</div>
     <div class="tab active" onclick="switchTab('form',this)">➕ Nuevo</div>
+    <div class="tab" onclick="switchTab('borr',this)">📥 Borradores<span id="borrCount" style="display:none"></span></div>
     <div class="tab" onclick="switchTab('stats',this)">📊 Vistas</div>
-    <div class="tab tab-disabled" onclick="switchTab('sheet',this)">📊 Hoja</div>
+    <div class="tab" onclick="switchTab('sheet',this)">📊 Hoja</div>
   </div>
 
   <!-- TAB FORMULARIO (por defecto) -->
@@ -208,16 +218,39 @@ tbody td select{cursor:pointer}
 
   <!-- TAB HOJA -->
   <div id="tabSheet" style="display:none">
-    <div style="padding:48px 16px;text-align:center">
-      <div style="font-size:36px;margin-bottom:12px">🚧</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:8px">En desarrollo</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6">La importación masiva desde hoja de cálculo<br>estará disponible próximamente.</div>
+    <div class="admin-section-title">Pegar varios eventos</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+      Pega filas de una hoja de cálculo o las que te da el chat. Columnas separadas por tabulador, en este orden:<br>
+      <b>fecha · hora · deporte · género · categoría · competición · nombre · local · visitante · municipio · instalación · entrada · texto · participantes</b><br>
+      (las dos últimas son opcionales; varios participantes se separan con |).
     </div>
+    <textarea id="sheetPaste" rows="3" placeholder="Pega aquí las filas…" style="width:100%;box-sizing:border-box;margin-bottom:8px"></textarea>
+    <div class="sheet-actions" style="margin:0 0 12px">
+      <button type="button" class="btn-primary" style="width:auto;padding:9px 16px" onclick="pegarDesdeCaja()">Añadir filas</button>
+      <button type="button" class="btn-primary" style="width:auto;padding:9px 16px;background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="addRow();renumerar();resumenHoja()">+ Fila vacía</button>
+      <button type="button" class="btn-primary" style="width:auto;padding:9px 16px;background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="vaciarHoja()">Vaciar</button>
+    </div>
+    <div class="sheet-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Deporte</th><th>Género</th><th>Categ.</th><th>Comp.</th><th>Nombre</th><th>Local</th><th>Visitante</th><th>Municipio</th><th>Instalación</th><th>Entrada</th><th>Texto</th><th>Participantes</th><th></th></tr></thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+    <div id="sheetResumen" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn-primary" id="sheetGuardar" onclick="guardarHoja()">Publicar eventos</button>
+    </div>
+    <div id="sheetStatus" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
   </div>
 
   <!-- TAB LISTA -->
   <div id="tabList" style="display:none">
     <div id="eventosList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabBorr" style="display:none">
+    <div class="admin-section-title">Borradores</div>
+    <div id="borrList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
   <div id="tabStats" style="display:none">
@@ -257,6 +290,7 @@ function mostrarAdmin(){
   document.getElementById('adminSubtitle').textContent=(authUser&&authUser.email)||'Panel de eventos';
   document.getElementById('f_fecha').value=new Date().toISOString().split('T')[0];
   loadUserTeams();
+  actualizarBadgeBorradores();
 }
 
 async function login(){
@@ -428,7 +462,7 @@ function getLocalValue(){
 
 // ── TABS ──
 function switchTab(name,el){
-  ['Form','Sheet','List','Stats'].forEach(t=>{
+  ['Form','Sheet','List','Stats','Borr'].forEach(t=>{
     document.getElementById('tab'+t).style.display='none';
   });
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -436,6 +470,7 @@ function switchTab(name,el){
   el.classList.add('active');
   if(name==='list') cargarLista();
   if(name==='stats') cargarStatsClub();
+  if(name==='borr') cargarBorradores();
 }
 
 // ── EDICIÓN ──
@@ -727,15 +762,181 @@ async function guardarForm(){
   }catch(e){toast('Error: '+e.message,true);}
 }
 
+// ── BORRADORES ──
+// Eventos guardados como borrador (p. ej. desde el chat de claude.ai); se revisan y se publican con un clic.
+const BORR_DEPORTES=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','otros'];
+const BORR_GENEROS=['Sin especificar','Masculino','Femenino','Mixto'];
+const BORR_CATS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
+const BORR_COMPS=['Liga','Copa','Torneo','Amistoso','Play-off'];
+const BORR_ENTRADAS=['gratis','pago','rifa','puertas','sin info'];
+let listaBorradores=[];
+
+function borrOpts(lista,val,vacio){
+  return (vacio?'<option value="">—</option>':'')+lista.map(o=>`<option value="${esc(o)}"${o===val?' selected':''}>${esc(o)}</option>`).join('');
+}
+
+async function actualizarBadgeBorradores(){
+  const b=document.getElementById('borrCount');
+  if(!b) return;
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos_borrador?select=id&estado=eq.pendiente`,{headers:H()});
+    const rows=await res.json();
+    const n=Array.isArray(rows)?rows.length:0;
+    b.textContent=n; b.style.display=n?'':'none';
+  }catch(err){ b.style.display='none'; }
+}
+
+function borradorHtml(b){
+  const p='b'+Number(b.id)+'_';
+  const img=/^https:\/\//.test(b.imagen_url||'')?`<img class="borr-thumb" src="${esc(b.imagen_url)}" alt="" onclick="window.open(this.src,'_blank')">`:'';
+  const aviso=b.avisos?`<div class="borr-aviso">⚠️ ${esc(b.avisos)}</div>`:'<div class="borr-ok">✓ Sin avisos</div>';
+  const fuente=b.fuente_texto?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">Texto original</summary><div style="font-size:12px;white-space:pre-line;color:var(--muted);margin-top:4px">${esc(b.fuente_texto)}</div></details>`:'';
+  return `<div class="borr-card" id="${p}card">
+    <div class="borr-top">${img}${aviso}</div>
+    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(si no son equipos)</span></label><input type="text" id="${p}nombre" value="${esc(b.nombre_evento||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>Local</label><input type="text" id="${p}local" value="${esc(b.equipo_local||'')}"></div>
+      <div class="field"><label>Visitante</label><input type="text" id="${p}visitante" value="${esc(b.equipo_visitante||'')}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Fecha</label><input type="date" id="${p}fecha" value="${esc(b.fecha||'')}"></div>
+      <div class="field"><label>Hora</label><input type="time" id="${p}hora" value="${esc((b.hora||'').slice(0,5))}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Municipio</label><input type="text" id="${p}municipio" value="${esc(b.municipio||'')}"></div>
+      <div class="field"><label>Instalación</label><input type="text" id="${p}instalacion" value="${esc(b.instalacion||'')}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Deporte</label><select id="${p}deporte">${borrOpts(BORR_DEPORTES,b.deporte,true)}</select></div>
+      <div class="field"><label>Género</label><select id="${p}genero">${borrOpts(BORR_GENEROS,b.genero,false)}</select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Categoría</label><select id="${p}cat">${borrOpts(BORR_CATS,b.categoria,true)}</select></div>
+      <div class="field"><label>Competición</label><select id="${p}comp">${borrOpts(BORR_COMPS,b.tipo_competicion,true)}</select></div>
+    </div>
+    <div class="field"><label>Entrada</label><select id="${p}entrada">${borrOpts(BORR_ENTRADAS,b.tipo_entrada,false)}</select></div>
+    <div class="field"><label>Texto del evento</label><textarea id="${p}info" rows="2" style="resize:vertical">${esc(b.info_evento||'')}</textarea></div>
+    <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(uno por línea)</span></label><textarea id="${p}parts" rows="2" style="resize:vertical">${esc(b.participantes||'')}</textarea></div>
+    ${fuente}
+    <div class="borr-acc"><button type="button" onclick="descartarBorrador(${Number(b.id)})">🗑️ Descartar</button><button type="button" class="pub" onclick="publicarBorrador(${Number(b.id)})">Publicar ✅</button></div>
+  </div>`;
+}
+
+async function cargarBorradores(){
+  const list=document.getElementById('borrList');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos_borrador?select=*&estado=eq.pendiente&order=created_at.desc&limit=100`,{headers:H()});
+    const data=await res.json();
+    if(!res.ok) throw new Error((data&&data.message)||'Error');
+    listaBorradores=data;
+    const n=data.length, badge=document.getElementById('borrCount');
+    if(badge){badge.textContent=n;badge.style.display=n?'':'none';}
+    if(!n){list.innerHTML='<div class="empty-slot">No hay borradores pendientes.<br><span style="font-size:11px">Aquí aparecen los eventos que se guardan como borrador para revisarlos antes de publicar.</span></div>';return;}
+    list.innerHTML=data.map(borradorHtml).join('');
+  }catch(err){ list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar: ${esc(err.message)}</div>`; }
+}
+
+function valorBorr(id,campo){ const el=document.getElementById('b'+id+'_'+campo); return el?el.value.trim():''; }
+
+// Si el equipo es uno de mis equipos (por nombre), se enlaza para que salgan su escudo y su municipio
+function equipoPropioPorNombre(nombre,userId){
+  if(!nombre||!authUser||userId!==authUser.id) return null;
+  const n=normTxt(nombre);
+  return userTeams.find(function(t){return normTxt(t.nombre)===n})||null;
+}
+
+async function publicarBorrador(id){
+  const b=listaBorradores.find(function(x){return Number(x.id)===id});
+  if(!b) return;
+  const fecha=valorBorr(id,'fecha'), hora=valorBorr(id,'hora'), municipio=valorBorr(id,'municipio');
+  const nombre=valorBorr(id,'nombre'), local=valorBorr(id,'local'), visitante=valorBorr(id,'visitante');
+  if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
+  if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
+  const eqLocal=equipoPropioPorNombre(local,b.user_id), eqVis=equipoPropioPorNombre(visitante,b.user_id);
+  const ev=buildEvento({
+    deporte:valorBorr(id,'deporte')||'otros', genero:valorBorr(id,'genero'), nombre, cat:valorBorr(id,'cat'),
+    comp:valorBorr(id,'comp'), local, visitante, fecha, hora, municipio, instalacion:valorBorr(id,'instalacion'),
+    entrada:valorBorr(id,'entrada'), duracion:b.duracion_minutos, imagen_url:b.imagen_url,
+    equipo_id:eqLocal?eqLocal.id:null, municipio_equipo:eqLocal?eqLocal.municipio||null:null,
+    equipo_visitante_id:eqVis?eqVis.id:null,
+    info:valorBorr(id,'info')||null, participantes:valorBorr(id,'parts')||null
+  });
+  ev.user_id=b.user_id;
+  if(!(await confirmarDuplicados([ev],null,'Publicar'))) return;
+  const btns=document.querySelectorAll('#b'+id+'_card .borr-acc button');
+  btns.forEach(function(x){x.disabled=true});
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos`,{method:'POST',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify(ev)});
+    if(!res.ok) throw new Error(await res.text());
+    const filas=await res.json();
+    const eid=filas&&filas[0]?filas[0].id:null;
+    await fetch(`${SB_URL}/rest/v1/eventos_borrador?id=eq.${id}`,{method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({estado:'publicado',evento_id:eid})});
+    toast('✅ Evento publicado');
+    cargarBorradores();
+  }catch(err){
+    btns.forEach(function(x){x.disabled=false});
+    toast('Error: '+err.message,true);
+  }
+}
+
+async function descartarBorrador(id){
+  if(!confirm('¿Descartar este borrador?')) return;
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/eventos_borrador?id=eq.${id}`,{method:'PATCH',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify({estado:'descartado'})});
+    if(!res.ok) throw new Error(await res.text());
+    cargarBorradores();
+  }catch(err){ toast('Error: '+err.message,true); }
+}
+
 // ── HOJA DE CÁLCULO ──
-const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
+// Pegar varias filas (hoja de cálculo o chat) -> revisar en la tabla -> publicar de golpe
+const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','otros'];
 const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
 const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
 const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
-const ENTRADA_OPTS=['gratis','pago','rifa','sin info'];
+const ENTRADA_OPTS=['gratis','pago','rifa','puertas','sin info'];
+
+// Devuelve la opción de la lista que coincide con lo pegado (sin tildes ni mayúsculas) o el valor por defecto
+function elegirOpcion(val,opts,porDefecto){
+  const n=normTxt(val);
+  if(!n) return porDefecto;
+  for(let i=0;i<opts.length;i++) if(normTxt(opts[i])===n) return opts[i];
+  return porDefecto;
+}
+
+// Acepta 2026-10-24, 24/10/2026, 24-10-26 o 24/10 (sin año: la próxima fecha futura)
+function normFecha(v){
+  v=(v||'').trim();
+  if(!v) return '';
+  let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  let y,mo,d;
+  if(m){ y=+m[1]; mo=+m[2]; d=+m[3]; }
+  else{
+    m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/);
+    if(!m) return '';
+    d=+m[1]; mo=+m[2]; y=m[3]?+m[3]:0;
+    if(y&&y<100) y+=2000;
+    if(!y){
+      const hoy=new Date(); const hoyISO=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
+      y=hoy.getFullYear();
+      if(y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')<hoyISO) y++;
+    }
+  }
+  const dt=new Date(Date.UTC(y,mo-1,d));
+  if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d) return '';
+  return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+function normHora(v){
+  const m=(v||'').trim().match(/^(\d{1,2})(?:[:.hH](\d{2}))?/);
+  if(!m) return '';
+  const hh=+m[1], mm=m[2]?+m[2]:0;
+  if(hh>23||mm>59) return '';
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
 
 function sel(opts,val){
-  return `<select>${opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+  return `<select>${opts.map(o=>`<option value="${esc(o)}"${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
 }
 
 function addRow(d={}){
@@ -745,19 +946,23 @@ function addRow(d={}){
   const tr=document.createElement('tr');
   tr.innerHTML=`
     <td class="row-num">${n}</td>
-    <td><input type="date" value="${d.fecha||''}"></td>
-    <td><input type="time" value="${d.hora||''}"></td>
+    <td><input type="date" value="${esc(d.fecha||'')}"></td>
+    <td><input type="time" value="${esc(d.hora||'')}"></td>
     <td>${sel(DEPORTES_OPTS,d.deporte||'futbol')}</td>
     <td>${sel(GENERO_OPTS,d.genero||'Sin especificar')}</td>
     <td>${sel(CAT_OPTS,d.cat||'Senior')}</td>
     <td>${sel(COMP_OPTS,d.comp||'Liga')}</td>
-    <td><input type="text" value="${d.nombre||''}" placeholder="Nombre evento"></td>
-    <td><input type="text" value="${d.local||''}" placeholder="Equipo local"></td>
-    <td><input type="text" value="${d.visitante||''}" placeholder="Visitante"></td>
-    <td><input type="text" value="${d.municipio||''}" placeholder="Municipio"></td>
-    <td><input type="text" value="${d.instalacion||''}" placeholder="Instalación"></td>
+    <td><input type="text" value="${esc(d.nombre||'')}" placeholder="Nombre evento"></td>
+    <td><input type="text" value="${esc(d.local||'')}" placeholder="Equipo local"></td>
+    <td><input type="text" value="${esc(d.visitante||'')}" placeholder="Visitante"></td>
+    <td><input type="text" value="${esc(d.municipio||'')}" placeholder="Municipio"></td>
+    <td><input type="text" value="${esc(d.instalacion||'')}" placeholder="Instalación"></td>
     <td>${sel(ENTRADA_OPTS,d.entrada||'sin info')}</td>
-    <td class="row-del" onclick="this.closest('tr').remove();renumerar()">✕</td>`;
+    <td><input type="text" value="${esc(d.info||'')}" placeholder="Texto"></td>
+    <td><input type="text" value="${esc(d.participantes||'')}" placeholder="A | B | C"></td>
+    <td class="row-del" onclick="this.closest('tr').remove();renumerar();resumenHoja()">✕</td>`;
+  tr.addEventListener('input',resumenHoja);
+  tr.addEventListener('change',resumenHoja);
   body.appendChild(tr);
 }
 
@@ -771,32 +976,102 @@ function getRowData(tr){
     fecha:inputs[0].value, hora:inputs[1].value,
     deporte:inputs[2].value, genero:inputs[3].value,
     cat:inputs[4].value, comp:inputs[5].value,
-    nombre:inputs[6].value, local:inputs[7].value,
-    visitante:inputs[8].value, municipio:inputs[9].value,
-    instalacion:inputs[10].value, entrada:inputs[11].value
+    nombre:inputs[6].value.trim(), local:inputs[7].value.trim(),
+    visitante:inputs[8].value.trim(), municipio:inputs[9].value.trim(),
+    instalacion:inputs[10].value.trim(), entrada:inputs[11].value,
+    info:inputs[12].value.trim(),
+    participantes:inputs[13].value.split('|').map(function(x){return x.trim()}).filter(Boolean).join('\n')
   };
+}
+
+function filaValida(d){ return !!(d.fecha&&d.hora&&d.municipio&&(d.nombre||d.local)); }
+function filaVacia(d){ return !(d.fecha||d.hora||d.nombre||d.local||d.visitante||d.municipio); }
+
+// Marca en rojo las filas incompletas y cuenta las que se publicarían
+function resumenHoja(){
+  const rows=Array.from(document.getElementById('sheetBody').rows);
+  let ok=0, mal=0;
+  rows.forEach(function(tr){
+    const d=getRowData(tr);
+    const valida=filaValida(d), vacia=filaVacia(d);
+    tr.style.outline=(!valida&&!vacia)?'1px solid #dc2626':'';
+    tr.style.outlineOffset='-1px';
+    if(valida) ok++; else if(!vacia) mal++;
+  });
+  const r=document.getElementById('sheetResumen');
+  if(r) r.innerHTML=rows.length?`${ok} fila${ok===1?'':'s'} lista${ok===1?'':'s'} para publicar`+(mal?` · <span style="color:#dc2626">${mal} incompleta${mal===1?'':'s'} (falta fecha, hora, municipio o equipos/nombre; no se publican)</span>`:''):'';
+  const b=document.getElementById('sheetGuardar');
+  if(b) b.textContent=ok?`Publicar ${ok} evento${ok===1?'':'s'}`:'Publicar eventos';
+}
+
+function vaciarHoja(){
+  const body=document.getElementById('sheetBody');
+  if(body.rows.length&&!confirm('¿Vaciar la tabla?')) return;
+  body.innerHTML='';
+  resumenHoja();
+}
+
+// Convierte texto pegado (columnas con tabulador) en filas de la tabla
+function pegarFilas(text){
+  const lines=(text||'').replace(/\r/g,'').split('\n').filter(function(l){return l.trim()});
+  if(!lines.length) return 0;
+  const body=document.getElementById('sheetBody');
+  Array.from(body.rows).forEach(function(tr){ if(filaVacia(getRowData(tr))) tr.remove(); });
+  let n=0;
+  lines.forEach(function(line){
+    const cols=line.split('\t').map(function(c){return c.trim()});
+    // Cabecera pegada desde una hoja de cálculo: se ignora
+    if(/^fecha$/i.test(cols[0]||'')) return;
+    addRow({
+      fecha:normFecha(cols[0]), hora:normHora(cols[1]),
+      deporte:elegirOpcion(cols[2],DEPORTES_OPTS,cols[2]?'otros':'futbol'),
+      genero:elegirOpcion(cols[3],GENERO_OPTS,'Sin especificar'),
+      cat:elegirOpcion(cols[4],CAT_OPTS,'Senior'),
+      comp:elegirOpcion(cols[5],COMP_OPTS,'Liga'),
+      nombre:cols[6]||'', local:cols[7]||'', visitante:cols[8]||'',
+      municipio:cols[9]||'', instalacion:cols[10]||'',
+      entrada:elegirOpcion(cols[11],ENTRADA_OPTS,'sin info'),
+      info:cols[12]||'', participantes:cols[13]||''
+    });
+    n++;
+  });
+  renumerar();
+  resumenHoja();
+  return n;
+}
+
+function pegarDesdeCaja(){
+  const caja=document.getElementById('sheetPaste');
+  const n=pegarFilas(caja.value);
+  if(n){ caja.value=''; toast(`📋 ${n} fila${n===1?'':'s'} añadida${n===1?'':'s'}`); }
+  else toast('No hay filas que añadir',true);
 }
 
 async function guardarHoja(){
   const rows=Array.from(document.getElementById('sheetBody').rows);
-  const eventos=rows.map(tr=>getRowData(tr))
-    .filter(d=>d.fecha&&d.hora&&d.municipio)
-    .map(d=>buildEvento(d));
-
-  if(!eventos.length){toast('Sin filas válidas — revisa fecha, hora y municipio',true);return;}
+  const datos=rows.map(function(tr){return getRowData(tr)}).filter(filaValida);
   const status=document.getElementById('sheetStatus');
-  if(!(await confirmarDuplicados(eventos,null,'Guardar'))){status.textContent='';return;}
+  if(!datos.length){toast('Sin filas válidas — revisa fecha, hora, municipio y equipos o nombre',true);return;}
+  const eventos=datos.map(function(d){
+    // Si el local o el visitante es uno de mis equipos (por nombre), se enlaza para el escudo y el municipio
+    const uid=authUser&&authUser.id;
+    const eqLocal=equipoPropioPorNombre(d.local,uid), eqVis=equipoPropioPorNombre(d.visitante,uid);
+    return buildEvento({...d,
+      equipo_id:eqLocal?eqLocal.id:null, municipio_equipo:eqLocal?eqLocal.municipio||null:null,
+      equipo_visitante_id:eqVis?eqVis.id:null, participantes:d.participantes||null, info:d.info||null});
+  });
+  if(!(await confirmarDuplicados(eventos,null,'Publicar'))){status.textContent='';return;}
   status.textContent='Guardando '+eventos.length+' eventos...';
-
   try{
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{
       method:'POST',headers:{...H(),'Prefer':'return=minimal'},body:JSON.stringify(eventos)
     });
     if(!res.ok) throw new Error(await res.text());
-    toast(`✅ ${eventos.length} eventos guardados`);
+    toast(`✅ ${eventos.length} eventos publicados`);
     status.textContent='';
-    document.getElementById('sheetBody').innerHTML='';
-    addRow();addRow();addRow();
+    // Se quitan las filas publicadas y quedan las incompletas para corregirlas
+    rows.forEach(function(tr){ if(filaValida(getRowData(tr))) tr.remove(); });
+    renumerar(); resumenHoja();
   }catch(e){toast('Error: '+e.message,true);status.textContent='';}
 }
 
@@ -831,31 +1106,13 @@ async function subirImagen(file) {
 document.addEventListener('paste',e=>{
   const activeTab=document.getElementById('tabSheet');
   if(activeTab.style.display==='none') return;
+  if(e.target&&e.target.id==='sheetPaste') return;
   const text=e.clipboardData.getData('text/plain');
-  if(!text) return;
-  const lines=text.trim().split('\n').filter(l=>l.trim());
-  if(!lines.length) return;
+  // Un pegado dentro de una celda con un solo valor se deja tal cual
+  if(!text||(text.indexOf('\t')<0&&text.indexOf('\n')<0)) return;
   e.preventDefault();
-  // Limpiar filas vacías antes de pegar
-  const body=document.getElementById('sheetBody');
-  Array.from(body.rows).forEach(tr=>{
-    const inputs=tr.querySelectorAll('input');
-    const empty=Array.from(inputs).every(i=>!i.value);
-    if(empty) tr.remove();
-  });
-  lines.forEach(line=>{
-    const cols=line.split('\t');
-    addRow({
-      fecha:cols[0]||'', hora:cols[1]||'',
-      deporte:cols[2]||'futbol', genero:cols[3]||'Sin especificar',
-      cat:cols[4]||'Senior', comp:cols[5]||'Liga',
-      nombre:cols[6]||'', local:cols[7]||'',
-      visitante:cols[8]||'', municipio:cols[9]||'',
-      instalacion:cols[10]||'', entrada:cols[11]||'sin info'
-    });
-  });
-  renumerar();
-  toast(`📋 ${lines.length} filas pegadas`);
+  const n=pegarFilas(text);
+  if(n) toast(`📋 ${n} fila${n===1?'':'s'} pegada${n===1?'':'s'}`);
 });
 
 // ── LISTA ──
@@ -979,7 +1236,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.27</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.30</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
