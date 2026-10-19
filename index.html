@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.35
-Fecha: 2026-10-17
+Versión: v6.36
+Fecha: 2026-10-20
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -16,6 +16,7 @@ v6.33: el detalle muestra el escudo del visitante cuando es un equipo de mis_equ
 v6.34: el escudo sale del club (clubes.escudo_url) y no del equipo, para local y visitante; si el equipo no tiene club, se usa el suyo.
 v6.35: al cambiar de municipio el día vuelve a hoy (y salta al primer día con eventos, también hacia atrás respecto
 al día que había elegido); se ignoran las respuestas de consultas antiguas de la parrilla.
+v6.36: el inicio de sesión guarda también el refresh token para que el admin pueda renovar la sesión caducada.
 -->
 
 <!DOCTYPE html>
@@ -589,10 +590,10 @@ function doLogin(){
   var em=document.getElementById('loginMail'),pw=document.getElementById('loginPass'),er=document.getElementById('loginErr'),bt=document.getElementById('loginBtn');
   if(!em||!pw)return;if(!em.value.trim()||!pw.value){if(er)er.textContent=t('prof.error_campos');return}
   if(bt){bt.disabled=true;bt.textContent='...'}
-  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser))}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
+  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser));if(d.refresh_token)sessionStorage.setItem('kb_refresh',d.refresh_token)}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
 }
 function sendRec(){var em=document.getElementById('recMail'),er=document.getElementById('recErr');if(!em||!em.value.trim()){if(er)er.textContent='Introduce tu email';return}fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim()})}).then(function(){if(er){er.style.color='#16a34a';er.textContent=t('prof.check_correo')}}).catch(function(e){if(er)er.textContent=e.message})}
-function doLogout(){fetch(SB+'/auth/v1/logout',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+authToken}}).catch(function(){});authUser=null;authToken=null;try{sessionStorage.removeItem('kb_token');sessionStorage.removeItem('kb_user')}catch(e){}renderProf();closeProf()}
+function doLogout(){fetch(SB+'/auth/v1/logout',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+authToken}}).catch(function(){});authUser=null;authToken=null;try{sessionStorage.removeItem('kb_token');sessionStorage.removeItem('kb_user');sessionStorage.removeItem('kb_refresh')}catch(e){}renderProf();closeProf()}
 function goTo(url){closeProf();window.location.href=url}
 
 // BANNERS
@@ -650,7 +651,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.35</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.36</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
