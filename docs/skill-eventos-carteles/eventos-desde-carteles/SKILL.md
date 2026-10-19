@@ -38,16 +38,17 @@ Antes de guardar nada, enséñame una lista corta (una línea por evento con fec
 - Proyecto: `glscnwctcvrosmbrljns`. Usa solo `execute_sql`.
 - Guarda cada evento como BORRADOR con un INSERT en `public.eventos_borrador`. NUNCA hagas UPDATE, DELETE, DDL ni consultes otras tablas, salvo los SELECT de comprobación de duplicados que se indican abajo. Nunca toques `auth.users`.
 - Usuario propietario de los borradores: `785d1099-b544-4fcd-b6b9-3dbe33ee8a24` (kirolorik.app@gmail.com).
+- Relaciona los equipos con los que ya están guardados: antes de insertar, lee `select id, nombre, deporte, genero, categoria, municipio from public.mis_equipos where activo and user_id = '785d1099-b544-4fcd-b6b9-3dbe33ee8a24' order by nombre`. Para el equipo local y el visitante de cada evento, busca el equipo guardado que sea el mismo (ignorando tildes, mayúsculas y prefijos como CD, SD, club o la categoría: "Eibar Juvenil A" y "SD Eibar" pueden ser el mismo equipo). Si hay uno claro, escribe en `equipo_local` / `equipo_visitante` el `nombre` EXACTO guardado y rellena `equipo_id` / `equipo_visitante_id` con su `id`. Si hay duda entre varios o no encaja ninguno, deja el nombre tal como sale en el cartel, los ids a NULL y dilo en `avisos`. Si el cartel no indica género o categoría y el equipo guardado sí, usa los del equipo guardado.
 - Antes de insertar, busca duplicados: `select id, nombre_evento, equipo_local, equipo_visitante, fecha, hora from public.eventos where activo and fecha in ('AAAA-MM-DD', ...)` y `select id, nombre_evento, equipo_local, equipo_visitante, fecha from public.eventos_borrador where estado = 'pendiente' and fecha in (...)`. Si un evento ya existe (mismo día y mismos equipos, en cualquier orden, o mismo nombre), no lo insertes y avísame.
 - Textos entre dollar-quoting para no romper comillas: `$q$texto$q$`. Los valores que no se conocen van como NULL.
 - Plantilla (varios eventos en un solo INSERT):
 
 ```sql
 insert into public.eventos_borrador
-  (user_id, deporte, genero, nombre_evento, categoria, tipo_competicion, equipo_local, equipo_visitante,
+  (user_id, deporte, genero, nombre_evento, categoria, tipo_competicion, equipo_local, equipo_visitante, equipo_id, equipo_visitante_id,
    fecha, hora, municipio, instalacion, tipo_entrada, duracion_minutos, info_evento, participantes, avisos, fuente_texto)
 values
-  ('785d1099-b544-4fcd-b6b9-3dbe33ee8a24', 'futbol', 'Masculino', NULL, 'Juvenil', 'Liga', $q$SD Eibar$q$, $q$Real Sociedad$q$,
+  ('785d1099-b544-4fcd-b6b9-3dbe33ee8a24', 'futbol', 'Masculino', NULL, 'Juvenil', 'Liga', $q$SD Eibar$q$, $q$Real Sociedad$q$, '<id del equipo local guardado o NULL>', NULL,
    '2026-10-24', '17:30', 'Eibar', $q$Ipurua$q$, 'gratis', NULL, NULL, NULL, NULL, NULL);
 ```
 
