@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.30 · 2026-10-17 · borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.31 · 2026-10-19 · borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -786,40 +786,115 @@ async function actualizarBadgeBorradores(){
   }catch(err){ b.style.display='none'; }
 }
 
+// Equipo de mis equipos que corresponde a un nombre: igual sin tildes ni mayúsculas o, si no, el único que lo contiene.
+// Solo se usa para preseleccionar en el desplegable del borrador, donde se ve y se puede cambiar.
+function equipoParecido(nombre){
+  const n=normTxt(nombre);
+  if(!n||!userTeams.length) return null;
+  const exacto=userTeams.find(function(t){return normTxt(t.nombre)===n});
+  if(exacto) return exacto;
+  if(n.length<4) return null;
+  const parecidos=userTeams.filter(function(t){const tn=normTxt(t.nombre);return tn.length>=4&&(tn.indexOf(n)>=0||n.indexOf(tn)>=0)});
+  return parecidos.length===1?parecidos[0]:null;
+}
+
+function borrLocalHtml(p,b){
+  const eq=(b.equipo_id&&userTeams.find(function(t){return t.id===b.equipo_id}))||equipoParecido(b.equipo_local);
+  const opts=userTeams.map(function(t){return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${eq&&eq.id===t.id?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`}).join('');
+  const manual=!eq&&!!b.equipo_local;
+  return `<select id="${p}local" onchange="onBorrLocalChange('${p}')"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__"${manual?' selected':''}>✏️ Escribir manualmente...</option></select><input type="text" id="${p}local_manual" value="${manual?esc(b.equipo_local):''}" placeholder="Nombre del equipo local" style="margin-top:6px;${manual?'':'display:none'}">`;
+}
+
+function onBorrLocalChange(p){
+  const sel=document.getElementById(p+'local'), man=document.getElementById(p+'local_manual');
+  if(!sel) return;
+  if(man) man.style.display=sel.value==='__manual__'?'':'none';
+  if(sel.value&&sel.value!=='__manual__') fillDeporte(sel.value,p);
+}
+
+// {nombre, team}: team es el equipo elegido en el desplegable (null si se escribe a mano)
+function getBorrLocal(p){
+  const sel=document.getElementById(p+'local');
+  if(!sel) return {nombre:'',team:null};
+  if(sel.tagName!=='SELECT') return {nombre:sel.value.trim(),team:null};
+  if(sel.value==='__manual__') return {nombre:((document.getElementById(p+'local_manual')||{value:''}).value||'').trim(),team:null};
+  if(!sel.value) return {nombre:'',team:null};
+  const id=sel.options[sel.selectedIndex].getAttribute('data-id');
+  return {nombre:sel.value,team:userTeams.find(function(t){return t.id===id})||null};
+}
+
+function previewBorr(p,input){
+  const f=input.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=function(ev){ const img=document.getElementById(p+'img'); if(img){img.src=ev.target.result;img.style.display='block';} };
+  r.readAsDataURL(f);
+}
+
+// Mismo orden y mismos campos que el formulario "Nuevo evento"
 function borradorHtml(b){
   const p='b'+Number(b.id)+'_';
-  const img=/^https:\/\//.test(b.imagen_url||'')?`<img class="borr-thumb" src="${esc(b.imagen_url)}" alt="" onclick="window.open(this.src,'_blank')">`:'';
-  const aviso=b.avisos?`<div class="borr-aviso">⚠️ ${esc(b.avisos)}</div>`:'<div class="borr-ok">✓ Sin avisos</div>';
+  const propios=!!(authUser&&b.user_id===authUser.id);
+  const opt=function(id){return document.getElementById(id).innerHTML};
+  const aviso=b.avisos?`<div class="borr-aviso" style="margin-bottom:10px">⚠️ ${esc(b.avisos)}</div>`:'<div class="borr-ok" style="margin-bottom:10px">✓ Sin avisos</div>';
+  const imgOk=/^https:\/\//.test(b.imagen_url||'');
   const fuente=b.fuente_texto?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">Texto original</summary><div style="font-size:12px;white-space:pre-line;color:var(--muted);margin-top:4px">${esc(b.fuente_texto)}</div></details>`:'';
+  const eqVis=propios?(b.equipo_visitante_id?userTeams.find(function(t){return t.id===b.equipo_visitante_id}):equipoParecido(b.equipo_visitante)):null;
+  const visNombre=eqVis?eqVis.nombre:(b.equipo_visitante||'');
+  const local=propios&&userTeams.length?borrLocalHtml(p,b):`<input type="text" id="${p}local" value="${esc(b.equipo_local||'')}" placeholder="Nombre del equipo local">`;
+  const visPick=propios?visitantePickHtml(p,visNombre,eqVis?eqVis.id:undefined):'';
+  const lbl='font-weight:400;text-transform:none;letter-spacing:0';
   return `<div class="borr-card" id="${p}card">
-    <div class="borr-top">${img}${aviso}</div>
-    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(si no son equipos)</span></label><input type="text" id="${p}nombre" value="${esc(b.nombre_evento||'')}"></div>
+    ${aviso}
     <div class="row2">
-      <div class="field"><label>Local</label><input type="text" id="${p}local" value="${esc(b.equipo_local||'')}"></div>
-      <div class="field"><label>Visitante</label><input type="text" id="${p}visitante" value="${esc(b.equipo_visitante||'')}"></div>
+      <div class="field"><label>Deporte</label><input type="text" id="${p}deporte" list="deportes-list" placeholder="Fútbol, basket..."></div>
+      <div class="field"><label>Género</label><select id="${p}genero">${opt('f_genero')}</select></div>
     </div>
+    <div class="field"><label>Nombre del evento <span style="${lbl}">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="${p}nombre"></div>
     <div class="row2">
-      <div class="field"><label>Fecha</label><input type="date" id="${p}fecha" value="${esc(b.fecha||'')}"></div>
-      <div class="field"><label>Hora</label><input type="time" id="${p}hora" value="${esc((b.hora||'').slice(0,5))}"></div>
+      <div class="field"><label>Categoría</label><select id="${p}cat"><option value="">—</option>${opt('f_cat')}</select></div>
+      <div class="field"><label>Competición</label><select id="${p}comp"><option value="">—</option>${opt('f_comp')}</select></div>
     </div>
+    <div class="field"><label>Equipo local <span style="${lbl}">(opcional)</span></label>${local}</div>
+    <div class="field"><label>Equipo visitante <span style="${lbl}">(opcional)</span></label>${visPick}<input type="text" id="${p}visitante" value="${esc(visNombre)}" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Texto del evento <span style="${lbl}">(descripción persuasiva)</span></label><textarea id="${p}info" rows="3"></textarea></div>
+    <div class="field"><label>Participantes <span style="${lbl}">(opcional · máx. 10)</span></label><div id="${p}parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('${p}parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
-      <div class="field"><label>Municipio</label><input type="text" id="${p}municipio" value="${esc(b.municipio||'')}"></div>
-      <div class="field"><label>Instalación</label><input type="text" id="${p}instalacion" value="${esc(b.instalacion||'')}"></div>
+      <div class="field"><label>Fecha</label><input type="date" id="${p}fecha"></div>
+      <div class="field"><label>Hora</label><input type="time" id="${p}hora"></div>
     </div>
+    <div class="field"><label>Municipio</label><input type="text" id="${p}municipio" placeholder="Eibar, Ermua..."></div>
+    <div class="field"><label>Instalación</label><input type="text" id="${p}instalacion" placeholder="Nombre del recinto"></div>
     <div class="row2">
-      <div class="field"><label>Deporte</label><select id="${p}deporte">${borrOpts(BORR_DEPORTES,b.deporte,true)}</select></div>
-      <div class="field"><label>Género</label><select id="${p}genero">${borrOpts(BORR_GENEROS,b.genero,false)}</select></div>
+      <div class="field"><label>Entrada</label><select id="${p}entrada">${opt('f_entrada')}</select></div>
+      <div class="field"><label>Duración (min)</label><select id="${p}duracion">${opt('f_duracion')}</select></div>
     </div>
-    <div class="row2">
-      <div class="field"><label>Categoría</label><select id="${p}cat">${borrOpts(BORR_CATS,b.categoria,true)}</select></div>
-      <div class="field"><label>Competición</label><select id="${p}comp">${borrOpts(BORR_COMPS,b.tipo_competicion,true)}</select></div>
+    <div class="field">
+      <label>Cartel / Imagen del evento <span style="${lbl}">(opcional · JPG, PNG, WebP)</span></label>
+      <input type="file" id="${p}imagen" accept="image/*" style="padding:8px" onchange="previewBorr('${p}',this)">
+      <img id="${p}img" src="${imgOk?esc(b.imagen_url):''}" alt="" style="margin-top:8px;width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);${imgOk?'':'display:none'}">
     </div>
-    <div class="field"><label>Entrada</label><select id="${p}entrada">${borrOpts(BORR_ENTRADAS,b.tipo_entrada,false)}</select></div>
-    <div class="field"><label>Texto del evento</label><textarea id="${p}info" rows="2" style="resize:vertical">${esc(b.info_evento||'')}</textarea></div>
-    <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(uno por línea)</span></label><textarea id="${p}parts" rows="2" style="resize:vertical">${esc(b.participantes||'')}</textarea></div>
     ${fuente}
     <div class="borr-acc"><button type="button" onclick="descartarBorrador(${Number(b.id)})">🗑️ Descartar</button><button type="button" class="pub" onclick="publicarBorrador(${Number(b.id)})">Publicar ✅</button></div>
   </div>`;
+}
+
+// Los valores se asignan por propiedad (no dentro del HTML) para no tener que escapar nada
+function rellenarBorrador(b){
+  const p='b'+Number(b.id)+'_';
+  const set=function(c,v){
+    const el=document.getElementById(p+c);
+    if(!el||v==null||v==='') return;
+    // En un desplegable solo se asigna si existe esa opción (si no, queda la que hay por defecto)
+    if(el.tagName==='SELECT'&&!Array.from(el.options).some(function(o){return o.value===String(v)})) return;
+    el.value=v;
+  };
+  set('deporte',b.deporte); set('genero',b.genero); set('nombre',b.nombre_evento);
+  set('cat',b.categoria); set('comp',b.tipo_competicion); set('info',b.info_evento);
+  set('fecha',b.fecha); set('hora',(b.hora||'').slice(0,5)); set('municipio',b.municipio);
+  set('instalacion',b.instalacion); set('entrada',b.tipo_entrada);
+  set('duracion',b.duracion_minutos||90);
+  setParticipantes(p+'parts_list',b.participantes);
 }
 
 async function cargarBorradores(){
@@ -833,10 +908,9 @@ async function cargarBorradores(){
     if(badge){badge.textContent=n;badge.style.display=n?'':'none';}
     if(!n){list.innerHTML='<div class="empty-slot">No hay borradores pendientes.<br><span style="font-size:11px">Aquí aparecen los eventos que se guardan como borrador para revisarlos antes de publicar.</span></div>';return;}
     list.innerHTML=data.map(borradorHtml).join('');
+    data.forEach(rellenarBorrador);
   }catch(err){ list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar: ${esc(err.message)}</div>`; }
 }
-
-function valorBorr(id,campo){ const el=document.getElementById('b'+id+'_'+campo); return el?el.value.trim():''; }
 
 // Si el equipo es uno de mis equipos (por nombre), se enlaza para que salgan su escudo y su municipio
 function equipoPropioPorNombre(nombre,userId){
@@ -848,24 +922,29 @@ function equipoPropioPorNombre(nombre,userId){
 async function publicarBorrador(id){
   const b=listaBorradores.find(function(x){return Number(x.id)===id});
   if(!b) return;
-  const fecha=valorBorr(id,'fecha'), hora=valorBorr(id,'hora'), municipio=valorBorr(id,'municipio');
-  const nombre=valorBorr(id,'nombre'), local=valorBorr(id,'local'), visitante=valorBorr(id,'visitante');
+  const p='b'+id+'_';
+  const v=function(c){const el=document.getElementById(p+c); return el?el.value.trim():'';};
+  const fecha=v('fecha'), hora=v('hora'), municipio=v('municipio'), nombre=v('nombre'), visitante=v('visitante');
+  const loc=getBorrLocal(p), local=loc.nombre;
   if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
   if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
-  const eqLocal=equipoPropioPorNombre(local,b.user_id), eqVis=equipoPropioPorNombre(visitante,b.user_id);
-  const ev=buildEvento({
-    deporte:valorBorr(id,'deporte')||'otros', genero:valorBorr(id,'genero'), nombre, cat:valorBorr(id,'cat'),
-    comp:valorBorr(id,'comp'), local, visitante, fecha, hora, municipio, instalacion:valorBorr(id,'instalacion'),
-    entrada:valorBorr(id,'entrada'), duracion:b.duracion_minutos, imagen_url:b.imagen_url,
-    equipo_id:eqLocal?eqLocal.id:null, municipio_equipo:eqLocal?eqLocal.municipio||null:null,
-    equipo_visitante_id:eqVis?eqVis.id:null,
-    info:valorBorr(id,'info')||null, participantes:valorBorr(id,'parts')||null
-  });
-  ev.user_id=b.user_id;
-  if(!(await confirmarDuplicados([ev],null,'Publicar'))) return;
-  const btns=document.querySelectorAll('#b'+id+'_card .borr-acc button');
+  const depRaw=v('deporte').toLowerCase();
+  const deporte=elegirOpcion(depRaw,DEPORTES_OPTS,depRaw||'otros');
+  const btns=document.querySelectorAll('#'+p+'card .borr-acc button');
   btns.forEach(function(x){x.disabled=true});
   try{
+    let imagen=b.imagen_url||null;
+    const fImg=document.getElementById(p+'imagen');
+    if(fImg&&fImg.files[0]) imagen=await subirImagen(fImg.files[0]);
+    const ev=buildEvento({
+      deporte, genero:v('genero'), nombre, cat:v('cat'), comp:v('comp'), local, visitante, fecha, hora, municipio,
+      instalacion:v('instalacion'), entrada:v('entrada'), duracion:v('duracion'), imagen_url:imagen,
+      equipo_id:loc.team?loc.team.id:null, municipio_equipo:loc.team?loc.team.municipio||null:null,
+      equipo_visitante_id:getVisitanteId(p),
+      info:v('info')||null, participantes:getParticipantes(p+'parts_list')
+    });
+    ev.user_id=b.user_id;
+    if(!(await confirmarDuplicados([ev],null,'Publicar'))){btns.forEach(function(x){x.disabled=false});return;}
     const res=await fetch(`${SB_URL}/rest/v1/eventos`,{method:'POST',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify(ev)});
     if(!res.ok) throw new Error(await res.text());
     const filas=await res.json();
@@ -1236,7 +1315,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.30</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.31</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
