@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.15 · 2026-10-16 · etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
+<!-- Kirolorik · perfil.html · v2.16 · 2026-10-20 · la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -320,6 +320,52 @@ const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db
 const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',voley:'🏐',natacion:'🏊',padel:'🎾',ajedrez:'♟️',rugby:'🏉',hockey:'🏒',otros:'🏅'};
 
 let tok = null, user = null, perfil = null, idiomaActual = 'cas';
+
+// ── SESIÓN ──
+// El token de acceso caduca a la hora y entonces todo fallaba con "JWT expired". Se renueva solo con el refresh token y la
+// petición fallida se repite una vez; si no se puede renovar, se vuelve al inicio de sesión con un aviso.
+var _fetchOriginal=window.fetch.bind(window);
+var refrescando=null;
+function jwtExp(t){
+  try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
+}
+function refrescarSesion(){
+  if(refrescando) return refrescando;
+  var rt=sessionStorage.getItem('kb_refresh');
+  if(!rt) return Promise.resolve(false);
+  refrescando=_fetchOriginal(SB+'/auth/v1/token?grant_type=refresh_token',{
+    method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
+  }).then(function(r){return r.ok?r.json():null}).then(function(d){
+    if(!d||!d.access_token) return false;
+    tok=d.access_token;
+    try{
+      sessionStorage.setItem('kb_token',tok);
+      if(d.refresh_token) sessionStorage.setItem('kb_refresh',d.refresh_token);
+    }catch(e){}
+    return true;
+  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
+  return refrescando;
+}
+window.fetch=function(url,opts){
+  return _fetchOriginal(url,opts).then(function(res){
+    if(res.status!==401||!tok||typeof url!=='string'||url.indexOf(SB)!==0||url.indexOf('/auth/v1/')>=0) return res;
+    return refrescarSesion().then(function(ok){
+      if(!ok){ sesionCaducada(); return res; }
+      var o=Object.assign({},opts||{});
+      o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+tok});
+      return _fetchOriginal(url,o);
+    });
+  });
+};
+function renovarSiHaceFalta(){ if(tok&&jwtExp(tok)-Date.now()<5*60000) refrescarSesion(); }
+setInterval(renovarSiHaceFalta,60000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
+function sesionCaducada(){
+  ['kb_token','kb_user','kb_refresh'].forEach(function(k){try{sessionStorage.removeItem(k)}catch(e){}});
+  tok=null; user=null;
+  document.getElementById('noLogin').style.display='flex';
+  document.getElementById('perfilContent').style.display='none';
+}
 
 function H(){ return {'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json'}; }
 function color(e){ return COLORS[(e||'').charCodeAt(0) % COLORS.length]; }
@@ -687,6 +733,7 @@ async function confirmarBaja(){
     setTimeout(() => {
       sessionStorage.removeItem('kb_token');
       sessionStorage.removeItem('kb_user');
+      sessionStorage.removeItem('kb_refresh');
       window.location.href = '/';
     }, 3000);
   } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
@@ -703,7 +750,10 @@ if(!tok || !savedUser){
   user = JSON.parse(savedUser);
   document.getElementById('noLogin').style.display    = 'none';
   document.getElementById('perfilContent').style.display = 'block';
-  cargarPerfil();
+  // Si el token guardado ya caducó (o está a punto), se renueva antes de cargar nada
+  if(jwtExp(tok)-Date.now() < 60000){
+    refrescarSesion().then(function(ok){ if(ok) cargarPerfil(); else sesionCaducada(); });
+  } else cargarPerfil();
 }
 
 // Abrir idioma con opciones renderizadas
@@ -712,7 +762,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.15</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.16</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
