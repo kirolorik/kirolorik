@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.33 · 2026-10-20 · el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.34 · 2026-10-20 · la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -274,6 +274,55 @@ let selectedEditEquipoId = null;
 
 const COLORES = {futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b'};
 
+// ── SESIÓN ──
+// El token de acceso caduca a la hora. Antes, a partir de ahí todo fallaba con "JWT expired" (sin equipos, sin eventos, sin poder
+// descartar borradores). Ahora se renueva con el refresh token y la petición fallida se repite una vez; si no se puede renovar,
+// se vuelve al login con un aviso.
+const _fetchOriginal=window.fetch.bind(window);
+let refrescando=null;
+function jwtExp(t){
+  try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
+}
+function refrescarSesion(){
+  if(refrescando) return refrescando;
+  const rt=sessionStorage.getItem('kb_refresh');
+  if(!rt) return Promise.resolve(false);
+  refrescando=_fetchOriginal(`${SB_URL}/auth/v1/token?grant_type=refresh_token`,{
+    method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
+  }).then(function(r){return r.ok?r.json():null}).then(function(d){
+    if(!d||!d.access_token) return false;
+    authToken=d.access_token;
+    if(d.user) authUser=d.user;
+    try{
+      sessionStorage.setItem('kb_token',authToken);
+      if(d.refresh_token) sessionStorage.setItem('kb_refresh',d.refresh_token);
+      if(d.user) sessionStorage.setItem('kb_user',JSON.stringify(d.user));
+    }catch(e){}
+    return true;
+  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
+  return refrescando;
+}
+function sesionCaducada(){
+  ['kb_token','kb_user','kb_refresh'].forEach(function(k){try{sessionStorage.removeItem(k)}catch(e){}});
+  authToken=null; authUser=null;
+  const adm=document.getElementById('adminScreen'), lg=document.getElementById('loginScreen'), er=document.getElementById('loginError');
+  if(adm) adm.style.display='none';
+  if(lg) lg.style.display='flex';
+  if(er) er.textContent='La sesión ha caducado. Entra de nuevo.';
+}
+window.fetch=async function(url,opts){
+  const res=await _fetchOriginal(url,opts);
+  if(res.status!==401||!authToken||typeof url!=='string'||url.indexOf(SB_URL)!==0||url.indexOf('/auth/v1/')>=0) return res;
+  if(!(await refrescarSesion())){ sesionCaducada(); return res; }
+  const o=Object.assign({},opts||{});
+  o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+authToken});
+  return _fetchOriginal(url,o);
+};
+// Renovar antes de que caduque, también al volver a la pestaña tras un rato (móvil)
+function renovarSiHaceFalta(){ if(authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); }
+setInterval(renovarSiHaceFalta,60000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
+
 function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
@@ -310,6 +359,7 @@ async function login(){
     authUser=data.user;
     sessionStorage.setItem('kb_token',authToken);
     sessionStorage.setItem('kb_user',JSON.stringify(authUser));
+    if(data.refresh_token) sessionStorage.setItem('kb_refresh',data.refresh_token);
     mostrarAdmin();
   }catch(e){
     err.textContent=e.message;
@@ -320,6 +370,7 @@ async function login(){
 function logout(){
   sessionStorage.removeItem('kb_token');
   sessionStorage.removeItem('kb_user');
+  sessionStorage.removeItem('kb_refresh');
   window.location.href='/';
 }
 
@@ -1336,12 +1387,15 @@ const savedUser=sessionStorage.getItem('kb_user');
 if(savedToken&&savedUser){
   authToken=savedToken;
   authUser=JSON.parse(savedUser);
-  mostrarAdmin();
+  // Si el token guardado ya caducó (o está a punto), se renueva antes de cargar nada
+  if(jwtExp(savedToken)-Date.now()<60000){
+    refrescarSesion().then(function(ok){ if(ok) mostrarAdmin(); else sesionCaducada(); });
+  }else mostrarAdmin();
 }else{
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.33</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.34</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
