@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.31 · 2026-10-19 · borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.33 · 2026-10-20 · el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -786,23 +786,46 @@ async function actualizarBadgeBorradores(){
   }catch(err){ b.style.display='none'; }
 }
 
-// Equipo de mis equipos que corresponde a un nombre: igual sin tildes ni mayúsculas o, si no, el único que lo contiene.
+// Equipos de mis equipos que podrían ser el nombre dado (igual, o uno contiene al otro: "Eibar Eskubaloia" y "Eibar Eskubaloia Primera Nacional")
+function equiposCandidatos(nombre){
+  const n=normTxt(nombre);
+  if(!n||n.length<4||!userTeams.length) return [];
+  return userTeams.filter(function(t){const tn=normTxt(t.nombre);return tn.length>=4&&(tn===n||tn.indexOf(n)>=0||n.indexOf(tn)>=0)});
+}
+
+// Equipo que corresponde a un nombre: igual sin tildes ni mayúsculas; si hay un único candidato, ese; si hay varios (un club con
+// varios equipos), el que mejor encaje por género, categoría, deporte y por el texto del cartel (p. ej. "Primera Nacional").
 // Solo se usa para preseleccionar en el desplegable del borrador, donde se ve y se puede cambiar.
-function equipoParecido(nombre){
+function equipoParecido(nombre,b){
   const n=normTxt(nombre);
   if(!n||!userTeams.length) return null;
   const exacto=userTeams.find(function(t){return normTxt(t.nombre)===n});
   if(exacto) return exacto;
-  if(n.length<4) return null;
-  const parecidos=userTeams.filter(function(t){const tn=normTxt(t.nombre);return tn.length>=4&&(tn.indexOf(n)>=0||n.indexOf(tn)>=0)});
-  return parecidos.length===1?parecidos[0]:null;
+  const c=equiposCandidatos(nombre);
+  if(c.length<2) return c[0]||null;
+  if(!b) return null;
+  const gen=normTxt(b.genero), cat=normTxt(b.categoria), dep=normTxt(b.deporte);
+  const texto=normTxt([b.nombre_evento,b.tipo_competicion,b.info_evento,b.fuente_texto,b.avisos].join(' '));
+  const puntos=function(t){
+    let p=0;
+    if(gen&&gen!=='sinespecificar'&&normTxt(t.genero)===gen) p+=3;
+    if(cat&&normTxt(t.categoria)===cat) p+=2;
+    if(dep&&normTxt(t.deporte)===dep) p+=1;
+    const resto=normTxt(t.nombre).replace(n,'');
+    if(resto.length>=4&&texto.indexOf(resto)>=0) p+=4;
+    return p;
+  };
+  const orden=c.map(function(t){return {t:t,p:puntos(t)}}).sort(function(x,y){return y.p-x.p});
+  return orden[0].p>0&&orden[0].p>orden[1].p?orden[0].t:null;
 }
 
 function borrLocalHtml(p,b){
-  const eq=(b.equipo_id&&userTeams.find(function(t){return t.id===b.equipo_id}))||equipoParecido(b.equipo_local);
+  const eq=(b.equipo_id&&userTeams.find(function(t){return t.id===b.equipo_id}))||equipoParecido(b.equipo_local,b);
   const opts=userTeams.map(function(t){return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${eq&&eq.id===t.id?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`}).join('');
   const manual=!eq&&!!b.equipo_local;
-  return `<select id="${p}local" onchange="onBorrLocalChange('${p}')"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__"${manual?' selected':''}>✏️ Escribir manualmente...</option></select><input type="text" id="${p}local_manual" value="${manual?esc(b.equipo_local):''}" placeholder="Nombre del equipo local" style="margin-top:6px;${manual?'':'display:none'}">`;
+  const cands=!eq?equiposCandidatos(b.equipo_local):[];
+  const pista=cands.length>1?`<div style="font-size:11px;color:#b45309;margin-top:4px">Detectado "${esc(b.equipo_local)}": puede ser ${cands.map(function(t){return esc(t.nombre)}).join(', ')}. Elige el equipo en el desplegable.</div>`:'';
+  return `<select id="${p}local" onchange="onBorrLocalChange('${p}')"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__"${manual?' selected':''}>✏️ Escribir manualmente...</option></select><input type="text" id="${p}local_manual" value="${manual?esc(b.equipo_local):''}" placeholder="Nombre del equipo local" style="margin-top:6px;${manual?'':'display:none'}">${pista}`;
 }
 
 function onBorrLocalChange(p){
@@ -839,7 +862,7 @@ function borradorHtml(b){
   const aviso=b.avisos?`<div class="borr-aviso" style="margin-bottom:10px">⚠️ ${esc(b.avisos)}</div>`:'<div class="borr-ok" style="margin-bottom:10px">✓ Sin avisos</div>';
   const imgOk=/^https:\/\//.test(b.imagen_url||'');
   const fuente=b.fuente_texto?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">Texto original</summary><div style="font-size:12px;white-space:pre-line;color:var(--muted);margin-top:4px">${esc(b.fuente_texto)}</div></details>`:'';
-  const eqVis=propios?(b.equipo_visitante_id?userTeams.find(function(t){return t.id===b.equipo_visitante_id}):equipoParecido(b.equipo_visitante)):null;
+  const eqVis=propios?(b.equipo_visitante_id?userTeams.find(function(t){return t.id===b.equipo_visitante_id}):equipoParecido(b.equipo_visitante,b)):null;
   const visNombre=eqVis?eqVis.nombre:(b.equipo_visitante||'');
   const local=propios&&userTeams.length?borrLocalHtml(p,b):`<input type="text" id="${p}local" value="${esc(b.equipo_local||'')}" placeholder="Nombre del equipo local">`;
   const visPick=propios?visitantePickHtml(p,visNombre,eqVis?eqVis.id:undefined):'';
@@ -1299,9 +1322,12 @@ async function toggleActivo(id,actual){
 async function borrar(id){
   if(!confirm('¿Borrar este evento?')) return;
   try{
-    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    if(!res.ok) throw new Error(await res.text());
+    // El borrador que originó este evento ya no tiene a qué apuntar: se borra para no dejarlo huérfano ni bloquear volver a guardar el mismo partido
+    try{ await fetch(`${SB_URL}/rest/v1/eventos_borrador?evento_id=eq.${id}&estado=eq.publicado`,{method:'DELETE',headers:H()}); }catch(e){}
     toast('Evento eliminado');cargarLista();
-  }catch(err){toast('Error al borrar',true);}
+  }catch(err){toast('Error al borrar: '+err.message,true);}
 }
 
 // ── INIT ──
@@ -1315,7 +1341,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.31</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.33</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
