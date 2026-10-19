@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.31 · 2026-10-19 · borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.32 · 2026-10-19 · al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1299,9 +1299,12 @@ async function toggleActivo(id,actual){
 async function borrar(id){
   if(!confirm('¿Borrar este evento?')) return;
   try{
-    await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    const res=await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${id}`,{method:'DELETE',headers:H()});
+    if(!res.ok) throw new Error(await res.text());
+    // El borrador que originó este evento ya no tiene a qué apuntar: se borra para no dejarlo huérfano ni bloquear volver a guardar el mismo partido
+    try{ await fetch(`${SB_URL}/rest/v1/eventos_borrador?evento_id=eq.${id}&estado=eq.publicado`,{method:'DELETE',headers:H()}); }catch(e){}
     toast('Evento eliminado');cargarLista();
-  }catch(err){toast('Error al borrar',true);}
+  }catch(err){toast('Error al borrar: '+err.message,true);}
 }
 
 // ── INIT ──
@@ -1315,7 +1318,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.31</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.32</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
