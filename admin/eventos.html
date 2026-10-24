@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.35 · 2026-10-24 · equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.36 · 2026-10-24 · rediseño del admin: Nuevo evento y Borradores con campos de una línea, botones tocables (género, competición, entrada), "Más detalles" plegado y borradores como filas compactas; Vistas: los nombres largos ya no empujan el número de vistas/día fuera de pantalla; equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,8 +10,8 @@
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
 /* ── TABS ── */
-.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-shrink:0}
-.tab{padding:10px 18px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-shrink:0;overflow-x:auto}
+.tab{white-space:nowrap;padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
 .tab-disabled{opacity:0.4;font-style:italic}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
@@ -93,9 +93,41 @@ tbody td select{cursor:pointer}
 .stat-label{font-size:11px;color:var(--muted);margin-top:4px}
 .stats-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:24px 0 10px}
 .rank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
-.rank-name{font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.rank-row>div:first-child{min-width:0;flex:1}
+.rank-name{font-size:12px;font-weight:600;color:var(--text);white-space:normal;overflow-wrap:anywhere}
 .rank-meta{font-size:10px;color:var(--muted)}
 .rank-value{font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
+
+/* ── REDISEÑO v3.36: campos de una línea, pills, filas de borrador ── */
+.u .field{margin-bottom:16px}
+.u .field label{font-size:10px;letter-spacing:1px;font-weight:600;margin-bottom:2px}
+.u .field input,.u .field select,.u .field textarea{border:none;border-bottom:1px solid var(--border);border-radius:0;background:none;padding:7px 0;font-size:15px;min-width:0}
+.u .field input:focus,.u .field select:focus,.u .field textarea:focus{border-bottom-color:var(--accent)}
+.u .field select{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 2px center;padding-right:18px}
+.u .field textarea{border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px}
+.u .field input[type=file]{border:none;padding:6px 0;font-size:13px}
+.u .field input[type=date],.u .field input[type=time]{min-height:34px}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pill{border:0;background:var(--surface2);color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.pill[aria-pressed=true]{background:var(--accent);color:#fff}
+.mas{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;padding:6px 0;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px}
+.mas-body{display:none}
+.mas-body.show{display:block}
+.u .btn-primary{margin-top:6px}
+#borrList .d-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden}
+#borrList .d-head{display:flex;gap:10px;align-items:flex-start;padding:12px}
+#borrList .d-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;cursor:pointer}
+#borrList .d-thumb.vacio{display:flex;align-items:center;justify-content:center;background:var(--surface2);font-size:20px;cursor:default}
+#borrList .d-main{flex:1;min-width:0}
+#borrList .d-title{font-size:14px;font-weight:700;color:var(--text);overflow-wrap:anywhere}
+#borrList .d-line{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+#borrList .d-warn{font-size:11px;line-height:1.4;color:#b45309;background:rgba(234,179,8,0.1);border-radius:6px;padding:5px 8px;margin-top:6px;overflow-wrap:anywhere}
+#borrList .d-act{display:flex;gap:8px;padding:0 12px 12px}
+#borrList .a-btn{flex:1;padding:9px 6px;border-radius:999px;border:0;background:var(--surface2);font-size:13px;font-weight:600;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif}
+#borrList .a-btn.go{background:var(--accent);color:#fff}
+#borrList .a-btn:disabled{opacity:.5}
+#borrList .d-form{display:none;padding:4px 12px 12px;border-top:1px solid var(--border)}
+#borrList .d-item.abierto .d-form{display:block}
 </style>
 </head>
 <body>
@@ -137,13 +169,18 @@ tbody td select{cursor:pointer}
   </div>
 
   <!-- TAB FORMULARIO (por defecto) -->
-  <div id="tabForm">
+  <div id="tabForm" class="u">
     <div class="admin-section-title">Nuevo evento</div>
+    <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
+    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_vis_pick_wrap"></div><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
     <div class="row2">
-      <div class="field">
-        <label>Deporte</label>
-        <input type="text" id="f_deporte" list="deportes-list" placeholder="Fútbol, basket...">
-        <datalist id="deportes-list">
+      <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
+      <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
+    </div>
+    <div class="field"><label>Municipio</label><input type="text" id="f_municipio" placeholder="Eibar, Ermua..."></div>
+    <div class="field"><label>Deporte</label><input type="text" id="f_deporte" list="deportes-list" placeholder="Fútbol, basket...">
+      <datalist id="deportes-list">
           <option value="futbol">⚽ Fútbol</option>
           <option value="basket">🏀 Basket</option>
           <option value="balonmano">🤾 Balonmano</option>
@@ -169,38 +206,20 @@ tbody td select{cursor:pointer}
           <option value="trail">⛰️ Trail</option>
           <option value="otros">🏅 Otros</option>
         </datalist>
-      </div>
-      <div class="field">
-        <label>Género</label>
-        <select id="f_genero">
+    </div>
+    <div class="field"><label>Género</label><select id="f_genero" data-pills>
           <option value="Sin especificar">Sin especificar</option>
           <option value="Masculino">Masculino</option>
           <option value="Femenino">Femenino</option>
           <option value="Mixto">Mixto</option>
-        </select>
-      </div>
-    </div>
-    <div class="field"><label>Nombre del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="f_nombre" placeholder="Ej: Gran Premio Eibar"></div>
-    <div class="row2">
-      <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Junior</option><option>Juvenil</option><option>Élite</option><option>Absoluto</option><option>Senior</option><option>Master</option><option>Veteranos</option><option>Todas</option></select></div>
-      <div class="field"><label>Competición</label><select id="f_comp"><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
-    </div>
-    <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
-    <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_vis_pick_wrap"></div><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
-    <div class="field" id="f_org_field" style="display:none"><label>Organiza (club) <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · torneos, carreras, exhibiciones)</span></label><div id="f_org_wrap"></div></div>
-    <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
-    <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
-    <div class="row2">
-      <div class="field"><label>Fecha</label><input type="date" id="f_fecha"></div>
-      <div class="field"><label>Hora</label><input type="time" id="f_hora"></div>
-    </div>
-    <div class="field"><label>Municipio</label><input type="text" id="f_municipio" placeholder="Eibar, Ermua..."></div>
-    <div class="field"><label>Instalación</label><input type="text" id="f_instalacion" placeholder="Nombre del recinto"></div>
-    <div class="row2">
-      <div class="field"><label>Entrada</label>        <select id="f_entrada"><option value="gratis">🟢 Gratis</option><option value="pago">🟡 De pago</option><option value="rifa">🟠 Rifa</option><option value="puertas">🚪 Puertas abiertas</option><option value="sin info">⚪ Sin info</option></select></div>
-      <div class="field">
-        <label>Duración (min)</label>
-        <select id="f_duracion">
+        </select></div>
+    <div class="field"><label>Competición</label><select id="f_comp" data-pills><option value="Liga">🏆 Liga</option><option value="Copa">🥇 Copa</option><option value="Torneo">🎯 Torneo</option><option value="Amistoso">🤝 Amistoso</option><option value="Play-off">🏅 Play-off</option></select></div>
+    <div class="field"><label>Entrada</label><select id="f_entrada" data-pills><option value="gratis">🟢 Gratis</option><option value="pago">🟡 De pago</option><option value="rifa">🟠 Rifa</option><option value="puertas">🚪 Puertas abiertas</option><option value="sin info">⚪ Sin info</option></select></div>
+    <button type="button" class="mas" onclick="toggleMas(this)">+ Más detalles</button>
+    <div class="mas-body">
+      <div class="row2">
+        <div class="field"><label>Categoría</label><select id="f_cat"><option>Benjamín</option><option>Alevín</option><option>Infantil</option><option>Cadete</option><option>Junior</option><option>Juvenil</option><option>Élite</option><option>Absoluto</option><option>Senior</option><option>Master</option><option>Veteranos</option><option>Todas</option></select></div>
+        <div class="field"><label>Duración (min)</label><select id="f_duracion">
           <option value="45">45 min</option>
           <option value="60">60 min</option>
           <option value="90" selected>90 min</option>
@@ -208,15 +227,18 @@ tbody td select{cursor:pointer}
           <option value="180">180 min</option>
           <option value="240">240 min</option>
           <option value="360">Día completo</option>
-        </select>
+        </select></div>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Cartel / Imagen del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · JPG, PNG, WebP)</span></label>
-      <input type="file" id="f_imagen" accept="image/*" style="padding:8px">
-      <div id="f_imagen_preview" style="margin-top:8px;display:none">
-        <img id="f_imagen_img" src="" alt="Preview" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)">
+      <div class="field"><label>Instalación</label><input type="text" id="f_instalacion" placeholder="Nombre del recinto"></div>
+      <div class="field" id="f_org_field" style="display:none"><label>Organiza (club) <span style="font-weight:400;text-transform:none;letter-spacing:0">(torneos, carreras, exhibiciones)</span></label><div id="f_org_wrap"></div></div>
+      <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
+      <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
+      <div class="field">
+        <label>Cartel / imagen <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · JPG, PNG, WebP)</span></label>
+        <input type="file" id="f_imagen" accept="image/*">
+        <div id="f_imagen_preview" style="margin-top:8px;display:none">
+          <img id="f_imagen_img" src="" alt="Preview" style="width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)">
+        </div>
       </div>
     </div>
 
@@ -483,12 +505,65 @@ function onVisitantePick(prefix){
   if(!local||!local.value||local.value==='__manual__') fillDeporte(sel.value,prefix);
 }
 
+// ── PILLS Y "MÁS DETALLES" ──
+// Los botones tocables se montan sobre un <select data-pills> oculto: el select sigue guardando el valor y los ids
+function convertirEnPills(root){
+  (root||document).querySelectorAll('select[data-pills]').forEach(function(sel){
+    if(sel.getAttribute('data-pilled')) return;
+    sel.setAttribute('data-pilled','1');
+    sel.style.display='none';
+    const box=document.createElement('div');
+    box.className='pills';
+    Array.from(sel.options).forEach(function(o){
+      if(o.value==='') return;
+      const bt=document.createElement('button');
+      bt.type='button'; bt.className='pill';
+      bt.setAttribute('data-v',o.value);
+      bt.textContent=o.textContent.replace(/^[^A-Za-zÁ-ú0-9]+/,'').trim();
+      box.appendChild(bt);
+    });
+    sel.parentNode.insertBefore(box,sel.nextSibling);
+  });
+  refrescarPills();
+}
+
+function refrescarPills(){
+  document.querySelectorAll('.pills').forEach(function(box){
+    const sel=box.previousElementSibling;
+    if(!sel||sel.tagName!=='SELECT') return;
+    box.querySelectorAll('.pill').forEach(function(bt){
+      bt.setAttribute('aria-pressed',sel.value===bt.getAttribute('data-v')?'true':'false');
+    });
+  });
+}
+
+document.addEventListener('click',function(ev){
+  const bt=ev.target.closest?ev.target.closest('.pill'):null;
+  if(!bt) return;
+  const sel=bt.parentNode.previousElementSibling;
+  if(!sel||sel.tagName!=='SELECT') return;
+  const v=bt.getAttribute('data-v');
+  const puedeVaciar=Array.from(sel.options).some(function(o){return o.value===''});
+  sel.value=(sel.value===v&&puedeVaciar)?'':v;
+  sel.dispatchEvent(new Event('change'));
+  refrescarPills();
+});
+
+convertirEnPills(document.getElementById('tabForm'));
+
+function toggleMas(btn){
+  const body=btn.nextElementSibling;
+  const abierto=body.classList.toggle('show');
+  btn.textContent=abierto?'− Menos detalles':'+ Más detalles';
+}
+
 function fillDeporte(teamNombre, prefix){
   const team=userTeams.find(t=>t.nombre===teamNombre);
   if(!team) return;
   if(team.deporte) document.getElementById(prefix+'deporte').value=team.deporte;
   if(team.genero){const g=document.getElementById(prefix+'genero');if(g)g.value=team.genero;}
   if(team.categoria){const c=document.getElementById(prefix+'cat');if(c)c.value=team.categoria;}
+  refrescarPills();
 }
 
 function onLocalChange(sel){
@@ -590,7 +665,7 @@ function abrirEdicion(e){
   const DURACION_OPTS=[45,60,90,120,180,240,360];
   function selOpt(opts,val){return opts.map(o=>`<option value="${esc(o)}"${String(o)===String(val)?' selected':''}>${esc(o)}</option>`).join('');}
   modal.innerHTML=`
-    <div style="background:var(--bg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px 40px">
+    <div class="u" style="background:var(--bg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px 40px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px">Editar evento</div>
         <div onclick="cerrarEdicion()" style="font-size:22px;cursor:pointer;color:var(--muted)">✕</div>
@@ -625,12 +700,12 @@ function abrirEdicion(e){
             <option value="otros">🏅 Otros</option>
           </datalist>
         </div>
-        <div class="field"><label>Género</label><select id="e_genero">${selOpt(GENERO_OPTS,e.genero)}</select></div>
+        <div class="field"><label>Género</label><select id="e_genero" data-pills>${selOpt(GENERO_OPTS,e.genero)}</select></div>
       </div>
       <div class="field"><label>Nombre evento</label><input type="text" id="e_nombre" value="${esc(e.nombre_evento||'')}"></div>
       <div class="row2">
         <div class="field"><label>Categoría</label><select id="e_cat">${selOpt(CAT_OPTS,e.categoria)}</select></div>
-        <div class="field"><label>Competición</label><select id="e_comp">${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
+        <div class="field"><label>Competición</label><select id="e_comp" data-pills>${selOpt(COMP_OPTS,e.tipo_competicion)}</select></div>
       </div>
       <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
       <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante,e.equipo_visitante_id)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
@@ -642,7 +717,7 @@ function abrirEdicion(e){
       <div class="field"><label>Municipio</label><input type="text" id="e_municipio" value="${esc(e.municipio||'')}"></div>
       <div class="field"><label>Instalación</label><input type="text" id="e_instalacion" value="${esc(e.instalacion||'')}"></div>
       <div class="row2">
-        <div class="field"><label>Entrada</label>        <select id="e_entrada">${selOpt(ENTRADA_OPTS,e.tipo_entrada)}</select></div>
+        <div class="field"><label>Entrada</label>        <select id="e_entrada" data-pills>${selOpt(ENTRADA_OPTS,e.tipo_entrada)}</select></div>
         <div class="field"><label>Duración (min)</label><select id="e_duracion">${selOpt(DURACION_OPTS,e.duracion_minutos||90)}</select></div>
       </div>
       <div class="field"><label>Info del evento</label><textarea id="e_info" rows="3" style="resize:vertical">${esc(e.info_evento||'')}</textarea></div>
@@ -677,6 +752,7 @@ function abrirEdicion(e){
   }, 50);
   setParticipantes('e_parts_list',e.participantes);
   renderEditLocalField(e);
+  convertirEnPills(modal);
 }
 
 function cerrarEdicion(){
@@ -869,6 +945,7 @@ async function guardarForm(){
     document.getElementById('f_parts_list').innerHTML='';
     selectedEquipoId=null;
     renderLocalField();
+    refrescarPills();
   }catch(e){toast('Error: '+e.message,true);}
 }
 
@@ -964,52 +1041,83 @@ function previewBorr(p,input){
   r.readAsDataURL(f);
 }
 
-// Mismo orden y mismos campos que el formulario "Nuevo evento"
+// Fila compacta (se ve de un vistazo) + formulario plegable con los mismos campos que "Nuevo evento"
+function fechaCorta(f){
+  if(!f) return '';
+  try{ return new Intl.DateTimeFormat('es-ES',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(f+'T00:00:00Z')); }
+  catch(err){ return f; }
+}
+
+function toggleBorr(id){
+  const it=document.getElementById('b'+Number(id)+'_card');
+  if(it) it.classList.toggle('abierto');
+}
+
 function borradorHtml(b){
   const p='b'+Number(b.id)+'_';
   const propios=!!(authUser&&b.user_id===authUser.id);
   const opt=function(id){return document.getElementById(id).innerHTML};
-  const aviso=b.avisos?`<div class="borr-aviso" style="margin-bottom:10px">⚠️ ${esc(b.avisos)}</div>`:'<div class="borr-ok" style="margin-bottom:10px">✓ Sin avisos</div>';
   const imgOk=/^https:\/\//.test(b.imagen_url||'');
   const fuente=b.fuente_texto?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--muted);cursor:pointer">Texto original</summary><div style="font-size:12px;white-space:pre-line;color:var(--muted);margin-top:4px">${esc(b.fuente_texto)}</div></details>`:'';
+  const eqLoc=propios?((b.equipo_id&&userTeams.find(function(t){return t.id===b.equipo_id}))||equipoParecido(b.equipo_local,b)):null;
   const eqVis=propios?(b.equipo_visitante_id?userTeams.find(function(t){return t.id===b.equipo_visitante_id}):equipoParecido(b.equipo_visitante,b)):null;
   const visNombre=eqVis?eqVis.nombre:(b.equipo_visitante||'');
+  const locNombre=eqLoc?eqLoc.nombre:(b.equipo_local||'');
   const local=propios&&userTeams.length?borrLocalHtml(p,b):`<input type="text" id="${p}local" value="${esc(b.equipo_local||'')}" placeholder="Nombre del equipo local">`;
   const visPick=propios?visitantePickHtml(p,visNombre,eqVis?eqVis.id:undefined):'';
   const lbl='font-weight:400;text-transform:none;letter-spacing:0';
-  return `<div class="borr-card" id="${p}card">
-    ${aviso}
-    <div class="row2">
+  const titulo=(locNombre&&visNombre)?locNombre+' – '+visNombre:(b.nombre_evento||locNombre||visNombre||'Sin título');
+  const l1=[fechaCorta(b.fecha),(b.hora||'').slice(0,5),b.municipio,b.instalacion].filter(Boolean).join(' · ');
+  const l2=[b.deporte,[b.categoria,b.genero&&b.genero!=='Sin especificar'?b.genero:''].filter(Boolean).join(' '),b.tipo_competicion,b.tipo_entrada].filter(Boolean).join(' · ');
+  const faltan=!b.fecha||!b.hora||!b.municipio||(!b.nombre_evento&&!locNombre);
+  const aviso=b.avisos?`<div class="d-warn">⚠️ ${esc(b.avisos)}</div>`:'';
+  const miniatura=imgOk?`<img class="d-thumb" src="${esc(b.imagen_url)}" alt="" onclick="window.open(this.src)">`:'<div class="d-thumb vacio">📅</div>';
+  return `<div class="d-item u${faltan?' abierto':''}" id="${p}card">
+    <div class="d-head">
+      ${miniatura}
+      <div class="d-main">
+        <div class="d-title">${esc(titulo)}</div>
+        <div class="d-line">${esc(l1)||'Sin fecha ni lugar'}</div>
+        <div class="d-line">${esc(l2)}</div>
+        ${aviso}
+      </div>
+    </div>
+    <div class="d-act">
+      <button type="button" class="a-btn" onclick="toggleBorr(${Number(b.id)})">✏️ Editar</button>
+      <button type="button" class="a-btn" onclick="descartarBorrador(${Number(b.id)})">🗑️ Descartar</button>
+      <button type="button" class="a-btn go" onclick="publicarBorrador(${Number(b.id)})">Publicar</button>
+    </div>
+    <div class="d-form">
+      <div class="field" style="margin-top:12px"><label>Equipo local <span style="${lbl}">(opcional)</span></label>${local}</div>
+      <div class="field"><label>Equipo visitante <span style="${lbl}">(opcional)</span></label>${visPick}<input type="text" id="${p}visitante" value="${esc(visNombre)}" placeholder="Nombre del equipo visitante"></div>
+      <div class="field"><label>Nombre del evento <span style="${lbl}">(opcional si hay equipos)</span></label><input type="text" id="${p}nombre"></div>
+      <div class="row2">
+        <div class="field"><label>Fecha</label><input type="date" id="${p}fecha"></div>
+        <div class="field"><label>Hora</label><input type="time" id="${p}hora"></div>
+      </div>
+      <div class="field"><label>Municipio</label><input type="text" id="${p}municipio" placeholder="Eibar, Ermua..."></div>
       <div class="field"><label>Deporte</label><input type="text" id="${p}deporte" list="deportes-list" placeholder="Fútbol, basket..."></div>
-      <div class="field"><label>Género</label><select id="${p}genero">${opt('f_genero')}</select></div>
+      <div class="field"><label>Género</label><select id="${p}genero" data-pills>${opt('f_genero')}</select></div>
+      <div class="field"><label>Competición</label><select id="${p}comp" data-pills><option value="">—</option>${opt('f_comp')}</select></div>
+      <div class="field"><label>Entrada</label><select id="${p}entrada" data-pills>${opt('f_entrada')}</select></div>
+      <button type="button" class="mas" onclick="toggleMas(this)">+ Más detalles</button>
+      <div class="mas-body">
+        <div class="row2">
+          <div class="field"><label>Categoría</label><select id="${p}cat"><option value="">—</option>${opt('f_cat')}</select></div>
+          <div class="field"><label>Duración (min)</label><select id="${p}duracion">${opt('f_duracion')}</select></div>
+        </div>
+        <div class="field"><label>Instalación</label><input type="text" id="${p}instalacion" placeholder="Nombre del recinto"></div>
+        ${propios&&userClubs.length?`<div class="field"><label>Organiza (club) <span style="${lbl}">(opcional)</span></label>${organizadorSelectHtml(p+'organizador',b.organizador_id)}</div>`:''}
+        <div class="field"><label>Texto del evento <span style="${lbl}">(descripción persuasiva)</span></label><textarea id="${p}info" rows="3"></textarea></div>
+        <div class="field"><label>Participantes <span style="${lbl}">(opcional · máx. 10)</span></label><div id="${p}parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('${p}parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
+        <div class="field">
+          <label>Cartel / imagen <span style="${lbl}">(opcional · JPG, PNG, WebP)</span></label>
+          <input type="file" id="${p}imagen" accept="image/*" onchange="previewBorr('${p}',this)">
+          <img id="${p}img" src="${imgOk?esc(b.imagen_url):''}" alt="" style="margin-top:8px;width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);${imgOk?'':'display:none'}">
+        </div>
+      </div>
+      ${fuente}
     </div>
-    <div class="field"><label>Nombre del evento <span style="${lbl}">(para ciclismo, atletismo... opcional si hay equipos)</span></label><input type="text" id="${p}nombre"></div>
-    <div class="row2">
-      <div class="field"><label>Categoría</label><select id="${p}cat"><option value="">—</option>${opt('f_cat')}</select></div>
-      <div class="field"><label>Competición</label><select id="${p}comp"><option value="">—</option>${opt('f_comp')}</select></div>
-    </div>
-    <div class="field"><label>Equipo local <span style="${lbl}">(opcional)</span></label>${local}</div>
-    <div class="field"><label>Equipo visitante <span style="${lbl}">(opcional)</span></label>${visPick}<input type="text" id="${p}visitante" value="${esc(visNombre)}" placeholder="Nombre del equipo visitante"></div>
-    ${propios&&userClubs.length?`<div class="field"><label>Organiza (club) <span style="${lbl}">(opcional)</span></label>${organizadorSelectHtml(p+'organizador',b.organizador_id)}</div>`:''}
-    <div class="field"><label>Texto del evento <span style="${lbl}">(descripción persuasiva)</span></label><textarea id="${p}info" rows="3"></textarea></div>
-    <div class="field"><label>Participantes <span style="${lbl}">(opcional · máx. 10)</span></label><div id="${p}parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('${p}parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
-    <div class="row2">
-      <div class="field"><label>Fecha</label><input type="date" id="${p}fecha"></div>
-      <div class="field"><label>Hora</label><input type="time" id="${p}hora"></div>
-    </div>
-    <div class="field"><label>Municipio</label><input type="text" id="${p}municipio" placeholder="Eibar, Ermua..."></div>
-    <div class="field"><label>Instalación</label><input type="text" id="${p}instalacion" placeholder="Nombre del recinto"></div>
-    <div class="row2">
-      <div class="field"><label>Entrada</label><select id="${p}entrada">${opt('f_entrada')}</select></div>
-      <div class="field"><label>Duración (min)</label><select id="${p}duracion">${opt('f_duracion')}</select></div>
-    </div>
-    <div class="field">
-      <label>Cartel / Imagen del evento <span style="${lbl}">(opcional · JPG, PNG, WebP)</span></label>
-      <input type="file" id="${p}imagen" accept="image/*" style="padding:8px" onchange="previewBorr('${p}',this)">
-      <img id="${p}img" src="${imgOk?esc(b.imagen_url):''}" alt="" style="margin-top:8px;width:100%;max-height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);${imgOk?'':'display:none'}">
-    </div>
-    ${fuente}
-    <div class="borr-acc"><button type="button" onclick="descartarBorrador(${Number(b.id)})">🗑️ Descartar</button><button type="button" class="pub" onclick="publicarBorrador(${Number(b.id)})">Publicar ✅</button></div>
   </div>`;
 }
 
@@ -1043,6 +1151,7 @@ async function cargarBorradores(){
     if(!n){list.innerHTML='<div class="empty-slot">No hay borradores pendientes.<br><span style="font-size:11px">Aquí aparecen los eventos que se guardan como borrador para revisarlos antes de publicar.</span></div>';return;}
     list.innerHTML=data.map(borradorHtml).join('');
     data.forEach(rellenarBorrador);
+    convertirEnPills(list);
   }catch(err){ list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar: ${esc(err.message)}</div>`; }
 }
 
@@ -1060,11 +1169,12 @@ async function publicarBorrador(id){
   const v=function(c){const el=document.getElementById(p+c); return el?el.value.trim():'';};
   const fecha=v('fecha'), hora=v('hora'), municipio=v('municipio'), nombre=v('nombre'), visitante=v('visitante');
   const loc=getBorrLocal(p), local=loc.nombre;
-  if(!fecha||!hora||!municipio){toast('Fecha, hora y municipio obligatorios',true);return;}
-  if(!nombre&&!local){toast('Añade equipos o nombre del evento',true);return;}
+  const abrir=function(){const c=document.getElementById(p+'card');if(c)c.classList.add('abierto');};
+  if(!fecha||!hora||!municipio){abrir();toast('Fecha, hora y municipio obligatorios',true);return;}
+  if(!nombre&&!local){abrir();toast('Añade equipos o nombre del evento',true);return;}
   const depRaw=v('deporte').toLowerCase();
   const deporte=elegirOpcion(depRaw,DEPORTES_OPTS,depRaw||'otros');
-  const btns=document.querySelectorAll('#'+p+'card .borr-acc button');
+  const btns=document.querySelectorAll('#'+p+'card .d-act button');
   btns.forEach(function(x){x.disabled=true});
   try{
     let imagen=b.imagen_url||null;
@@ -1456,7 +1566,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.35</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.36</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
