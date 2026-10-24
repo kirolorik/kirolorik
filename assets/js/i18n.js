@@ -9,8 +9,8 @@ var I18N = {
 
   cas: {
     // —— Navegación / Chrome ——
-    'nav.todos_deportes':      '🏅 Todos los deportes',
-    'nav.todos_equipos':       '👕 Todos los clubes',
+    'nav.todos_deportes':      'Todos los deportes',
+    'nav.todos_equipos':       'Todos los clubes',
     'nav.municipios':          'Municipios',
     'nav.sel_municipio':       'Seleccionar municipio',
     'nav.todos_municipios':    'Todos los municipios',
@@ -48,7 +48,7 @@ var I18N = {
     'det.puertas_abiertas':    'Puertas abiertas',
     'det.acceso_libre':        'Acceso libre al recinto',
     'det.ultima_act':          '* Última actualización:',
-    'det.sobre_evento':        '📣 Sobre el evento',
+    'det.sobre_evento':        'Sobre el evento',
     'det.cartel':              'Cartel',
     'det.organiza':            'Organiza',
     'det.participantes':        'Participantes',
@@ -96,8 +96,8 @@ var I18N = {
 
   eus: {
     // —— Navegación / Chrome ——
-    'nav.todos_deportes':      '🏅 Kirol guztiak',
-    'nav.todos_equipos':       '👕 Kluba guztiak',
+    'nav.todos_deportes':      'Kirol guztiak',
+    'nav.todos_equipos':       'Kluba guztiak',
     'nav.municipios':          'Udalerriak',
     'nav.sel_municipio':       'Udalerria aukeratu',
     'nav.todos_municipios':    'Udalerri guztiak',
@@ -135,7 +135,7 @@ var I18N = {
     'det.puertas_abiertas':    'Ateak irekita',
     'det.acceso_libre':        'Eraikinera sarrera librea',
     'det.ultima_act':          '* Azken eguneraketa:',
-    'det.sobre_evento':        '📣 Gertaerari buruz',
+    'det.sobre_evento':        'Gertaerari buruz',
     'det.cartel':              'Kartela',
     'det.organiza':            'Antolatzailea',
     'det.participantes':        'Parte-hartzaileak',

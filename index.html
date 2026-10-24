@@ -1,7 +1,7 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.37
+Versión: v6.39
 Fecha: 2026-10-24
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
@@ -19,6 +19,10 @@ al día que había elegido); se ignoran las respuestas de consultas antiguas de 
 v6.36: el inicio de sesión guarda también el refresh token para que el admin pueda renovar la sesión caducada.
 v6.37: el filtro pasa de equipos a clubes (un club reúne los eventos de todos sus equipos y los que organiza); el detalle muestra
 el club organizador; deportes nuevos: billar, trec, triatlon, gimnasia ritmica, pelota y trail.
+v6.38: rediseño de la portada y del detalle con más aire y menos líneas y cajas: filtros como texto, días subrayados, filas sin
+separadores ni barras, entrada como palabra de color, sin leyenda, publicidad solo si hay anuncios y detalle en líneas de texto con el
+cartel arriba.
+v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 -->
 
 <!DOCTYPE html>
@@ -147,6 +151,83 @@ el club organizador; deportes nuevos: billar, trec, triatlon, gimnasia ritmica, 
 .splash-cas{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:24px}
 .splash-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:var(--accent-txt);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;transition:opacity 0.15s}
 .splash-btn:hover{opacity:0.88}
+/* ===== Rediseño v6.38: más aire, menos líneas y cajas (solo la portada y el detalle) ===== */
+body{background:var(--surface)}
+.app{background:var(--surface)}
+.top-bar{border-bottom:none;padding:16px 18px 6px}
+.top-actions{gap:14px}
+.location-pill{background:none;border:none;padding:0;font-size:14px;font-weight:600;color:var(--text);gap:7px}
+.loc-dot{display:none}
+.location-pill::after{content:"";width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px)}
+.lang-select{background:none;border:none;padding:0;height:auto;font-size:12px;color:var(--muted)}
+.prof-btn{width:30px;height:30px;border:none;background:var(--surface2)}
+.sport-select-wrap{padding:2px 18px 10px;border-bottom:none;background:var(--surface);align-items:center;gap:8px}
+.sport-select-wrap select{flex:0 1 auto;max-width:46%;border:none;background-color:transparent;padding:6px 18px 6px 0;font-size:13px;font-weight:500;color:var(--muted);background-position:right 2px center;text-overflow:ellipsis}
+.filt-sep{color:var(--border);flex:none}
+.date-strip{border-bottom:1px solid var(--border);background:var(--surface);gap:20px;padding:4px 18px 0}
+.date-chip{border:none;background:none;padding:8px 0 9px;min-width:0;border-radius:0;border-bottom:2px solid transparent;margin-bottom:-1px}
+.date-chip:hover{border-color:transparent}
+.date-chip.today{background:none;border-bottom-color:var(--accent)}
+.date-chip .dn{font-size:11px;letter-spacing:0;text-transform:none}
+.date-chip .dd{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:500}
+.date-chip.today .dn,.date-chip.today .dd{color:var(--accent)}
+.date-chip.today .dd{font-weight:700}
+.date-arrow{border-style:none;min-width:auto;padding:8px 0 9px;font-size:20px}
+.parrilla-wrap{background:var(--surface);padding-bottom:96px}
+.day-sep{padding:22px 18px 4px}
+.day-sep-line{display:none}
+.day-sep-label{font-size:12px;letter-spacing:.12em;font-weight:500}
+.time-row{border-bottom:none;min-height:0;padding-top:14px}
+.time-col{width:76px;border-right:none;background:none;flex-direction:row;align-items:flex-start;justify-content:flex-start;padding:2px 0 0 18px}
+.time-h,.time-m{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;line-height:1;color:var(--text)}
+.time-m::before{content:":"}
+.events-col{background:none;gap:14px;min-width:0}
+.parrilla,.time-row{min-width:0}
+.event-info{min-width:0}
+.event{border-bottom:none;align-items:flex-start;gap:12px;padding:0 18px 0 0}
+.event:hover{background:none}
+.event-teams{font-size:15px;font-weight:500;white-space:normal;line-height:1.3}
+.event-meta{margin-top:3px;flex-wrap:nowrap;overflow:hidden}
+.event-meta>*{white-space:nowrap}
+.event-meta .event-cat:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.event-sport{font-size:12.5px;text-transform:none;letter-spacing:0;font-weight:600;text-transform:capitalize}
+.event-sep{color:var(--muted)}
+.event-cat{font-size:12.5px}
+.entry-tag{font-size:12px;font-weight:700;flex-shrink:0;padding-top:2px}
+.entry-tag.gratis{color:#15803d}.entry-tag.pago{color:#92400e}.entry-tag.rifa{color:#c2410c}.entry-tag.puertas{color:var(--accent)}
+.now-row{border:none;background:none;padding:14px 18px 0}
+.empty-slot{background:none;padding:32px 18px}
+.bottom-bar{background:var(--surface)}
+.ad-wrap{display:none;border-top:none}
+.ad-wrap.on{display:block}
+.legal-footer{padding:10px 18px;gap:4px 14px;justify-content:flex-start}
+.legal-footer a{font-size:11px}
+.det-drawer{background:var(--surface)}
+.det-top{border-bottom:none;background:var(--surface);padding:14px 18px 0}
+.det-title{font-size:12px;font-weight:500;color:var(--muted)}
+.d-poster{margin:10px 18px 0;background:var(--surface2);border-radius:12px;overflow:hidden;cursor:pointer}
+.d-poster img{display:block;width:100%;max-height:320px;object-fit:contain}
+.d-head{padding:18px 18px 6px}
+.d-kicker{font-size:12.5px;color:var(--muted);margin-bottom:14px;text-transform:capitalize}
+.d-kicker i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.d-head .det-vs{margin-bottom:6px}
+.d-head .det-team-name{font-size:14px;font-weight:500}
+.d-head .det-single{font-size:22px;text-align:left}
+.d-lines{padding:12px 18px 4px;display:grid;gap:16px}
+.d-line{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.35}
+.d-line svg{width:18px;height:18px;flex:none;margin-top:2px;stroke:var(--muted);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.d-line b{display:block;font-weight:500}
+.d-line small{display:block;color:var(--muted);font-size:13px;margin-top:1px;font-weight:400}
+.d-line .acc{color:var(--accent)}
+.d-click{cursor:pointer}
+.d-ent{font-weight:700}
+.d-ent.gratis{color:#15803d}.d-ent.pago{color:#92400e}.d-ent.rifa{color:#c2410c}.d-ent.puertas{color:var(--accent)}
+.d-sec{padding:22px 18px 0}
+.d-sec h3{margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d-sec p{margin:0;font-size:15px;line-height:1.6;white-space:pre-line}
+.d-sec ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.d-sec li{font-size:15px}
+.d-upd{padding:24px 18px 32px;font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -171,6 +252,7 @@ el club organizador; deportes nuevos: billar, trec, triatlon, gimnasia ritmica, 
     <select id="sportSel" onchange="filterSpSel(this)">
       <option value="todos" data-i18n="nav.todos_deportes">🏅 Todos los deportes</option>
     </select>
+    <span class="filt-sep">·</span>
     <select id="clubSel" onchange="filterClubSel(this)">
       <option value="todos" data-i18n="nav.todos_equipos">👕 Todos los equipos</option>
     </select>
@@ -179,7 +261,7 @@ el club organizador; deportes nuevos: billar, trec, triatlon, gimnasia ritmica, 
   <div class="parrilla-wrap"><div class="parrilla" id="grid"><div class="empty-slot">Cargando...</div></div></div>
 </div>
 <div class="bottom-bar">
-  <div class="ad-wrap">
+  <div class="ad-wrap" id="adWrap">
     <div class="ad-bar" onclick="toggleAd()">
       <div class="ad-tag" data-i18n="ad.tag">Publicidad</div>
       <div class="ad-logo">📣</div>
@@ -191,12 +273,6 @@ el club organizador; deportes nuevos: billar, trec, triatlon, gimnasia ritmica, 
       </div>
     </div>
     <div class="ad-panel" id="adPanel"></div>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(234,179,8,0.15);color:#b45309">€</div><span data-i18n="leg.entrada">Entrada</span></div>
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(249,115,22,0.12);font-size:11px">🎟️</div><span data-i18n="leg.rifa">Rifa</span></div>
-    <div class="legend-item"><div class="leg-icon" style="background:rgba(22,163,74,0.1);color:#16a34a;font-size:8px;font-weight:800;font-family:'Bebas Neue',sans-serif">FREE</div><span data-i18n="leg.gratis">Gratis</span></div>
-    <div class="legend-item" style="margin-left:auto;font-size:9px"><span data-i18n="leg.sin_icono">Sin icono = libre</span></div>
   </div>
   <div class="legal-footer">
     <a href="/pages/legal.html#quienes">Kirolorik</a>
@@ -262,13 +338,13 @@ function fd(iso){if(!iso)return'';var p=iso.split('-'),dt=new Date(p[0],p[1]-1,p
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 // Solo URLs http(s): evita javascript: y similares en src/href
 function safeUrl(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:''}
-function en(e){return esc(e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''))}
+function en(e){return esc(e.nombre_evento||(e.equipo_local||'—')+(e.equipo_visitante?' – '+e.equipo_visitante:''))}
 function bg(tp){
-  if(tp==='pago')return'<div class="entry-badge"><div class="entry-paid">€</div><div class="entry-paid-label">'+window.t('badge.entrada')+'</div></div>';
-  if(tp==='rifa')return'<div class="entry-badge"><div class="entry-raffle">🎟️</div><div class="entry-raffle-label">'+window.t('badge.rifa')+'</div></div>';
-  if(tp==='gratis')return'<div class="entry-badge"><div class="entry-free">FREE</div><div class="entry-free-label">'+window.t('badge.gratis')+'</div></div>';
-  if(tp==='puertas')return'<div class="entry-badge"><div class="entry-free" style="font-size:9px;letter-spacing:-0.5px">🚪</div><div class="entry-free-label" style="color:var(--accent)">'+window.t('badge.puertas')+'</div></div>';
-  return'<div class="entry-badge"><div class="entry-none"></div></div>';
+  if(tp==='pago')return'<span class="entry-tag pago">'+window.t('badge.entrada')+'</span>';
+  if(tp==='rifa')return'<span class="entry-tag rifa">'+window.t('badge.rifa')+'</span>';
+  if(tp==='gratis')return'<span class="entry-tag gratis">'+window.t('badge.gratis')+'</span>';
+  if(tp==='puertas')return'<span class="entry-tag puertas">'+window.t('badge.puertas')+'</span>';
+  return'';
 }
 
 // DATES
@@ -438,9 +514,11 @@ function loadGrid(){
     g.innerHTML='';
     function renderEventCard(e,evCache){
       var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
-      var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
+      var gen=e.genero&&e.genero!=='Sin especificar'?' '+esc(e.genero.toLowerCase()):'';
       var idx=evCache.indexOf(e);
-      return '<div class="event" onclick="openDet('+idx+')"><div class="event-bar" style="background:'+d.c+'"></div><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span><span class="event-sep">·</span><span class="event-cat">'+esc(e.categoria||'')+gen+'</span></div></div>'+bg(e.tipo_entrada)+'</div>';
+      var cat=(esc(e.categoria||'')+gen).trim();
+      var lugar=e.instalacion?esc(e.instalacion):'';
+      return '<div class="event" onclick="openDet('+idx+')"><div class="event-info"><div class="event-teams">'+en(e)+'</div><div class="event-meta"><span class="event-sport" style="color:'+d.c+'">'+dl+'</span>'+(cat?'<span class="event-sep">·</span><span class="event-cat">'+cat+'</span>':'')+(lugar?'<span class="event-sep">·</span><span class="event-cat">'+lugar+'</span>':'')+'</div></div>'+bg(e.tipo_entrada)+'</div>';
     }
     if(fechaSel){
       // Vista horaria (día seleccionado)
@@ -448,6 +526,7 @@ function loadGrid(){
       for(var i=0;i<filtered.length;i++){var e=filtered[i];var h=(e.hora||'00:00').slice(0,5);if(!groups[h])groups[h]=[];groups[h].push(e);}
       var nowDone=false;
       var keys=Object.keys(groups).sort();
+      var dh=document.createElement('div');dh.className='day-sep';dh.innerHTML='<div class="day-sep-label">'+fd(fechaSel)+'</div>';g.appendChild(dh);
       for(var k=0;k<keys.length;k++){
         var hora=keys[k],evs=groups[hora],hh=hora.split(':')[0],mm=hora.split(':')[1];
         if(!nowDone&&hora>curTime&&fechaSel===hoy){nowDone=true;var nr=document.createElement('div');nr.className='now-row';nr.innerHTML='<div class="now-dot"></div><div class="now-label">'+t('grid.ahora')+'</div><div class="now-time">'+curTime+'</div>';g.appendChild(nr);}
@@ -492,6 +571,12 @@ function escudoEq(eq){
   var c=eq.clubes?safeUrl(eq.clubes.escudo_url):'';
   return c||safeUrl(eq.escudo_url);
 }
+var DET_IC={
+  cal:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg>',
+  tic:'<svg viewBox="0 0 24 24"><path d="M4 9a2 2 0 0 0 0 6v3h16v-3a2 2 0 0 1 0-6V6H4z"/><path d="M14 6v12" stroke-dasharray="2 2"/></svg>',
+  org:'<svg viewBox="0 0 24 24"><path d="M5 21V4h11l-1.5 4L16 12H5"/></svg>'
+};
 var detSeq=0;
 function openDet(idx){
   var mySeq=++detSeq;
@@ -500,7 +585,7 @@ function openDet(idx){
   try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
   var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
-  document.getElementById('detTitle').textContent=detTitulo+' · '+fd(e.fecha);
+  document.getElementById('detTitle').textContent=detTitulo;
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
   var vs;
   var escudo=escudoEq(e.mis_equipos);
@@ -508,28 +593,28 @@ function openDet(idx){
   else{var escLocal=escudo?'<img class="det-escudo" src="'+esc(escudo)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div id="detVisEsc" style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
   var mu='https://www.google.com/maps/search/?api=1&query='+mq;
-  var ent='';
-  if(e.tipo_entrada==='gratis')ent='<div class="det-entry" style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2)"><div style="font-size:20px">🟢</div><div><div class="det-entry-title" style="color:#16a34a">'+t('det.entrada_libre')+'</div></div></div>';
-  else if(e.tipo_entrada==='pago')ent='<div class="det-entry" style="background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.25)"><div style="font-size:20px">€</div><div><div class="det-entry-title" style="color:#b45309">'+t('det.entrada_pago')+'</div></div></div>';
-  else if(e.tipo_entrada==='rifa')ent='<div class="det-entry" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2)"><div style="font-size:20px">🎟️</div><div><div class="det-entry-title" style="color:#ea580c">'+t('det.entrada_rifa')+'</div></div></div>';
-  else if(e.tipo_entrada==='puertas')ent='<div class="det-entry" style="background:var(--accent-bg);border:1px solid var(--accent)"><div style="font-size:20px">🚪</div><div><div class="det-entry-title" style="color:var(--accent)">'+t('det.puertas_abiertas')+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+t('det.acceso_libre')+'</div></div></div>';
-  var upd=e.updated_at?'<div style="font-size:10px;color:var(--muted);padding:8px 16px 0">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
+  var kp=[dl];
+  if(e.categoria)kp.push(esc(e.categoria));
+  if(e.genero&&e.genero!=='Sin especificar')kp.push(esc(e.genero));
+  if(e.tipo_competicion)kp.push(esc(e.tipo_competicion));
+  var kicker='<div class="d-kicker"><i style="background:'+d.c+'"></i>'+kp.join(' · ')+'</div>';
+  var cal='<div class="d-line">'+DET_IC.cal+'<span><b>'+fd(e.fecha)+'</b><small>'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</small></span></div>';
+  var lugarTxt=[e.instalacion,e.municipio].filter(Boolean).join(', ');
+  var pin=lugarTxt?'<div class="d-line d-click" data-u="'+esc(mu)+'" onclick="window.open(this.getAttribute(\'data-u\'),\'_blank\')">'+DET_IC.pin+'<span><b>'+esc(lugarTxt)+'</b><small class="acc">'+t('det.ver_maps')+'</small></span></div>':'';
+  var entTxt={gratis:t('det.entrada_libre'),pago:t('det.entrada_pago'),rifa:t('det.entrada_rifa'),puertas:t('det.puertas_abiertas')}[e.tipo_entrada];
+  var ent=entTxt?'<div class="d-line">'+DET_IC.tic+'<span class="d-ent '+esc(e.tipo_entrada)+'">'+entTxt+(e.tipo_entrada==='puertas'?'<small>'+t('det.acceso_libre')+'</small>':'')+'</span></div>':'';
   var orgClub=e.organizador_id?clubesData.byId[e.organizador_id]:null;
-  var org=orgClub?'<div style="margin:12px 16px 0;font-size:13px;color:var(--muted)">'+t('det.organiza')+': <b style="color:var(--text);font-weight:600">'+esc(nombreClub(orgClub))+'</b></div>':'';
-  var info=e.info_evento?'<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px">'+t('det.sobre_evento')+'</div><div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">'+esc(e.info_evento)+'</div></div>':'';
+  var orgLine=orgClub?'<div class="d-line">'+DET_IC.org+'<span>'+t('det.organiza')+': '+esc(nombreClub(orgClub))+'</span></div>':'';
+  var info=e.info_evento?'<div class="d-sec"><h3>'+t('det.sobre_evento')+'</h3><p>'+esc(e.info_evento)+'</p></div>':'';
   var cartel=safeUrl(e.imagen_url);
-  var poster=cartel?'<div style="padding:12px 16px 0"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px">'+t('det.cartel')+'</div><div style="cursor:pointer" onclick="openLb(evCache['+idx+'].imagen_url)">'+'<img src="'+esc(cartel)+'" alt="" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);object-fit:cover;max-height:200px" loading="lazy"></div></div>':'';
+  var poster=cartel?'<div class="d-poster" onclick="openLb(evCache['+idx+'].imagen_url)"><img src="'+esc(cartel)+'" alt="" loading="lazy"></div>':'';
   var partsHtml='';
   if(e.participantes&&e.participantes.trim()){
     var parts=e.participantes.split('\n').map(function(p){return p.trim()}).filter(function(p){return p});
-    if(parts.length){
-      partsHtml='<div style="margin:12px 16px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px">'+t('det.participantes')+'</div>'
-        +'<div style="display:flex;flex-direction:column;gap:6px">'
-        +parts.map(function(p){return '<div style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><span style="color:var(--accent);font-weight:700">·</span>'+esc(p)+'</div>'}).join('')
-        +'</div></div>';
-    }
+    if(parts.length)partsHtml='<div class="d-sec"><h3>'+t('det.participantes')+'</h3><ul>'+parts.map(function(p){return '<li>'+esc(p)+'</li>'}).join('')+'</ul></div>';
   }
-  document.getElementById('detScroll').innerHTML='<div class="det-hero"><div class="det-bar" style="background:'+d.c+'"></div><div class="det-pill"><span class="det-pill-txt">'+esc(e.tipo_competicion||t('det.evento_fallback'))+' · '+esc(e.categoria||'')+gen+'</span></div>'+vs+'</div><div class="det-grid"><div class="det-cell"><div class="det-lbl">'+t('det.fecha')+'</div><div class="det-val">'+fd(e.fecha)+'</div><div class="det-sub">'+(e.hora||'').slice(0,5)+' h · ~'+(e.duracion_minutos||90)+' min</div></div><div class="det-cell click" onclick="window.open(\''+mu+'\',\'_blank\')"><div class="det-lbl">'+t('det.instalacion')+'</div><div class="det-val">'+esc(e.instalacion||'—')+'</div><div class="det-sub" style="color:var(--accent)">'+t('det.ver_maps')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.municipio')+'</div><div class="det-val">'+esc(e.municipio||'—')+'</div></div><div class="det-cell"><div class="det-lbl">'+t('det.deporte')+'</div><div class="det-val">'+d.e+' '+dl+'</div><div class="det-sub">'+esc(e.tipo_competicion||'')+'</div></div></div>'+upd+ent+org+info+partsHtml+poster+'<div style="height:24px"></div>';
+  var upd=e.updated_at?'<div class="d-upd">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
+  document.getElementById('detScroll').innerHTML=poster+'<div class="d-head">'+kicker+vs+'</div><div class="d-lines">'+cal+pin+ent+orgLine+'</div>'+info+partsHtml+upd;
   if(e.equipo_visitante_id&&!e.nombre_evento){
     fetch(SB+'/rest/v1/mis_equipos?id=eq.'+encodeURIComponent(e.equipo_visitante_id)+'&select=escudo_url,clubes(escudo_url)',{headers:H}).then(function(r){return r.json()}).then(function(rows){
       var u=rows&&rows[0]?escudoEq(rows[0]):'';
@@ -629,7 +714,7 @@ function loadAds(){
     adList=data||[];
     // Orden aleatorio
     for(var i=adList.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=adList[i];adList[i]=adList[j];adList[j]=tmp}
-    if(adList.length){renderAdBar();renderAdDots();if(adOpen){try{localStorage.setItem('kb_ad_seen','1')}catch(e){};renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
+    if(adList.length){var aw=document.getElementById('adWrap');if(aw)aw.classList.add('on');renderAdBar();renderAdDots();if(adOpen){try{localStorage.setItem('kb_ad_seen','1')}catch(e){};renderAdPanel();setTimeout(function(){document.getElementById('adPanel').classList.add('open')},30);}}
   }).catch(function(){});
 }
 function renderAdBar(){if(!adList.length)return;var b=adList[adIdx];document.getElementById('adName').textContent=b.nombre||'';var d=b.descripcion||'';document.getElementById('adShort').textContent=d.length>60?d.substring(0,60)+'...':d;if(adOpen)renderAdPanel()}
@@ -678,7 +763,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.37</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.39</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
