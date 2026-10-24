@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.16 · 2026-10-20 · la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
+<!-- Kirolorik · perfil.html · v2.17 · 2026-10-24 · el equipo se define con división, nombre propio y tipo, y el nombre se compone solo; nombre corto del club; deportes nuevos; la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -219,6 +219,7 @@ a{color:var(--accent)}
     <div class="modal-title" id="mClubTitle">Añadir club</div>
     <input type="hidden" id="clubId">
     <div class="field"><label>Nombre del club</label><input type="text" id="clubNombre" placeholder="Club Deportivo Eibar..."></div>
+    <div class="field"><label>Nombre corto <span style="font-weight:400;font-size:11px">(opcional · como se ve en los equipos)</span></label><input type="text" id="clubNombreCorto" placeholder="Urbat"></div>
     <div class="field"><label>Municipio</label><input type="text" id="clubMunicipio" placeholder="Eibar..."></div>
     <div class="field"><label>Descripción <span style="font-weight:400;font-size:11px">(opcional)</span></label>
       <input type="text" id="clubDescripcion" placeholder="Asociación deportiva municipal...">
@@ -242,7 +243,17 @@ a{color:var(--accent)}
     <div class="modal-title" id="mEquipoTitle">Añadir equipo</div>
     <input type="hidden" id="eqId">
     <input type="hidden" id="eqClubId">
-    <div class="field"><label>Nombre del equipo</label><input type="text" id="eqNombre" placeholder="Nombre del equipo"></div>
+    <div class="field"><label>Se mostrará como</label><div id="eqVista" style="font-weight:700;font-size:15px;min-height:22px">—</div></div>
+    <div class="field"><label>División o liga <span style="font-weight:400;font-size:11px">(opcional)</span></label>
+      <input type="text" id="eqDivision" list="eqDivisionList" placeholder="Primera Nacional, Liga Vasca, B..." oninput="actualizarVistaEquipo()">
+      <datalist id="eqDivisionList"><option value="Primera Nacional"><option value="Segunda Nacional"><option value="División de Honor"><option value="Liga Vasca"><option value="Primera Euskal Herria"><option value="B"><option value="Escolar"></datalist>
+    </div>
+    <div class="field"><label>Nombre propio <span style="font-weight:400;font-size:11px">(opcional · solo si se llama distinto al club)</span></label>
+      <input type="text" id="eqNombrePropio" placeholder="Hiru Urak" oninput="actualizarVistaEquipo()">
+    </div>
+    <div class="field"><label>Tipo</label>
+      <select id="eqTipo" onchange="actualizarVistaEquipo()"><option value="equipo">Equipo</option><option value="individual">Persona o pareja</option></select>
+    </div>
     <div class="row2">
       <div class="field"><label>Deporte</label>
         <input type="text" id="eqDeporte" list="eqDeporteList" placeholder="Fútbol, basket, natación...">
@@ -261,6 +272,12 @@ a{color:var(--accent)}
           <option value="ajedrez">♟️ Ajedrez</option>
           <option value="rugby">🏉 Rugby</option>
           <option value="hockey">🏒 Hockey</option>
+          <option value="billar">🎱 Billar</option>
+          <option value="trec">🐎 TREC</option>
+          <option value="triatlon">🏁 Triatlón</option>
+          <option value="gimnasia ritmica">🤸 Gimnasia rítmica</option>
+          <option value="pelota">🥎 Pelota</option>
+          <option value="trail">⛰️ Trail</option>
           <option value="otros">🏅 Otros</option>
         </datalist>
       </div>
@@ -268,7 +285,7 @@ a{color:var(--accent)}
     </div>
     <div class="row2">
       <div class="field"><label>Género <span style="font-weight:400;font-size:11px">(opcional)</span></label>
-        <select id="eqGenero">
+        <select id="eqGenero" onchange="actualizarVistaEquipo()">
           <option value="">Sin especificar</option>
           <option value="Masculino">Masculino</option>
           <option value="Femenino">Femenino</option>
@@ -276,7 +293,7 @@ a{color:var(--accent)}
         </select>
       </div>
       <div class="field"><label>Categoría <span style="font-weight:400;font-size:11px">(opcional)</span></label>
-        <select id="eqCategoria">
+        <select id="eqCategoria" onchange="actualizarVistaEquipo()">
           <option value="">Sin especificar</option>
           <option value="Benjamín">Benjamín</option>
           <option value="Alevín">Alevín</option>
@@ -317,9 +334,10 @@ a{color:var(--accent)}
 const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
-const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',voley:'🏐',natacion:'🏊',padel:'🎾',ajedrez:'♟️',rugby:'🏉',hockey:'🏒',otros:'🏅'};
+const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',voley:'🏐',natacion:'🏊',padel:'🎾',ajedrez:'♟️',rugby:'🏉',hockey:'🏒',billar:'🎱',trec:'🐎',triatlon:'🏁','gimnasia ritmica':'🤸',pelota:'🥎',trail:'⛰️',otros:'🏅'};
 
 let tok = null, user = null, perfil = null, idiomaActual = 'cas';
+let clubesPerfil = {};   // clubes del usuario, para componer el nombre de sus equipos
 
 // ── SESIÓN ──
 // El token de acceso caduca a la hora y entonces todo fallaba con "JWT expired". Se renueva solo con el refresh token y la
@@ -496,7 +514,7 @@ function guardarPass(){
 async function cargarClubes(){
   const list = document.getElementById('clubesList');
   try {
-    const res = await fetch(`${SB}/rest/v1/perfil_club?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,escudo_url,municipio,descripcion)`, {headers:H()});
+    const res = await fetch(`${SB}/rest/v1/perfil_club?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,nombre_corto,escudo_url,municipio,descripcion)`, {headers:H()});
     const data = await res.json();
     if(!data || !data.length){
       list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún club.</div>';
@@ -506,6 +524,7 @@ async function cargarClubes(){
     for(const pc of data){
       const club = pc.clubes;
       if(!club) continue;
+      clubesPerfil[club.id] = club;
       const resEq = await fetch(`${SB}/rest/v1/mis_equipos?club_id=eq.${club.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
       const equipos = await resEq.json() || [];
       const equiposHtml = equipos.map(eq => `
@@ -513,7 +532,7 @@ async function cargarClubes(){
           <div class="eq-shield" style="width:32px;height:32px;font-size:18px">${DEPEMOJI[eq.deporte]||'🏅'}</div>
           <div class="eq-info">
             <div class="eq-name">${esc(eq.nombre)}</div>
-            <div class="eq-meta">${esc(eq.deporte)}${eq.genero?' · '+esc(eq.genero):''}${eq.categoria?' · '+esc(eq.categoria):''}</div>
+            <div class="eq-meta">${esc(eq.deporte)}${eq.genero?' · '+esc(eq.genero):''}${eq.categoria?' · '+esc(eq.categoria):''}${eq.division?' · '+esc(eq.division):''}</div>
           </div>
           <div class="eq-acts">
             <button class="eq-btn" onclick='editarEquipo(${JSON.stringify(eq).replace(/'/g,"&#39;")})'>✏️</button>
@@ -549,6 +568,7 @@ function openModalClub(){
   document.getElementById('clubId').value = '';
   document.getElementById('mClubTitle').textContent = 'Añadir club';
   document.getElementById('clubNombre').value = '';
+  document.getElementById('clubNombreCorto').value = '';
   document.getElementById('clubMunicipio').value = '';
   document.getElementById('clubDescripcion').value = '';
   document.getElementById('clubEscudo').value = '';
@@ -560,6 +580,7 @@ function editarClub(club){
   document.getElementById('clubId').value = club.id;
   document.getElementById('mClubTitle').textContent = 'Editar club';
   document.getElementById('clubNombre').value = club.nombre||'';
+  document.getElementById('clubNombreCorto').value = club.nombre_corto||'';
   document.getElementById('clubMunicipio').value = club.municipio||'';
   document.getElementById('clubDescripcion').value = club.descripcion||'';
   if(club.escudo_url){
@@ -576,6 +597,7 @@ async function guardarClub(){
   if(!nombre){ toast('El nombre es obligatorio','err'); return; }
   const datos = {
     nombre,
+    nombre_corto: document.getElementById('clubNombreCorto').value.trim()||null,
     municipio: document.getElementById('clubMunicipio').value.trim()||null,
     descripcion: document.getElementById('clubDescripcion').value.trim()||null,
     activo: true
@@ -629,11 +651,14 @@ function openModalEquipo(clubId){
   document.getElementById('eqId').value = '';
   document.getElementById('eqClubId').value = clubId||'';
   document.getElementById('mEquipoTitle').textContent = 'Añadir equipo';
-  document.getElementById('eqNombre').value = '';
+  document.getElementById('eqDivision').value = '';
+  document.getElementById('eqNombrePropio').value = '';
+  document.getElementById('eqTipo').value = 'equipo';
   document.getElementById('eqDeporte').value = 'futbol';
   document.getElementById('eqMunicipio').value = '';
   document.getElementById('eqGenero').value = '';
   document.getElementById('eqCategoria').value = '';
+  actualizarVistaEquipo();
   openModal('mEquipo');
 }
 
@@ -641,11 +666,14 @@ function editarEquipo(eq){
   document.getElementById('eqId').value = eq.id;
   document.getElementById('eqClubId').value = eq.club_id||'';
   document.getElementById('mEquipoTitle').textContent = 'Editar equipo';
-  document.getElementById('eqNombre').value = eq.nombre||'';
+  document.getElementById('eqDivision').value = eq.division||'';
+  document.getElementById('eqNombrePropio').value = eq.nombre_propio||'';
+  document.getElementById('eqTipo').value = eq.tipo||'equipo';
   document.getElementById('eqDeporte').value = eq.deporte||'futbol';
   document.getElementById('eqMunicipio').value = eq.municipio||'';
   document.getElementById('eqGenero').value = eq.genero||'';
   document.getElementById('eqCategoria').value = eq.categoria||'';
+  actualizarVistaEquipo();
   openModal('mEquipo');
 }
 
@@ -674,12 +702,49 @@ async function subirEscudo(file){
   return `${SB}/storage/v1/object/public/escudos/${name}`;
 }
 
+// Misma regla que la base de datos (función componer_nombre_equipo): base + división; o, sin división, categoría + género
+function componerNombreEquipo(club, propio, categoria, division, genero, tipo){
+  const base = (propio||'').trim() || (club && club.nombre_corto && club.nombre_corto.trim()) || (club && club.nombre) || '';
+  if(tipo === 'individual') return base;
+  let res = base;
+  if((division||'').trim()){
+    res += ' ' + division.trim();
+  } else {
+    if(categoria && ['Senior','Élite','Todas'].indexOf(categoria) < 0) res += ' ' + (categoria === 'Master' ? 'Máster' : categoria);
+    if(genero === 'Masculino') res += ' Masc.';
+    else if(genero === 'Femenino') res += ' Fem.';
+  }
+  return res;
+}
+
+function nombreEquipoFormulario(){
+  const club = clubesPerfil[document.getElementById('eqClubId').value] || null;
+  return componerNombreEquipo(club,
+    document.getElementById('eqNombrePropio').value,
+    document.getElementById('eqCategoria').value,
+    document.getElementById('eqDivision').value,
+    document.getElementById('eqGenero').value,
+    document.getElementById('eqTipo').value);
+}
+
+function actualizarVistaEquipo(){
+  const el = document.getElementById('eqVista');
+  if(el) el.textContent = nombreEquipoFormulario() || '—';
+}
+
 async function guardarEquipo(){
-  const nombre = document.getElementById('eqNombre').value.trim();
-  if(!nombre){ toast('El nombre es obligatorio','err'); return; }
+  const tipo = document.getElementById('eqTipo').value;
+  const propio = document.getElementById('eqNombrePropio').value.trim();
+  if(tipo === 'individual' && !propio){ toast('Escribe el nombre de la persona o pareja','err'); return; }
+  const nombre = nombreEquipoFormulario();
+  if(!nombre){ toast('El equipo necesita un club o un nombre propio','err'); return; }
   const clubId = document.getElementById('eqClubId').value;
   const datos = {
     nombre,
+    nombre_auto: true,
+    nombre_propio: propio || null,
+    division:   document.getElementById('eqDivision').value.trim() || null,
+    tipo,
     deporte:    document.getElementById('eqDeporte').value,
     municipio:  document.getElementById('eqMunicipio').value.trim() || null,
     genero:     document.getElementById('eqGenero').value || null,
@@ -762,7 +827,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.16</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.17</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

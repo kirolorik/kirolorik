@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.34 · 2026-10-20 · la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.35 · 2026-10-24 · equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -161,6 +161,12 @@ tbody td select{cursor:pointer}
           <option value="artes marciales">🥋 Artes Marciales</option>
           <option value="bjj">🥋 BJJ</option>
           <option value="grappling">🥋 Grappling</option>
+          <option value="billar">🎱 Billar</option>
+          <option value="trec">🐎 TREC</option>
+          <option value="triatlon">🏁 Triatlón</option>
+          <option value="gimnasia ritmica">🤸 Gimnasia rítmica</option>
+          <option value="pelota">🥎 Pelota</option>
+          <option value="trail">⛰️ Trail</option>
           <option value="otros">🏅 Otros</option>
         </datalist>
       </div>
@@ -181,6 +187,7 @@ tbody td select{cursor:pointer}
     </div>
     <div class="field"><label>Equipo local <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_local_wrap"><input type="text" id="f_local" placeholder="Nombre del equipo local"></div></div>
     <div class="field"><label>Equipo visitante <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><div id="f_vis_pick_wrap"></div><input type="text" id="f_visitante" placeholder="Nombre del equipo visitante"></div>
+    <div class="field" id="f_org_field" style="display:none"><label>Organiza (club) <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · torneos, carreras, exhibiciones)</span></label><div id="f_org_wrap"></div></div>
     <div class="field"><label>Texto del evento <span style="font-weight:400;text-transform:none;letter-spacing:0">(descripción persuasiva)</span></label><textarea id="f_info" rows="3" placeholder="Describe el evento para que la gente quiera asistir..."></textarea></div>
     <div class="field"><label>Participantes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · máx. 10)</span></label><div id="f_parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('f_parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
@@ -269,10 +276,12 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let authToken = null;
 let authUser  = null;
 let userTeams = [];
+let userClubs = [];   // clubes que administro (para elegir organizador)
+let clubById = {};    // todos los clubes activos, para agrupar los equipos por club
 let selectedEquipoId = null;
 let selectedEditEquipoId = null;
 
-const COLORES = {futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b'};
+const COLORES = {futbol:'#16a34a',basket:'#ea580c',balonmano:'#2563eb',waterpolo:'#0891b2',boxeo:'#dc2626',tenis:'#65a30d',atletismo:'#9333ea',ciclismo:'#db2777',otros:'#64748b',billar:'#166534',trec:'#7c2d12',triatlon:'#0ea5e9','gimnasia ritmica':'#c026d3',pelota:'#b91c1c',trail:'#15803d'};
 
 // ── SESIÓN ──
 // El token de acceso caduca a la hora. Antes, a partir de ahí todo fallaba con "JWT expired" (sin equipos, sin eventos, sin poder
@@ -378,14 +387,52 @@ function irInicio(){ window.location.href='/'; }
 
 // ── MIS EQUIPOS ──
 async function loadUserTeams(){
-  userTeams=[];
+  userTeams=[]; userClubs=[]; clubById={};
   selectedEquipoId=null;
   if(!authUser) return;
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=nombre.asc`,{headers:H()});
-    userTeams=await res.json()||[];
-  }catch(e){ userTeams=[]; }
+    const r=await Promise.all([
+      fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=nombre.asc`,{headers:H()}),
+      fetch(`${SB_URL}/rest/v1/clubes?select=id,nombre,nombre_corto&activo=eq.true&order=nombre.asc`,{headers:H()}),
+      fetch(`${SB_URL}/rest/v1/perfil_club?select=club_id&user_id=eq.${authUser.id}&activo=eq.true`,{headers:H()})
+    ]);
+    const eq=await r[0].json(), cl=await r[1].json(), pc=await r[2].json();
+    userTeams=Array.isArray(eq)?eq:[];
+    (Array.isArray(cl)?cl:[]).forEach(function(c){clubById[c.id]=c});
+    const mios={};
+    (Array.isArray(pc)?pc:[]).forEach(function(x){mios[x.club_id]=true});
+    userTeams.forEach(function(t){ if(t.club_id) mios[t.club_id]=true; });
+    userClubs=Object.keys(mios).map(function(id){return clubById[id]}).filter(Boolean)
+      .sort(function(a,b){return nombreClub(a).localeCompare(nombreClub(b),'es')});
+  }catch(e){ userTeams=[]; userClubs=[]; }
   renderLocalField();
+}
+
+function nombreClub(c){ return (c&&(c.nombre_corto||c.nombre))||''; }
+function clubLabel(id){ return id&&clubById[id]?nombreClub(clubById[id]):'Sin club'; }
+
+// Opciones de equipo agrupadas por club (esSel decide cuál va preseleccionado)
+function equiposOpcionesHtml(esSel){
+  const grupos={}, orden=[];
+  userTeams.forEach(function(t){
+    const k=t.club_id||'_';
+    if(!grupos[k]){grupos[k]=[];orden.push(k);}
+    grupos[k].push(t);
+  });
+  orden.sort(function(a,b){return clubLabel(a==='_'?null:a).localeCompare(clubLabel(b==='_'?null:b),'es')});
+  return orden.map(function(k){
+    const ops=grupos[k].map(function(t){
+      return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${esSel(t)?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`;
+    }).join('');
+    return `<optgroup label="${esc(clubLabel(k==='_'?null:k))}">${ops}</optgroup>`;
+  }).join('');
+}
+
+// Club que organiza el evento (para torneos, carreras o exhibiciones sin equipos)
+function organizadorSelectHtml(id,valor){
+  if(!userClubs.length) return '';
+  const opts=userClubs.map(function(c){return `<option value="${esc(c.id)}"${c.id===valor?' selected':''}>${esc(nombreClub(c))}</option>`}).join('');
+  return `<select id="${id}"><option value="">— Sin organizador —</option>${opts}</select>`;
 }
 
 function renderLocalField(){
@@ -394,8 +441,10 @@ function renderLocalField(){
   selectedEquipoId=null;
   const vw=document.getElementById('f_vis_pick_wrap');
   if(vw) vw.innerHTML=visitantePickHtml('f_','');
+  const ow=document.getElementById('f_org_wrap'), of=document.getElementById('f_org_field');
+  if(ow){ const h=organizadorSelectHtml('f_organizador',''); ow.innerHTML=h; if(of) of.style.display=h?'':'none'; }
   if(userTeams.length){
-    const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}">${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
+    const opts=equiposOpcionesHtml(function(){return false});
     wrap.innerHTML=`<select id="f_local" onchange="onLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="f_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
     // Si solo hay un equipo, seleccionarlo automáticamente
     if(userTeams.length===1){
@@ -411,7 +460,7 @@ function renderLocalField(){
 
 function visitantePickHtml(prefix, actual, actualId){
   if(!userTeams.length) return '';
-  const opts=userTeams.map(t=>`<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${(actualId?t.id===actualId:t.nombre===actual)?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`).join('');
+  const opts=equiposOpcionesHtml(function(t){return actualId?t.id===actualId:t.nombre===actual});
   return `<select id="${prefix}vis_pick" onchange="onVisitantePick('${prefix}')" style="margin-bottom:6px"><option value="">— Rival externo (escribe abajo) —</option>${opts}</select>`;
 }
 
@@ -460,11 +509,11 @@ function renderEditLocalField(e){
   if(!wrap) return;
   selectedEditEquipoId=e.equipo_id||null;
   if(userTeams.length){
-    const opts=userTeams.map(t=>{
-      const sel=(t.id===e.equipo_id||t.nombre===e.equipo_local)?' selected':'';
+    const opts=equiposOpcionesHtml(function(t){
+      const sel=(t.id===e.equipo_id||t.nombre===e.equipo_local);
       if(sel) selectedEditEquipoId=t.id;
-      return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${sel}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`;
-    }).join('');
+      return sel;
+    });
     wrap.innerHTML=`<select id="e_local" onchange="onEditLocalChange(this)"><option value="">— Elige tu equipo —</option>${opts}<option value="__manual__">✏️ Escribir manualmente...</option></select><input type="text" id="e_local_manual" placeholder="Nombre del equipo local" style="display:none;margin-top:6px">`;
     // Si no coincide ninguno pero hay valor, mostrar manual
     if(e.equipo_local && !userTeams.find(t=>t.id===e.equipo_id||t.nombre===e.equipo_local)){
@@ -533,7 +582,7 @@ function abrirEdicion(e){
   const modal = document.createElement('div');
   modal.id = 'editModal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:flex-end;justify-content:center';
-  const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','otros'];
+  const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','billar','trec','triatlon','gimnasia ritmica','pelota','trail','otros'];
   const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
   const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
   const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
@@ -567,6 +616,12 @@ function abrirEdicion(e){
             <option value="artes marciales">🥋 Artes Marciales</option>
             <option value="bjj">🥋 BJJ</option>
             <option value="grappling">🥋 Grappling</option>
+            <option value="billar">🎱 Billar</option>
+            <option value="trec">🐎 TREC</option>
+            <option value="triatlon">🏁 Triatlón</option>
+            <option value="gimnasia ritmica">🤸 Gimnasia rítmica</option>
+            <option value="pelota">🥎 Pelota</option>
+            <option value="trail">⛰️ Trail</option>
             <option value="otros">🏅 Otros</option>
           </datalist>
         </div>
@@ -579,6 +634,7 @@ function abrirEdicion(e){
       </div>
       <div class="field"><label>Equipo local</label><div id="e_local_wrap"><input type="text" id="e_local" value="${esc(e.equipo_local||'')}" placeholder="Nombre del equipo local"></div></div>
       <div class="field"><label>Equipo visitante</label>${visitantePickHtml('e_',e.equipo_visitante,e.equipo_visitante_id)}<input type="text" id="e_visitante" value="${esc(e.equipo_visitante||'')}"></div>
+      ${userClubs.length?`<div class="field"><label>Organiza (club)</label>${organizadorSelectHtml('e_organizador',e.organizador_id)}</div>`:''}
       <div class="row2">
         <div class="field"><label>Fecha</label><input type="date" id="e_fecha" value="${esc(e.fecha||'')}"></div>
         <div class="field"><label>Hora</label><input type="time" id="e_hora" value="${esc((e.hora||'').slice(0,5))}"></div>
@@ -640,6 +696,7 @@ async function guardarEdicion(){
     equipo_local:getEditLocalValue()||null,
     equipo_visitante:document.getElementById('e_visitante').value.trim()||null,
     equipo_visitante_id:getVisitanteId('e_'),
+    organizador_id:document.getElementById('e_organizador')?(document.getElementById('e_organizador').value||null):(eventoEditando.organizador_id||null),
     equipo_id:selectedEditEquipoId||null,
     fecha:document.getElementById('e_fecha').value,
     hora:document.getElementById('e_hora').value,
@@ -729,6 +786,7 @@ function buildEvento(d){
     tipo_competicion:d.comp||'Liga',
     equipo_local:d.local||null, equipo_visitante:d.visitante||null,
     equipo_visitante_id:d.equipo_visitante_id||null,
+    organizador_id:d.organizador_id||null,
     equipo_id:d.equipo_id||null,
     municipio_equipo:d.municipio_equipo||null,
     fecha:d.fecha, hora:d.hora, municipio:d.municipio||null,
@@ -795,6 +853,7 @@ async function guardarForm(){
     entrada:document.getElementById('f_entrada').value,
     duracion:document.getElementById('f_duracion').value,
     imagen_url, equipo_id:selectedEquipoId||null,
+    organizador_id:(document.getElementById('f_organizador')||{value:''}).value||null,
     municipio_equipo:selectedEquipoId?(userTeams.find(function(t){return t.id===selectedEquipoId})||{}).municipio||null:null,
     info:document.getElementById('f_info').value.trim()||null,
     participantes:getParticipantes('f_parts_list')
@@ -815,7 +874,7 @@ async function guardarForm(){
 
 // ── BORRADORES ──
 // Eventos guardados como borrador (p. ej. desde el chat de claude.ai); se revisan y se publican con un clic.
-const BORR_DEPORTES=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','otros'];
+const BORR_DEPORTES=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','billar','trec','triatlon','gimnasia ritmica','pelota','trail','otros'];
 const BORR_GENEROS=['Sin especificar','Masculino','Femenino','Mixto'];
 const BORR_CATS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
 const BORR_COMPS=['Liga','Copa','Torneo','Amistoso','Play-off'];
@@ -872,7 +931,7 @@ function equipoParecido(nombre,b){
 
 function borrLocalHtml(p,b){
   const eq=(b.equipo_id&&userTeams.find(function(t){return t.id===b.equipo_id}))||equipoParecido(b.equipo_local,b);
-  const opts=userTeams.map(function(t){return `<option value="${esc(t.nombre)}" data-id="${esc(t.id)}"${eq&&eq.id===t.id?' selected':''}>${esc(t.nombre)}${t.deporte?' · '+esc(t.deporte):''}</option>`}).join('');
+  const opts=equiposOpcionesHtml(function(t){return !!(eq&&eq.id===t.id)});
   const manual=!eq&&!!b.equipo_local;
   const cands=!eq?equiposCandidatos(b.equipo_local):[];
   const pista=cands.length>1?`<div style="font-size:11px;color:#b45309;margin-top:4px">Detectado "${esc(b.equipo_local)}": puede ser ${cands.map(function(t){return esc(t.nombre)}).join(', ')}. Elige el equipo en el desplegable.</div>`:'';
@@ -931,6 +990,7 @@ function borradorHtml(b){
     </div>
     <div class="field"><label>Equipo local <span style="${lbl}">(opcional)</span></label>${local}</div>
     <div class="field"><label>Equipo visitante <span style="${lbl}">(opcional)</span></label>${visPick}<input type="text" id="${p}visitante" value="${esc(visNombre)}" placeholder="Nombre del equipo visitante"></div>
+    ${propios&&userClubs.length?`<div class="field"><label>Organiza (club) <span style="${lbl}">(opcional)</span></label>${organizadorSelectHtml(p+'organizador',b.organizador_id)}</div>`:''}
     <div class="field"><label>Texto del evento <span style="${lbl}">(descripción persuasiva)</span></label><textarea id="${p}info" rows="3"></textarea></div>
     <div class="field"><label>Participantes <span style="${lbl}">(opcional · máx. 10)</span></label><div id="${p}parts_list" style="display:flex;flex-direction:column;gap:6px"></div><button type="button" onclick="addParticipante('${p}parts_list')" style="margin-top:6px;background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px;font-size:12px;color:var(--muted);cursor:pointer">+ Añadir participante</button></div>
     <div class="row2">
@@ -1015,6 +1075,7 @@ async function publicarBorrador(id){
       instalacion:v('instalacion'), entrada:v('entrada'), duracion:v('duracion'), imagen_url:imagen,
       equipo_id:loc.team?loc.team.id:null, municipio_equipo:loc.team?loc.team.municipio||null:null,
       equipo_visitante_id:getVisitanteId(p),
+      organizador_id:(document.getElementById(p+'organizador')||{value:b.organizador_id||''}).value||null,
       info:v('info')||null, participantes:getParticipantes(p+'parts_list')
     });
     ev.user_id=b.user_id;
@@ -1043,7 +1104,7 @@ async function descartarBorrador(id){
 
 // ── HOJA DE CÁLCULO ──
 // Pegar varias filas (hoja de cálculo o chat) -> revisar en la tabla -> publicar de golpe
-const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','otros'];
+const DEPORTES_OPTS=['futbol','basket','balonmano','waterpolo','boxeo','tenis','atletismo','ciclismo','voley','natacion','padel','ajedrez','rugby','hockey','artes marciales','bjj','grappling','billar','trec','triatlon','gimnasia ritmica','pelota','trail','otros'];
 const GENERO_OPTS=['Sin especificar','Masculino','Femenino','Mixto'];
 const CAT_OPTS=['Benjamín','Alevín','Infantil','Cadete','Junior','Juvenil','Élite','Absoluto','Senior','Master','Veteranos','Todas'];
 const COMP_OPTS=['Liga','Copa','Torneo','Amistoso','Play-off'];
@@ -1395,7 +1456,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.34</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.35</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

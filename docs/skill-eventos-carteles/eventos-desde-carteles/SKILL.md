@@ -16,7 +16,7 @@ Un cartel puede tener varios eventos (una jornada con varios partidos): un event
 - No inventes. Si un dato no aparece, usa null. Mejor null que adivinar.
 - fecha en formato AAAA-MM-DD. Si no pone el año, usa la próxima fecha futura que coincida con el día y mes desde hoy. Si solo pone el día de la semana ("este sábado"), calcula la fecha desde hoy. Si hay duda real, null y explícalo en avisos.
 - hora en formato HH:MM de 24 horas (17.30h -> 17:30).
-- deporte: uno de futbol, basket, balonmano, waterpolo, boxeo, tenis, atletismo, ciclismo, voley, natacion, padel, ajedrez, rugby, hockey, artes marciales, bjj, grappling, otros. Fútbol sala, fútbol 7 y similares -> futbol. Baloncesto -> basket. Lo que no encaje -> otros.
+- deporte: uno de futbol, basket, balonmano, waterpolo, boxeo, tenis, atletismo, ciclismo, voley, natacion, padel, ajedrez, rugby, hockey, artes marciales, bjj, grappling, billar, trec, triatlon, gimnasia ritmica, pelota, trail, otros. Fútbol sala, fútbol 7 y similares -> futbol. Baloncesto -> basket. Lo que no encaje -> otros.
 - genero: uno de Sin especificar, Masculino, Femenino, Mixto (Sin especificar si no se indica).
 - categoria: una de Benjamín, Alevín, Infantil, Cadete, Junior, Juvenil, Élite, Absoluto, Senior, Master, Veteranos, Todas o null si no se indica. Sub-12/prebenjamín/benjamín -> Benjamín; sub-14/alevín -> Alevín; sub-16/infantil -> Infantil; sub-18/cadete -> Cadete; sub-19 o sub-21/juvenil/junior -> Juvenil o Junior según el texto; primer equipo, regional, 1ª/2ª/3ª -> Senior.
 - tipo_competicion: una de Liga, Copa, Torneo, Amistoso, Play-off o null.
@@ -38,22 +38,25 @@ Antes de guardar nada, enséñame una lista corta (una línea por evento con fec
 - Proyecto: `glscnwctcvrosmbrljns`. Usa solo `execute_sql`.
 - Guarda cada evento como BORRADOR con un INSERT en `public.eventos_borrador`. NUNCA hagas UPDATE, DELETE, DDL ni consultes otras tablas, salvo los SELECT de comprobación de duplicados que se indican abajo. Nunca toques `auth.users`.
 - Usuario propietario de los borradores: `785d1099-b544-4fcd-b6b9-3dbe33ee8a24` (kirolorik.app@gmail.com).
-- Relaciona los equipos con los que ya están guardados. Antes de insertar, lee `select m.id, m.nombre, m.deporte, m.genero, m.categoria, m.municipio, c.nombre as club from public.mis_equipos m left join public.clubes c on c.id = m.club_id where m.activo and m.user_id = '785d1099-b544-4fcd-b6b9-3dbe33ee8a24' order by m.nombre`.
-  - Un club suele tener VARIOS equipos guardados (por ejemplo "Eibar Eskubaloia Liga Vasca", "Eibar Eskubaloia Primera Nacional", "Eibar Eskubaloia División Honor" y "Eibar Eskubaloia B"). El cartel normalmente nombra solo el club ("Eibar Eskubaloia") y el nombre guardado lleva además la categoría o la liga. Por eso no basta con comparar nombres: primero localiza el club y luego elige el equipo concreto por género (Femenino/Masculino), categoría (Senior, Élite, Juvenil...), deporte y por la competición o liga que diga el cartel ("Primera Nacional", "División de Honor", "Liga Vasca"...).
-  - Si el equipo de un club queda claro, escribe en `equipo_local` / `equipo_visitante` el `nombre` EXACTO guardado y rellena `equipo_id` / `equipo_visitante_id` con su `id`.
-  - Si tras mirar género, categoría y competición siguen siendo posibles varios equipos del mismo club, NO adivines: deja el nombre tal como sale en el cartel, los ids a NULL y escribe en `avisos` cuáles son los candidatos. En el borrador yo elegiré el equipo en el desplegable.
+- Relaciona los equipos y los clubes con los que ya están guardados. Antes de insertar, lee `select m.id, m.nombre, m.nombre_propio, m.division, m.tipo, m.deporte, m.genero, m.categoria, c.id as club_id, c.nombre as club, c.nombre_corto from public.mis_equipos m join public.clubes c on c.id = m.club_id where m.activo and c.activo and m.user_id = '785d1099-b544-4fcd-b6b9-3dbe33ee8a24' order by c.nombre, m.nombre` y `select id, nombre, nombre_corto from public.clubes where activo order by nombre`.
+  - Un club tiene varios equipos que se distinguen por **división o liga**, **género** y **categoría**; el nombre del equipo se compone con esos datos ("Eibar Eskubaloia Primera Nacional", "Urbat Cadete Masc."). El cartel normalmente nombra solo el club ("Eibar Eskubaloia", "Urbat"). Por eso se hace en dos pasos:
+    1. Localiza el **club**: compara el nombre del cartel con `club`, `nombre_corto` y `nombre_propio` (ignorando tildes, mayúsculas y prefijos como CD, SD o club).
+    2. Dentro del club elige el **equipo** por la división o liga que diga el cartel ("Primera Nacional", "División de Honor", "Liga Vasca"...), por el género (Femenino/Masculino) y por la categoría (Senior, Élite, Juvenil...). Un equipo de tipo `individual` es una persona o pareja: se elige por su nombre propio.
+  - Si el equipo queda claro, escribe en `equipo_local` / `equipo_visitante` el `nombre` EXACTO guardado y rellena `equipo_id` / `equipo_visitante_id` con su `id`.
+  - Si tras mirar división, género y categoría siguen siendo posibles varios equipos del mismo club, NO adivines: deja el nombre tal como sale en el cartel, los ids a NULL y escribe en `avisos` cuáles son los candidatos. En el borrador yo elegiré el equipo en el desplegable.
   - Los rivales que no están guardados (otros clubes) se dejan como texto con su nombre del cartel y el id a NULL.
   - Si el cartel no indica género o categoría y el equipo guardado sí, usa los del equipo guardado.
+  - **Organizador:** en torneos, carreras, exhibiciones y similares, sin equipos, mira si el cartel dice qué club organiza ("Organiza: Club Ciclista Eibarrés"). Si coincide con un club de la lista, escribe su `id` en `organizador_id` y deja los equipos a NULL. Si el club no está en la lista, déjalo a NULL y menciona el nombre en `avisos`.
 - Antes de insertar, busca duplicados: `select id, nombre_evento, equipo_local, equipo_visitante, fecha, hora from public.eventos where activo and fecha in ('AAAA-MM-DD', ...)` y `select id, nombre_evento, equipo_local, equipo_visitante, fecha from public.eventos_borrador where estado = 'pendiente' and fecha in (...)`. Si un evento ya existe (mismo día y mismos equipos, en cualquier orden, o mismo nombre), no lo insertes y avísame.
 - Textos entre dollar-quoting para no romper comillas: `$q$texto$q$`. Los valores que no se conocen van como NULL.
 - Plantilla (varios eventos en un solo INSERT):
 
 ```sql
 insert into public.eventos_borrador
-  (user_id, deporte, genero, nombre_evento, categoria, tipo_competicion, equipo_local, equipo_visitante, equipo_id, equipo_visitante_id,
+  (user_id, deporte, genero, nombre_evento, categoria, tipo_competicion, equipo_local, equipo_visitante, equipo_id, equipo_visitante_id, organizador_id,
    fecha, hora, municipio, instalacion, tipo_entrada, duracion_minutos, info_evento, participantes, avisos, fuente_texto)
 values
-  ('785d1099-b544-4fcd-b6b9-3dbe33ee8a24', 'futbol', 'Masculino', NULL, 'Juvenil', 'Liga', $q$SD Eibar$q$, $q$Real Sociedad$q$, '<id del equipo local guardado o NULL>', NULL,
+  ('785d1099-b544-4fcd-b6b9-3dbe33ee8a24', 'futbol', 'Masculino', NULL, 'Juvenil', 'Liga', $q$SD Eibar$q$, $q$Real Sociedad$q$, '<id del equipo local guardado o NULL>', NULL, NULL,
    '2026-10-24', '17:30', 'Eibar', $q$Ipurua$q$, 'gratis', NULL, NULL, NULL, NULL, NULL);
 ```
 
