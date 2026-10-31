@@ -1,4 +1,4 @@
-// Kirolorik · i18n.js · v1.1 · 2026-05-22
+// Kirolorik · i18n.js · v1.2 · 2026-10-31 · textos de «sin conexión» · (v1.1 · 2026-05-22)
 // Sistema de traducciones centralizado.
 // Añadir un idioma nuevo = añadir un bloque más en I18N.
 // Uso: t('key') → string en el idioma activo (var lang debe existir globalmente)
@@ -19,6 +19,8 @@ var I18N = {
     // —— Grid / parrilla ——
     'grid.cargando':           'Cargando...',
     'grid.sin_eventos':        'Sin eventos próximos',
+    'grid.offline':            'Sin conexión · mostrando los últimos eventos guardados',
+    'grid.sin_conexion':       'Sin conexión. Vuelve a intentarlo en unos minutos',
     'grid.sin_municipios':     'Sin municipios',
     'grid.ahora':              'Ahora',
     'grid.error':              'Error',
@@ -106,6 +108,8 @@ var I18N = {
     // —— Grid / parrilla ——
     'grid.cargando':           'Kargatzen...',
     'grid.sin_eventos':        'Ez dago gertaera hurbilik',
+    'grid.offline':            'Konexiorik ez · gordetako azken gertaerak erakusten',
+    'grid.sin_conexion':       'Konexiorik ez. Saiatu berriro minutu batzuen buruan',
     'grid.sin_municipios':     'Udalerriak ez',
     'grid.ahora':              'Orain',
     'grid.error':              'Errorea',
