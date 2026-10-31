@@ -1,6 +1,9 @@
-/* Kirolorik · sw.js · v9 · 2026-10-16 · cache v9 para forzar la recarga de las páginas nuevas */
+/* Kirolorik · sw.js · v10 · 2026-10-31 · la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10 */
 
-const CACHE = 'kirolorik-v9';
+const CACHE = 'kirolorik-v10';
+
+// Se guardan al instalar para poder abrir la app sin red
+const PRECACHE = ['/', '/index.html', '/assets/css/style.css', '/assets/js/i18n.js'];
 
 const CACHE_FIRST = [
   '/manifest.json',
@@ -20,7 +23,9 @@ function fetchWithTimeout(request, ms) {
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(CACHE_FIRST.map(a => new Request(a, {cache:'reload'}))))
+      .then(c => Promise.all(CACHE_FIRST.concat(PRECACHE).map(a =>
+        c.add(new Request(a, {cache:'reload'})).catch(() => {})
+      )))
       .catch(() => {})
   );
   self.skipWaiting();
@@ -46,9 +51,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   const isHtml = url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '';
   const isCacheFirst = CACHE_FIRST.some(p => url.pathname === p);
+  const isAsset = url.origin === self.location.origin && (url.pathname.endsWith('.css') || url.pathname.endsWith('.js'));
 
-  if (isHtml) {
-    // NETWORK FIRST con timeout — si la red falla o tarda, cae al caché
+  if (isHtml || isAsset) {
+    // NETWORK FIRST con timeout — páginas, CSS y JS propios: si la red falla o tarda, cae al caché
     e.respondWith(
       fetchWithTimeout(e.request, 4000)
         .then(res => {
@@ -58,9 +64,10 @@ self.addEventListener('fetch', e => {
           return res;
         })
         .catch(() =>
-          caches.match(e.request)
-            .then(r => r || caches.match('/index.html'))
-            .then(r => r || new Response('Sin conexión', {status: 503, headers: {'Content-Type': 'text/plain'}}))
+          caches.match(e.request, {ignoreSearch: true})
+            .then(r => r || (isAsset ? null : caches.match('/')))
+            .then(r => r || (isAsset ? null : caches.match('/index.html')))
+            .then(r => r || new Response(isAsset ? '' : 'Sin conexión', {status: 503, headers: {'Content-Type': 'text/plain'}}))
         )
     );
   } else if (isCacheFirst) {
@@ -75,5 +82,5 @@ self.addEventListener('fetch', e => {
       })
     );
   }
-  // CSS, JS, fuentes — sin interceptar, red directa
+  // Fuentes — sin interceptar, red directa
 });

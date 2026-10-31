@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.39
-Fecha: 2026-10-24
+Versión: v6.40
+Fecha: 2026-10-31
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -23,6 +23,8 @@ v6.38: rediseño de la portada y del detalle con más aire y menos líneas y caj
 separadores ni barras, entrada como palabra de color, sin leyenda, publicidad solo si hay anuncios y detalle en líneas de texto con el
 cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
+v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
+móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
 -->
 
 <!DOCTYPE html>
@@ -436,6 +438,32 @@ function changeLang(l){
 
 // GRID
 var gridSeq=0;
+// Última lista de eventos vista (por deporte y municipio): si falla la red se muestra con un aviso
+var offlineEv=false;
+function fetchEventos(url){
+  var key='kb_ev:'+deporteSel+':'+(muni||'');
+  var esHoy=url.indexOf('&fecha=gte.'+td()+'&')>=0;
+  return fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(d){
+    if(Array.isArray(d)){
+      offlineEv=false;
+      if(esHoy){try{localStorage.setItem(key,JSON.stringify({t:Date.now(),d:d}))}catch(e){}}
+    }
+    return d;
+  }).catch(function(){
+    offlineEv=true;
+    try{
+      var c=JSON.parse(localStorage.getItem(key)||'null');
+      if(c&&Array.isArray(c.d)){var f=fechaSel||td();return c.d.filter(function(e){return e.fecha>=f})}
+    }catch(e){}
+    return null;
+  });
+}
+function avisoOffline(g,sinDatos){
+  var n=document.getElementById('offlineNote');
+  if(!offlineEv||sinDatos){if(n)n.parentNode.removeChild(n);return}
+  if(!n){n=document.createElement('div');n.id='offlineNote';n.style.cssText='font-size:12px;color:#b45309;background:rgba(234,179,8,0.12);border-radius:8px;padding:8px 12px;margin:0 0 10px';g.parentNode.insertBefore(n,g)}
+  n.textContent=t('grid.offline');
+}
 // Cambia el día seleccionado y marca su chip (si el día queda fuera de las 14 fechas, no se marca ninguno)
 function setFechaSel(iso){
   fechaSel=iso;
@@ -455,12 +483,13 @@ function loadGrid(){
   if(deporteSel!=='todos')url+='&deporte=eq.'+encodeURIComponent(deporteSel);
   url+='&test=eq.false';
   if(muni)url+='&municipio=eq.'+encodeURIComponent(muni);
-  fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
+  fetchEventos(url).then(function(data){
     if(clubSel==='todos'||!Array.isArray(data))return data;
     return cargarClubes().then(function(){return data.filter(function(e){return eventoDeClub(e,clubSel)})});
   }).then(function(data){
     if(mySeq!==gridSeq)return;
-    if(!data||!data.length){g.innerHTML='<div class="empty-slot">'+t('grid.sin_eventos')+'</div>';return}
+    avisoOffline(g,!data);
+    if(!data||!data.length){g.innerHTML='<div class="empty-slot">'+t(offlineEv&&!data?'grid.sin_conexion':'grid.sin_eventos')+'</div>';return}
     var now=new Date();
     var filtered=[];
     for(var i=0;i<data.length;i++){
@@ -763,7 +792,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.39</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.40</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
