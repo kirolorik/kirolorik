@@ -1,4 +1,4 @@
-// Kirolorik · i18n.js · v1.2 · 2026-10-31 · textos de «sin conexión» · (v1.1 · 2026-05-22)
+// Kirolorik · i18n.js · v1.3 · 2026-10-31 · ayuda en el aviso de «sin conexión» (posible bloqueo del operador) · (v1.2 · textos de «sin conexión» · v1.1 · 2026-05-22)
 // Sistema de traducciones centralizado.
 // Añadir un idioma nuevo = añadir un bloque más en I18N.
 // Uso: t('key') → string en el idioma activo (var lang debe existir globalmente)
@@ -20,6 +20,8 @@ var I18N = {
     'grid.cargando':           'Cargando...',
     'grid.sin_eventos':        'Sin eventos próximos',
     'grid.offline':            'Sin conexión · mostrando los últimos eventos guardados',
+    'grid.offline_ayuda':      'Puede que tu operador esté bloqueando la web por los partidos. Prueba con una VPN o con WARP.',
+    'grid.offline_mas':        'Más información',
     'grid.sin_conexion':       'Sin conexión. Vuelve a intentarlo en unos minutos',
     'grid.sin_municipios':     'Sin municipios',
     'grid.ahora':              'Ahora',
@@ -109,6 +111,8 @@ var I18N = {
     'grid.cargando':           'Kargatzen...',
     'grid.sin_eventos':        'Ez dago gertaera hurbilik',
     'grid.offline':            'Konexiorik ez · gordetako azken gertaerak erakusten',
+    'grid.offline_ayuda':      'Agian zure operadoreak webgunea blokeatzen ari da partidengatik. Saiatu VPN batekin edo WARP-ekin.',
+    'grid.offline_mas':        'Informazio gehiago',
     'grid.sin_conexion':       'Konexiorik ez. Saiatu berriro minutu batzuen buruan',
     'grid.sin_municipios':     'Udalerriak ez',
     'grid.ahora':              'Orain',
