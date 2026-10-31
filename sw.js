@@ -1,4 +1,4 @@
-/* Kirolorik · sw.js · v10 · 2026-10-31 · la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10 */
+/* Kirolorik · sw.js · v11 · 2026-10-31 · espera de red de 1,5 s en vez de 4 s para que la app abra rápido con la web bloqueada; (v10: la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10) */
 
 const CACHE = 'kirolorik-v10';
 
@@ -12,7 +12,7 @@ const CACHE_FIRST = [
   '/assets/img/icon-512.png'
 ];
 
-// Timeout para network-first: si la red no responde en 4s, usa caché
+// Timeout para network-first: si la red no responde en 1,5 s, usa caché
 function fetchWithTimeout(request, ms) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('timeout')), ms);
@@ -56,7 +56,7 @@ self.addEventListener('fetch', e => {
   if (isHtml || isAsset) {
     // NETWORK FIRST con timeout — páginas, CSS y JS propios: si la red falla o tarda, cae al caché
     e.respondWith(
-      fetchWithTimeout(e.request, 4000)
+      fetchWithTimeout(e.request, 1500)
         .then(res => {
           if (res.ok) {
             caches.open(CACHE).then(c => c.put(e.request, res.clone()));
