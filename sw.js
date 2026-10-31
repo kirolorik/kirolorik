@@ -1,9 +1,9 @@
-/* Kirolorik · sw.js · v11 · 2026-10-31 · espera de red de 1,5 s en vez de 4 s para que la app abra rápido con la web bloqueada; (v10: la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10) */
+/* Kirolorik · sw.js · v12 · 2026-10-31 · guarda también faq.html y legal.html para abrirlas sin red; (v11: espera de red de 1,5 s en vez de 4 s para que la app abra rápido con la web bloqueada; (v10: la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10) · cache v12 */
 
-const CACHE = 'kirolorik-v10';
+const CACHE = 'kirolorik-v12';
 
 // Se guardan al instalar para poder abrir la app sin red
-const PRECACHE = ['/', '/index.html', '/assets/css/style.css', '/assets/js/i18n.js'];
+const PRECACHE = ['/', '/index.html', '/assets/css/style.css', '/assets/js/i18n.js', '/pages/faq.html', '/pages/legal.html'];
 
 const CACHE_FIRST = [
   '/manifest.json',
