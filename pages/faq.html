@@ -1,4 +1,4 @@
-<!-- Kirolorik · faq.html · v1.2 · 2026-10-31 · guarda las últimas preguntas en el móvil y las muestra si falla la red; (v1.1 · 2026-10-16 · etiqueta de versión visible) -->
+<!-- Kirolorik · faq.html · v1.3 · 2026-10-31 · preguntas y respuestas escapadas con esc() antes de insertarlas como HTML; (v1.2 · guarda las últimas preguntas en el móvil y las muestra si falla la red; (v1.1 · 2026-10-16 · etiqueta de versión visible) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -125,6 +125,8 @@ const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 
 let catActual = 'todos', faqs = [];
 
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
 function toast(msg, tipo=''){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show'+(tipo?' '+tipo:'');
@@ -166,11 +168,11 @@ function renderFaq(){
   list.innerHTML = filtrados.map((f,i)=>`
     <div class="faq-item" id="faq-${i}">
       <div class="faq-q" onclick="toggleFaq(${i})">
-        <div class="faq-q-text">${f.pregunta}</div>
+        <div class="faq-q-text">${esc(f.pregunta)}</div>
         <div class="faq-arrow">›</div>
       </div>
       <div class="faq-a">
-        <div class="faq-a-inner">${f.respuesta}</div>
+        <div class="faq-a-inner">${esc(f.respuesta)}</div>
       </div>
     </div>`).join('');
 }
@@ -222,7 +224,7 @@ async function enviarReporte(){
 
 cargarFaq();
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">faq v1.2</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">faq v1.3</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
