@@ -1,4 +1,4 @@
-<!-- Kirolorik · faq.html · v1.1 · 2026-10-16 · etiqueta de versión visible -->
+<!-- Kirolorik · faq.html · v1.2 · 2026-10-31 · guarda las últimas preguntas en el móvil y las muestra si falla la red; (v1.1 · 2026-10-16 · etiqueta de versión visible) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -137,10 +137,22 @@ async function cargarFaq(){
     const res  = await fetch(`${SB}/rest/v1/faq?activo=eq.true&order=orden.asc`, {
       headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}
     });
-    faqs = await res.json();
+    const data = await res.json();
+    if(!res.ok || !Array.isArray(data)) throw new Error('faq');
+    faqs = data;
+    try{ localStorage.setItem('kb_faq', JSON.stringify(faqs)); }catch(e){}
     renderFaq();
   }catch(e){
-    document.getElementById('faqList').innerHTML='<div class="empty">Error al cargar las preguntas</div>';
+    // Sin red: se muestran las últimas preguntas guardadas
+    let guardadas = null;
+    try{ guardadas = JSON.parse(localStorage.getItem('kb_faq')||'null'); }catch(e2){}
+    if(Array.isArray(guardadas) && guardadas.length){
+      faqs = guardadas;
+      renderFaq();
+      toast('Sin conexión · mostrando las preguntas guardadas');
+    }else{
+      document.getElementById('faqList').innerHTML='<div class="empty">Error al cargar las preguntas</div>';
+    }
   }
 }
 
@@ -210,7 +222,7 @@ async function enviarReporte(){
 
 cargarFaq();
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">faq v1.1</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">faq v1.2</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
