@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/panel.html
-Versión: v1.18
-Fecha: 2026-10-20
+Versión: v1.19
+Fecha: 2026-11-04
 Descripción: Panel de control (admin). v1.14: sección de clics en banners (vista banner_clicks_resumen).
 v1.15: los clics pasan a una pestaña propia "Publicidad" (totales + clics por banner); se quitan de Estadísticas.
 v1.16: etiqueta de versión en la esquina inferior derecha.
 v1.17: etiqueta más corta (#v9).
 v1.18: la sesión caducada (JWT expired) se renueva sola; si no se puede, vuelve al login con aviso.
+v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro del onclick: usan data-id/data-email y un único listener.
 -->
 
 <!DOCTYPE html>
@@ -262,6 +263,17 @@ function teamsOf(userId){
   return allTeams.filter(function(t){return t.user_id===userId});
 }
 
+// Acciones de la lista de usuarios: los datos viajan en data-*, no dentro de código inline
+document.getElementById('usersList').addEventListener('click',function(ev){
+  var b=ev.target.closest?ev.target.closest('button[data-act]'):null;
+  if(!b) return;
+  var id=b.getAttribute('data-id'), email=b.getAttribute('data-email')||'', act=b.getAttribute('data-act');
+  if(act==='reset') openResetPass(id,email);
+  else if(act==='email') openChangeEmail(id,email);
+  else if(act==='ban') banUser(id,email);
+  else if(act==='unban') unbanUser(id);
+});
+
 function renderUsers(){
   var list=document.getElementById('usersList');
   var q=(document.getElementById('searchUser').value||'').toLowerCase();
@@ -283,11 +295,11 @@ function renderUsers(){
       +'</div>'
       +'<div style="margin:8px 0">'+teamsHtml+'</div>'
       +'<div class="user-actions">'
-      +'<button class="ua-btn" onclick="openResetPass(&quot;'+u.id+'&quot;,&quot;'+esc(u.email)+'&quot;)">🔑 Resetear contraseña</button>'
-      +'<button class="ua-btn" onclick="openChangeEmail(&quot;'+u.id+'&quot;,&quot;'+esc(u.email)+'&quot;)">✉️ Cambiar email</button>'
+      +'<button class="ua-btn" data-act="reset" data-id="'+esc(u.id)+'" data-email="'+esc(u.email)+'">🔑 Resetear contraseña</button>'
+      +'<button class="ua-btn" data-act="email" data-id="'+esc(u.id)+'" data-email="'+esc(u.email)+'">✉️ Cambiar email</button>'
       +(banned
-        ?'<button class="ua-btn" onclick="unbanUser(&quot;'+u.id+'&quot;)">✅ Reactivar</button>'
-        :'<button class="ua-btn danger" onclick="banUser(&quot;'+u.id+'&quot;,&quot;'+esc(u.email)+'&quot;)">🚫 Bloquear</button>')
+        ?'<button class="ua-btn" data-act="unban" data-id="'+esc(u.id)+'">✅ Reactivar</button>'
+        :'<button class="ua-btn danger" data-act="ban" data-id="'+esc(u.id)+'" data-email="'+esc(u.email)+'">🚫 Bloquear</button>')
       +'</div>'
       +'</div>';
   }).join('');
