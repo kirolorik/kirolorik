@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.36 · 2026-10-24 · rediseño del admin: Nuevo evento y Borradores con campos de una línea, botones tocables (género, competición, entrada), "Más detalles" plegado y borradores como filas compactas; Vistas: los nombres largos ya no empujan el número de vistas/día fuera de pantalla; equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.37 · 2026-11-07 · lista de eventos con buscador y filtros por club y por equipo (y próximos/pasados); rediseño del admin: Nuevo evento y Borradores con campos de una línea, botones tocables (género, competición, entrada), "Más detalles" plegado y borradores como filas compactas; Vistas: los nombres largos ya no empujan el número de vistas/día fuera de pantalla; equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -274,6 +274,15 @@ tbody td select{cursor:pointer}
 
   <!-- TAB LISTA -->
   <div id="tabList" style="display:none">
+    <div class="u" id="listFiltros">
+      <div class="field"><input type="search" id="lf_q" placeholder="Buscar equipo, evento, municipio, instalación…" oninput="renderLista()" autocomplete="off"></div>
+      <div class="row2">
+        <div class="field"><label>Club</label><select id="lf_club" onchange="onListaClub()"><option value="">Todos los clubes</option></select></div>
+        <div class="field"><label>Equipo</label><select id="lf_equipo" onchange="renderLista()"><option value="">Todos los equipos</option></select></div>
+      </div>
+      <div class="field"><select id="lf_cuando" data-pills onchange="cargarLista()"><option value="proximos">Próximos</option><option value="pasados">Pasados</option></select></div>
+      <div id="lf_info" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin:-4px 0 10px"><span id="lf_count"></span><button type="button" class="mas" style="margin:0" onclick="limpiarFiltrosLista()">Limpiar filtros</button></div>
+    </div>
     <div id="eventosList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
@@ -550,6 +559,7 @@ document.addEventListener('click',function(ev){
 });
 
 convertirEnPills(document.getElementById('tabForm'));
+convertirEnPills(document.getElementById('tabList'));
 
 function toggleMas(btn){
   const body=btn.nextElementSibling;
@@ -1496,35 +1506,141 @@ function abrirEdicionId(id){
   if(e) abrirEdicion(e);
 }
 
+// ── LISTA: buscador y filtros por club y por equipo ──
+let listaEquipos=[];   // todos los equipos activos (id, nombre, club_id) para relacionar eventos con clubes
+let listaEquiposCargados=false;
+
+function clubesParaFiltro(){
+  const isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
+  const lista=isAdmin?Object.keys(clubById).map(function(id){return clubById[id]}):userClubs;
+  return lista.filter(Boolean).sort(function(a,b){return nombreClub(a).localeCompare(nombreClub(b),'es')});
+}
+
+function rellenarFiltroEquipos(){
+  const club=(document.getElementById('lf_club')||{value:''}).value;
+  const sel=document.getElementById('lf_equipo');
+  if(!sel) return;
+  const prev=sel.value;
+  const equipos=listaEquipos.filter(function(t){return !club||t.club_id===club});
+  const grupos={}, orden=[];
+  equipos.forEach(function(t){const k=t.club_id||'_'; if(!grupos[k]){grupos[k]=[];orden.push(k)} grupos[k].push(t)});
+  orden.sort(function(a,b){return clubLabel(a==='_'?null:a).localeCompare(clubLabel(b==='_'?null:b),'es')});
+  sel.innerHTML='<option value="">Todos los equipos</option>'+orden.map(function(k){
+    const ops=grupos[k].sort(function(a,b){return String(a.nombre).localeCompare(String(b.nombre),'es')})
+      .map(function(t){return `<option value="${esc(t.id)}">${esc(t.nombre)}</option>`}).join('');
+    return club?ops:`<optgroup label="${esc(clubLabel(k==='_'?null:k))}">${ops}</optgroup>`;
+  }).join('');
+  sel.value=equipos.some(function(t){return t.id===prev})?prev:'';
+}
+
+async function cargarFiltrosLista(){
+  if(listaEquiposCargados) return;
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?select=id,nombre,club_id&activo=eq.true&order=nombre.asc&limit=1000`,{headers:H()});
+    const d=await res.json();
+    if(!Array.isArray(d)) throw new Error('equipos');
+    listaEquipos=d; listaEquiposCargados=true;
+  }catch(e){ listaEquipos=userTeams.slice(); }
+  const sc=document.getElementById('lf_club');
+  if(sc){
+    const prev=sc.value;
+    sc.innerHTML='<option value="">Todos los clubes</option>'+clubesParaFiltro().map(function(c){return `<option value="${esc(c.id)}">${esc(nombreClub(c))}</option>`}).join('');
+    sc.value=prev;
+  }
+  rellenarFiltroEquipos();
+}
+
+function onListaClub(){ rellenarFiltroEquipos(); renderLista(); }
+
+function limpiarFiltrosLista(){
+  ['lf_q','lf_club','lf_equipo'].forEach(function(id){const el=document.getElementById(id); if(el) el.value='';});
+  rellenarFiltroEquipos(); renderLista();
+}
+
+// Clubes a los que pertenece un evento: organizador, equipo local o visitante (por id o, si no hay id, por el nombre escrito)
+function clubesDeEvento(e){
+  const ids={};
+  if(e.organizador_id) ids[e.organizador_id]=true;
+  [e.equipo_id,e.equipo_visitante_id].forEach(function(id){
+    if(!id) return;
+    const t=listaEquipos.find(function(x){return x.id===id});
+    if(t&&t.club_id) ids[t.club_id]=true;
+  });
+  [e.equipo_local,e.equipo_visitante].forEach(function(n){
+    const nn=normTxt(n); if(!nn) return;
+    const t=listaEquipos.find(function(x){return normTxt(x.nombre)===nn});
+    if(t&&t.club_id) ids[t.club_id]=true;
+  });
+  return Object.keys(ids);
+}
+
+function eventoTieneEquipo(e,tid){
+  if(e.equipo_id===tid||e.equipo_visitante_id===tid) return true;
+  const t=listaEquipos.find(function(x){return x.id===tid});
+  if(!t) return false;
+  const nn=normTxt(t.nombre);
+  return normTxt(e.equipo_local)===nn||normTxt(e.equipo_visitante)===nn;
+}
+
+function eventoCoincide(e,q,club,equipo){
+  if(club&&clubesDeEvento(e).indexOf(club)<0) return false;
+  if(equipo&&!eventoTieneEquipo(e,equipo)) return false;
+  if(q){
+    const clubes=clubesDeEvento(e).map(function(id){return clubLabel(id)}).join(' ');
+    const texto=normTxt([e.nombre_evento,e.equipo_local,e.equipo_visitante,e.municipio,e.instalacion,e.deporte,e.categoria,e.tipo_competicion,clubes].join(' '));
+    const palabras=String(q).split(/\s+/).map(normTxt).filter(Boolean);
+    for(let i=0;i<palabras.length;i++) if(texto.indexOf(palabras[i])<0) return false;
+  }
+  return true;
+}
+
+function renderLista(){
+  const list=document.getElementById('eventosList');
+  const q=(document.getElementById('lf_q')||{value:''}).value;
+  const club=(document.getElementById('lf_club')||{value:''}).value;
+  const equipo=(document.getElementById('lf_equipo')||{value:''}).value;
+  const visibles=listaEventos.filter(function(e){return eventoCoincide(e,q,club,equipo)});
+  const cnt=document.getElementById('lf_count');
+  if(cnt) cnt.textContent=(q||club||equipo)?`${visibles.length} de ${listaEventos.length} eventos`:`${listaEventos.length} evento${listaEventos.length===1?'':'s'}`;
+  if(!listaEventos.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
+  if(!visibles.length){list.innerHTML='<div class="empty-slot">Ningún evento coincide con el filtro</div>';return;}
+  list.innerHTML=visibles.map(e=>{
+    const titulo=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
+    const color=COLORES[e.deporte]||'#64748b';
+    return `<div class="evento-card">
+      <div class="evento-bar" style="background:${color}"></div>
+      <div class="evento-info">
+        <div class="evento-teams">${esc(titulo)}</div>
+        <div class="evento-meta">${esc(e.deporte)} · ${esc(e.categoria||'')} · ${esc(e.fecha)} ${esc((e.hora||'').slice(0,5))} · ${esc(e.municipio||'')}</div>
+        <div style="margin-top:4px">
+          <span class="${e.activo?'badge-activo':'badge-inactivo'}">${e.activo?'Activo':'Inactivo'}</span>
+        </div>
+      </div>
+      <div class="ev-actions">
+        <button class="ev-btn" title="Editar" onclick="abrirEdicionId(${Number(e.id)})">✏️</button>
+        <button class="ev-btn ${e.activo?'on':'off'}" title="${e.activo?'Visible · pulsa para ocultar':'Oculto · pulsa para mostrar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'🙈'}</button>
+        <button class="ev-btn" title="Borrar" onclick="borrar(${Number(e.id)})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function cargarLista(){
   const list=document.getElementById('eventosList');
   try{
-    var isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
-  var filtroUrl=isAdmin?'':'&user_id=eq.'+(authUser?authUser.id:'');
-  var hoy=new Date().toISOString().split('T')[0];
-  const res=await fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&fecha=gte.${hoy}&order=fecha.asc,hora.asc`,{headers:H()});
+    const isAdmin=(authUser&&authUser.email==='kirolorik.app@gmail.com');
+    const filtroUrl=isAdmin?'':'&user_id=eq.'+(authUser?authUser.id:'');
+    const hoy=new Date().toISOString().split('T')[0];
+    const pasados=((document.getElementById('lf_cuando')||{value:'proximos'}).value==='pasados');
+    const consulta=pasados?`fecha=lt.${hoy}&order=fecha.desc,hora.desc&limit=300`:`fecha=gte.${hoy}&order=fecha.asc,hora.asc`;
+    const [res]=await Promise.all([
+      fetch(`${SB_URL}/rest/v1/eventos?select=*${filtroUrl}&${consulta}`,{headers:H()}),
+      cargarFiltrosLista()
+    ]);
     const data=await res.json();
-    if(!data.length){list.innerHTML='<div class="empty-slot">Sin eventos</div>';return;}
+    if(!Array.isArray(data)) throw new Error((data&&data.message)||'Error');
     listaEventos=data;
-    list.innerHTML=data.map(e=>{
-      const titulo=e.nombre_evento||((e.equipo_local||'—')+(e.equipo_visitante?' · '+e.equipo_visitante:''));
-      const color=COLORES[e.deporte]||'#64748b';
-      return `<div class="evento-card">
-        <div class="evento-bar" style="background:${color}"></div>
-        <div class="evento-info">
-          <div class="evento-teams">${esc(titulo)}</div>
-          <div class="evento-meta">${esc(e.deporte)} · ${esc(e.categoria||'')} · ${esc(e.fecha)} ${esc((e.hora||'').slice(0,5))} · ${esc(e.municipio||'')}</div>
-          <div style="margin-top:4px">
-            <span class="${e.activo?'badge-activo':'badge-inactivo'}">${e.activo?'Activo':'Inactivo'}</span>
-          </div>
-        </div>
-        <div class="ev-actions">
-          <button class="ev-btn" title="Editar" onclick="abrirEdicionId(${Number(e.id)})">✏️</button>
-          <button class="ev-btn ${e.activo?'on':'off'}" title="${e.activo?'Visible · pulsa para ocultar':'Oculto · pulsa para mostrar'}" onclick="toggleActivo(${Number(e.id)},${!!e.activo})">${e.activo?'👁️':'🙈'}</button>
-          <button class="ev-btn" title="Borrar" onclick="borrar(${Number(e.id)})">🗑️</button>
-        </div>
-      </div>`;
-    }).join('');
+    renderLista();
   }catch(e){list.innerHTML=`<div class="empty-slot" style="color:#dc2626">Error al cargar</div>`;}
 }
 
@@ -1566,7 +1682,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.36</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.37</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
