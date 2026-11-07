@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/panel.html
-Versión: v1.19
-Fecha: 2026-11-04
+Versión: v1.20
+Fecha: 2026-11-07
 Descripción: Panel de control (admin). v1.14: sección de clics en banners (vista banner_clicks_resumen).
 v1.15: los clics pasan a una pestaña propia "Publicidad" (totales + clics por banner); se quitan de Estadísticas.
 v1.16: etiqueta de versión en la esquina inferior derecha.
 v1.17: etiqueta más corta (#v9).
 v1.18: la sesión caducada (JWT expired) se renueva sola; si no se puede, vuelve al login con aviso.
+v1.20: sesión persistente con casilla «Mantener sesión iniciada» (sesion.js) y botón «Cerrar sesión».
 v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro del onclick: usan data-id/data-email y un único listener.
 -->
 
@@ -68,6 +69,7 @@ v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro d
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px">
     <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@kirolorik.app"></div>
     <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer"><input type="checkbox" id="loginRecordar" checked style="width:auto;margin:0"> Mantener sesión iniciada</label>
     <div id="loginError" style="font-size:12px;color:#dc2626;min-height:16px"></div>
     <button style="background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif" id="loginBtn" onclick="login()">Entrar</button>
   </div>
@@ -91,6 +93,7 @@ v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro d
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="window.location.href='/'" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">← Inicio</button>
       <button onclick="window.location.href='/admin/eventos.html'" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">📋 Eventos</button>
+      <button onclick="KBS.cerrar(SB_URL,SB_KEY,'kb_admin',function(){window.location.href='/'})" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
     </div>
   </div>
 
@@ -121,6 +124,7 @@ v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro d
 
 <div class="toast" id="toast"></div>
 
+<script src="/assets/js/sesion.js"></script>
 <script>
 const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
@@ -141,18 +145,21 @@ function jwtExp(t){
 }
 function refrescarSesion(){
   if(refrescando) return refrescando;
-  var rt=sessionStorage.getItem('kb_admin_refresh');
-  if(!rt) return Promise.resolve(false);
-  refrescando=_fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{
-    method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
-  }).then(function(r){return r.ok?r.json():null}).then(function(d){
-    if(!d||!d.access_token) return false;
-    authToken=d.access_token;
-    try{
-      sessionStorage.setItem('kb_admin_token',authToken);
-      if(d.refresh_token) sessionStorage.setItem('kb_admin_refresh',d.refresh_token);
-    }catch(e){}
-    return true;
+  refrescando=KBS.lock('kb_admin_refresh',function(){
+    // otra pestaña pudo renovar ya la sesión: se usa su token
+    var tk=KBS.get('kb_admin_token');
+    if(tk&&tk!==authToken&&jwtExp(tk)-Date.now()>60000){ authToken=tk; return true; }
+    var rt=KBS.get('kb_admin_refresh');
+    if(!rt) return false;
+    return _fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
+    }).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(!d||!d.access_token) return false;
+      authToken=d.access_token;
+      KBS.set('kb_admin_token',authToken);
+      if(d.refresh_token) KBS.set('kb_admin_refresh',d.refresh_token);
+      return true;
+    });
   }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
   return refrescando;
 }
@@ -171,7 +178,7 @@ function renovarSiHaceFalta(){ if(authToken&&jwtExp(authToken)-Date.now()<5*6000
 setInterval(renovarSiHaceFalta,60000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
 function sesionCaducada(){
-  ['kb_admin_token','kb_admin_user','kb_admin_refresh'].forEach(function(k){try{sessionStorage.removeItem(k)}catch(e){}});
+  KBS.clear('kb_admin');
   authToken=null; authUser=null;
   document.getElementById('adminScreen').style.display='none';
   document.getElementById('deniedScreen').style.display='none';
@@ -208,9 +215,10 @@ async function login(){
     }
     authToken=data.access_token;
     authUser=data.user;
-    sessionStorage.setItem('kb_admin_token',authToken);
-    sessionStorage.setItem('kb_admin_user',JSON.stringify(authUser));
-    if(data.refresh_token) sessionStorage.setItem('kb_admin_refresh',data.refresh_token);
+    KBS.setPersist(!!(document.getElementById('loginRecordar')||{checked:true}).checked,'kb_admin');
+    KBS.set('kb_admin_token',authToken);
+    KBS.set('kb_admin_user',JSON.stringify(authUser));
+    if(data.refresh_token) KBS.set('kb_admin_refresh',data.refresh_token);
     mostrarAdmin();
   }catch(e){
     err.textContent=e.message;
@@ -515,8 +523,8 @@ async function loadPubli(){
 }
 
 // ── INIT ──
-var savedToken=sessionStorage.getItem('kb_admin_token');
-var savedUser=sessionStorage.getItem('kb_admin_user');
+var savedToken=KBS.get('kb_admin_token');
+var savedUser=KBS.get('kb_admin_user');
 if(savedToken&&savedUser){
   authToken=savedToken;
   try{ authUser=JSON.parse(savedUser); }catch(e){ authUser=null; }
@@ -533,7 +541,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.18</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.20</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

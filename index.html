@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.41
-Fecha: 2026-10-31
+Versión: v6.42
+Fecha: 2026-11-07
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.42: sesión persistente con casilla «Mantener sesión iniciada» (sesion.js).
 v6.41: el aviso de sin conexión explica que puede ser un bloqueo del operador y enlaza a la FAQ.
 -->
 
@@ -51,6 +52,7 @@ v6.41: el aviso de sin conexión explica que puede ser un bloqueo del operador y
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css">
+<script src="/assets/js/sesion.js"></script>
 <script src="/assets/js/i18n.js"></script>
 <style>
 .lang-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:var(--text);outline:none;cursor:pointer;height:32px}
@@ -722,7 +724,7 @@ function renderProf(){
     if(modoRec){
       b.innerHTML='<div class="prof-login"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Recuperar contraseña</div><div class="field"><label>Email</label><input type="email" id="recMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="login-err" id="recErr"></div><button class="btn-kick" onclick="sendRec()">Enviar enlace ⚽</button><div class="login-link" onclick="modoRec=false;renderProf()">← Volver</div></div>';
     }else{
-      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="" onkeydown="if(event.key===\'Enter\')doLogin()"></div><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
+      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="" onkeydown="if(event.key===\'Enter\')doLogin()"></div><label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:2px 0 6px;cursor:pointer"><input type="checkbox" id="loginRecordar" checked style="width:auto;margin:0"><span data-i18n="prof.recordar">Mantener sesión iniciada</span></label><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
     }
   }
 }
@@ -732,10 +734,10 @@ function doLogin(){
   var em=document.getElementById('loginMail'),pw=document.getElementById('loginPass'),er=document.getElementById('loginErr'),bt=document.getElementById('loginBtn');
   if(!em||!pw)return;if(!em.value.trim()||!pw.value){if(er)er.textContent=t('prof.error_campos');return}
   if(bt){bt.disabled=true;bt.textContent='...'}
-  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{sessionStorage.setItem('kb_token',authToken);sessionStorage.setItem('kb_user',JSON.stringify(authUser));if(d.refresh_token)sessionStorage.setItem('kb_refresh',d.refresh_token)}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
+  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{var rc=document.getElementById('loginRecordar');KBS.setPersist(!rc||rc.checked,'kb');KBS.set('kb_token',authToken);KBS.set('kb_user',JSON.stringify(authUser));if(d.refresh_token)KBS.set('kb_refresh',d.refresh_token)}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
 }
 function sendRec(){var em=document.getElementById('recMail'),er=document.getElementById('recErr');if(!em||!em.value.trim()){if(er)er.textContent='Introduce tu email';return}fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim()})}).then(function(){if(er){er.style.color='#16a34a';er.textContent=t('prof.check_correo')}}).catch(function(e){if(er)er.textContent=e.message})}
-function doLogout(){fetch(SB+'/auth/v1/logout',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+authToken}}).catch(function(){});authUser=null;authToken=null;try{sessionStorage.removeItem('kb_token');sessionStorage.removeItem('kb_user');sessionStorage.removeItem('kb_refresh')}catch(e){}renderProf();closeProf()}
+function doLogout(){KBS.cerrar(SB,SK,'kb');authUser=null;authToken=null;renderProf();closeProf()}
 function goTo(url){closeProf();window.location.href=url}
 
 // BANNERS
@@ -763,7 +765,7 @@ function closeAll(){closeDet();closeProf();closeMun()}
 // INIT
 try{var sl=localStorage.getItem('kb_lang');if(sl)lang=sl}catch(e){}
 try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm}catch(e){}
-try{var st=sessionStorage.getItem('kb_token'),su=sessionStorage.getItem('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
+try{var st=KBS.get('kb_token'),su=KBS.get('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
 document.getElementById('langSel').value=lang;
 document.getElementById('locText').textContent=muni||t('nav.municipios');
 applyLang();
@@ -793,7 +795,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.41</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.42</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
