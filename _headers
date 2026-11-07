@@ -1,0 +1,21 @@
+# Proyecto: Kirolorik
+# Archivo: _headers (raíz del repo, Cloudflare Pages)
+# Versión: v0.02
+# Fecha: 2026-11-04
+# Explicación: Cabeceras de seguridad. La CSP mantiene 'unsafe-inline' porque la app usa
+#   scripts y onclick inline; aun así bloquea framing, <base>, plugins, envío de formularios
+#   a terceros y conexiones a dominios no previstos. Probar en develop.kirolorik.pages.dev.
+#   v0.02: img-src admite blob: (vista previa de imágenes del admin con URL.createObjectURL).
+#   Si algo no carga, mirar la consola (errores "Refused to ...") y ampliar solo ese dominio.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://glscnwctcvrosmbrljns.supabase.co; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+/admin/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex

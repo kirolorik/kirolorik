@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.17 · 2026-10-24 · el equipo se define con división, nombre propio y tipo, y el nombre se compone solo; nombre corto del club; deportes nuevos; la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
+<!-- Kirolorik · perfil.html · v2.18 · 2026-11-07 · sesión persistente (sesion.js: lee y renueva la sesión donde esté guardada); (v2.17 · 2026-10-24 · el equipo se define con división, nombre propio y tipo, y el nombre se compone solo; nombre corto del club; deportes nuevos; la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -330,6 +330,7 @@ a{color:var(--accent)}
 
 <div class="toast" id="toast"></div>
 
+<script src="/assets/js/sesion.js"></script>
 <script>
 const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
@@ -349,18 +350,21 @@ function jwtExp(t){
 }
 function refrescarSesion(){
   if(refrescando) return refrescando;
-  var rt=sessionStorage.getItem('kb_refresh');
-  if(!rt) return Promise.resolve(false);
-  refrescando=_fetchOriginal(SB+'/auth/v1/token?grant_type=refresh_token',{
-    method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
-  }).then(function(r){return r.ok?r.json():null}).then(function(d){
-    if(!d||!d.access_token) return false;
-    tok=d.access_token;
-    try{
-      sessionStorage.setItem('kb_token',tok);
-      if(d.refresh_token) sessionStorage.setItem('kb_refresh',d.refresh_token);
-    }catch(e){}
-    return true;
+  refrescando=KBS.lock('kb_refresh',function(){
+    // otra pestaña pudo renovar ya la sesión: se usa su token
+    var tk=KBS.get('kb_token');
+    if(tk&&tk!==tok&&jwtExp(tk)-Date.now()>60000){ tok=tk; return true; }
+    var rt=KBS.get('kb_refresh');
+    if(!rt) return false;
+    return _fetchOriginal(SB+'/auth/v1/token?grant_type=refresh_token',{
+      method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
+    }).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(!d||!d.access_token) return false;
+      tok=d.access_token;
+      KBS.set('kb_token',tok);
+      if(d.refresh_token) KBS.set('kb_refresh',d.refresh_token);
+      return true;
+    });
   }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
   return refrescando;
 }
@@ -379,7 +383,7 @@ function renovarSiHaceFalta(){ if(tok&&jwtExp(tok)-Date.now()<5*60000) refrescar
 setInterval(renovarSiHaceFalta,60000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
 function sesionCaducada(){
-  ['kb_token','kb_user','kb_refresh'].forEach(function(k){try{sessionStorage.removeItem(k)}catch(e){}});
+  KBS.clear('kb');
   tok=null; user=null;
   document.getElementById('noLogin').style.display='flex';
   document.getElementById('perfilContent').style.display='none';
@@ -796,17 +800,14 @@ async function confirmarBaja(){
     closeModal('mBaja');
     toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
     setTimeout(() => {
-      sessionStorage.removeItem('kb_token');
-      sessionStorage.removeItem('kb_user');
-      sessionStorage.removeItem('kb_refresh');
-      window.location.href = '/';
+      KBS.cerrar(SB, KEY, 'kb', function(){ window.location.href = '/'; });
     }, 3000);
   } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
 }
 
 // ── INIT ──
-tok  = sessionStorage.getItem('kb_token');
-const savedUser = sessionStorage.getItem('kb_user');
+tok  = KBS.get('kb_token');
+const savedUser = KBS.get('kb_user');
 
 if(!tok || !savedUser){
   document.getElementById('noLogin').style.display    = 'flex';
@@ -827,7 +828,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.17</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.18</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

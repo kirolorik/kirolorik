@@ -1,4 +1,4 @@
-// Kirolorik · i18n.js · v1.3 · 2026-10-31 · ayuda en el aviso de «sin conexión» (posible bloqueo del operador) · (v1.2 · textos de «sin conexión» · v1.1 · 2026-05-22)
+// Kirolorik · i18n.js · v1.4 · 2026-11-07 · texto «Mantener sesión iniciada» · (v1.3 · 2026-10-31 · ayuda en el aviso de «sin conexión» (posible bloqueo del operador) · (v1.2 · textos de «sin conexión» · v1.1 · 2026-05-22)
 // Sistema de traducciones centralizado.
 // Añadir un idioma nuevo = añadir un bloque más en I18N.
 // Uso: t('key') → string en el idioma activo (var lang debe existir globalmente)
@@ -69,6 +69,7 @@ var I18N = {
     'prof.email':              'Email',
     'prof.password':           'Password',
     'prof.entrar':             'Entra',
+    'prof.recordar':           'Mantener sesión iniciada',
     'prof.recuperar_titulo':   'Recuperar contraseña',
     'prof.enviar_enlace':      'Enviar enlace ⚽',
     'prof.volver':             '← Volver',
@@ -160,6 +161,7 @@ var I18N = {
     'prof.email':              'Email',
     'prof.password':           'Pasahitza',
     'prof.entrar':             'Sartu',
+    'prof.recordar':           'Saioa irekita mantendu',
     'prof.recuperar_titulo':   'Pasahitza berreskuratu',
     'prof.enviar_enlace':      'Esteka bidali ⚽',
     'prof.volver':             '← Itzuli',
