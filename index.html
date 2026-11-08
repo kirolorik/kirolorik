@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.46
-Fecha: 2026-11-08
+Versión: v6.47
+Fecha: 2026-11-09
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.47: con «Todos los municipios» (sin pueblo elegido) solo salen los banners de «todos los pueblos»: ni los de pueblos concretos ni los de los visitantes (así se respeta la exclusividad). Se recargan al cambiar de modo.
 v6.46: los clics de banner solo se cuentan con registrar_evento_banner (se quita la escritura temporal en banner_clicks).
 v6.45: no se cuentan las visitas, vistas de evento, vistas, aperturas ni clics de banner de quien tiene sesión iniciada ni de los dispositivos donde alguien inició sesión alguna vez (admin, gestores de clubes, anunciantes).
 v6.44: si el pueblo no tiene anunciantes propios, se muestran los de los pueblos de los equipos visitantes de los partidos que se ven (p. ej. partido en Donosti contra un equipo de Eibar → anunciantes de Eibar). Los de «todos los pueblos» salen siempre.
@@ -408,6 +409,7 @@ function filterClubSel(sel){
       if(chips[i].getAttribute('data-fecha')===fechaSel)chips[i].classList.add('today');
     }
   }
+  adVisitantes=[];adVisitantesKey='';loadAds();
   loadGrid();
 }
 
@@ -761,6 +763,7 @@ function loadAds(){
 // Anunciantes del pueblo; si no hay ninguno, los de los pueblos de los visitantes. Los de «todos los pueblos» salen siempre.
 function elegirAnuncios(data){
   var todos=data.filter(function(b){return !b.municipio});
+  if(!muni)return todos;   // sin pueblo elegido: solo los de «todos los pueblos»
   var locales=data.filter(function(b){return b.municipio&&muni&&String(b.municipio).toLowerCase()===muni.toLowerCase()});
   var visit=data.filter(function(b){return b.municipio&&(!muni||String(b.municipio).toLowerCase()!==muni.toLowerCase())});
   return todos.concat(locales.length?locales:visit);
@@ -768,7 +771,7 @@ function elegirAnuncios(data){
 // Pueblo de los equipos visitantes de los partidos que se ven (solo se conoce si el visitante es uno de los equipos de Kirolorik)
 function ajustarAnuncios(evs){
   var ids={};
-  (evs||[]).forEach(function(e){if(e.equipo_visitante_id)ids[e.equipo_visitante_id]=true});
+  if(muni)(evs||[]).forEach(function(e){if(e.equipo_visitante_id)ids[e.equipo_visitante_id]=true});
   var faltan=Object.keys(ids).filter(function(id){return !(id in munEquipo)});
   function fin(){
     var set={};
@@ -854,7 +857,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.46</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.47</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
