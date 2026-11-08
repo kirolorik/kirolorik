@@ -1,7 +1,7 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.43
+Versión: v6.44
 Fecha: 2026-11-08
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.44: si el pueblo no tiene anunciantes propios, se muestran los de los pueblos de los equipos visitantes de los partidos que se ven (p. ej. partido en Donosti contra un equipo de Eibar → anunciantes de Eibar). Los de «todos los pueblos» salen siempre.
 v6.43: publicidad. Los banners salen de la vista banners_publicos: solo los que están en vigor hoy (fechas) en el pueblo elegido o en todos; se cuentan vistas, aperturas del panel y clics con registrar_evento_banner.
 v6.42: sesión persistente con casilla «Mantener sesión iniciada» (sesion.js).
 v6.41: el aviso de sin conexión explica que puede ser un bloqueo del operador y enlaza a la FAQ.
@@ -493,7 +494,7 @@ function loadGrid(){
   }).then(function(data){
     if(mySeq!==gridSeq)return;
     avisoOffline(g,!data);
-    if(!data||!data.length){g.innerHTML='<div class="empty-slot">'+t(offlineEv&&!data?'grid.sin_conexion':'grid.sin_eventos')+'</div>';return}
+    if(!data||!data.length){g.innerHTML='<div class="empty-slot">'+t(offlineEv&&!data?'grid.sin_conexion':'grid.sin_eventos')+'</div>';ajustarAnuncios([]);return}
     var now=new Date();
     var filtered=[];
     for(var i=0;i<data.length;i++){
@@ -524,7 +525,7 @@ function loadGrid(){
         for(var i=0;i<data.length;i++){if(data[i].fecha===nextDay)filtered.push(data[i]);}
       }
     }
-    evCache=filtered;
+    evCache=filtered;ajustarAnuncios(filtered);
     if(!filtered.length){
       // Si filtramos por día y no hay eventos, saltar al próximo día con eventos
       if(_gridFechaSel&&data.length){
@@ -541,7 +542,7 @@ function loadGrid(){
           loadGrid();return;
         }
       }
-      g.innerHTML='<div class="empty-slot">'+t('grid.sin_eventos')+'</div>';return;
+      g.innerHTML='<div class="empty-slot">'+t('grid.sin_eventos')+'</div>';ajustarAnuncios([]);return;
     }
     var curTime=nm(),hoy=td();
     g.innerHTML='';
@@ -707,7 +708,7 @@ function populateClubSelect(){
   }).catch(function(){});
 }
 
-function selMun(name){muni=name;if(fechaSel)setFechaSel(hoyISO);try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name||t('nav.municipios');closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';loadGrid();loadAds()}
+function selMun(name){muni=name;if(fechaSel)setFechaSel(hoyISO);try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name||t('nav.municipios');closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';adVisitantes=[];adVisitantesKey='';loadGrid();loadAds()}
 
 // PERFIL
 function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
@@ -743,14 +744,43 @@ function goTo(url){closeProf();window.location.href=url}
 
 // BANNERS
 // Colocaciones en vigor hoy en el pueblo elegido (o en todos los pueblos): vista banners_publicos
-var adSilencio=false,adMarcados={};
+var adSilencio=false,adMarcados={},adVisitantes=[],adVisitantesKey='',munEquipo={};
 function loadAds(){
-  var url=SB+'/rest/v1/banners_publicos?select=*&order=orden.asc';
-  url+=muni?'&or=(municipio.is.null,municipio.eq.'+encodeURIComponent(muni)+')':'&municipio=is.null';
+  // candidatos: todos los pueblos + el pueblo elegido + los pueblos de los equipos visitantes de los partidos que se ven
+  var filtros=['municipio.is.null'];
+  if(muni)filtros.push('municipio.eq.'+encodeURIComponent(muni));
+  if(adVisitantes.length)filtros.push('municipio.in.('+adVisitantes.map(function(m){return '"'+encodeURIComponent(m)+'"'}).join(',')+')');
+  var url=SB+'/rest/v1/banners_publicos?select=*&order=orden.asc&or=('+filtros.join(',')+')';
   fetch(url,{headers:H}).then(function(r){return r.json()}).then(function(data){
     if(!Array.isArray(data))throw new Error('banners');
-    mostrarAds(data);
+    mostrarAds(elegirAnuncios(data));
   }).catch(function(){});
+}
+// Anunciantes del pueblo; si no hay ninguno, los de los pueblos de los visitantes. Los de «todos los pueblos» salen siempre.
+function elegirAnuncios(data){
+  var todos=data.filter(function(b){return !b.municipio});
+  var locales=data.filter(function(b){return b.municipio&&muni&&String(b.municipio).toLowerCase()===muni.toLowerCase()});
+  var visit=data.filter(function(b){return b.municipio&&(!muni||String(b.municipio).toLowerCase()!==muni.toLowerCase())});
+  return todos.concat(locales.length?locales:visit);
+}
+// Pueblo de los equipos visitantes de los partidos que se ven (solo se conoce si el visitante es uno de los equipos de Kirolorik)
+function ajustarAnuncios(evs){
+  var ids={};
+  (evs||[]).forEach(function(e){if(e.equipo_visitante_id)ids[e.equipo_visitante_id]=true});
+  var faltan=Object.keys(ids).filter(function(id){return !(id in munEquipo)});
+  function fin(){
+    var set={};
+    Object.keys(ids).forEach(function(id){var m=munEquipo[id];if(m&&(!muni||m.toLowerCase()!==muni.toLowerCase()))set[m]=true});
+    var lista=Object.keys(set).sort(),k=lista.join('|');
+    if(k===adVisitantesKey)return;
+    adVisitantes=lista;adVisitantesKey=k;loadAds();
+  }
+  if(!faltan.length){fin();return}
+  fetch(SB+'/rest/v1/mis_equipos?select=id,municipio&id=in.('+faltan.map(encodeURIComponent).join(',')+')',{headers:H}).then(function(r){return r.json()}).then(function(d){
+    faltan.forEach(function(id){munEquipo[id]=''});
+    (Array.isArray(d)?d:[]).forEach(function(t){munEquipo[t.id]=t.municipio||''});
+    fin();
+  }).catch(function(){fin()});
 }
 function mostrarAds(data){
   adList=data||[];adIdx=0;
@@ -789,6 +819,13 @@ function registrarClicBanner(){
   if(b.banner_id){try{fetch(SB+'/rest/v1/banner_clicks',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({banner_id:b.banner_id})}).catch(function(){});}catch(err){}}
 }
 
+function closeAll(){closeDet();closeProf();closeMun()}
+
+// INIT
+try{var sl=localStorage.getItem('kb_lang');if(sl)lang=sl}catch(e){}
+try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm}catch(e){}
+try{var st=KBS.get('kb_token'),su=KBS.get('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
+document.getElementById('langSel').value=lang;
 document.getElementById('locText').textContent=muni||t('nav.municipios');
 applyLang();
 buildDates();
@@ -817,7 +854,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.43</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.44</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
