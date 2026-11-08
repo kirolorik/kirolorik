@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/publicidad.html
-Versión: v1.04
-Fecha: 2026-11-12
+Versión: v1.05
+Fecha: 2026-11-14
 Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
 (por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
 (pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
@@ -16,6 +16,7 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
 v1.03: pestaña Solicitudes (solicitudes de visibilidad de los anunciantes: aprobar con fechas calculadas según el plan, o rechazar con
 motivo; solicitudes de pueblo nuevo) y botón «Acceso» en cada anunciante (crear usuario, vincular uno existente, ver y quitar accesos),
 que usa la función admin-users v1.1.
+v1.05: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores). El botón «Panel» va a /admin/admin.html.
 v1.04: la revisión del contenido del banner es un paso independiente de la solicitud de visibilidad: en Solicitudes aparecen «Banners por
 revisar» (aprobar o rechazar con motivo) y no se puede aprobar la visibilidad de un banner cuyo contenido no esté aprobado (migración
 2026-11-12).
@@ -151,7 +152,7 @@ revisar» (aprobar o rechazar con motivo) y no se puede aprobar la visibilidad d
       <div class="admin-sub">Publicidad</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-      <button class="hdr-btn" onclick="window.location.href='/admin/panel.html'">Panel</button>
+      <button class="hdr-btn" onclick="window.location.href='/admin/admin.html'">Panel</button>
       <button class="hdr-btn" onclick="window.location.href='/admin/eventos.html'">Eventos</button>
       <button class="hdr-btn" onclick="KBS.cerrar(SB_URL,SB_KEY,'kb_admin',function(){window.location.href='/'})">Cerrar sesión</button>
     </div>
@@ -391,10 +392,10 @@ async function cargarTodo(){
     ]);
     ANUN=r[0]; BAN=r[1]; COL=r[2]; MUN=r[3]; TIPOS=r[4]; MET=r[5]; TARIFAS=r[6];
     try{
-      var rb=await Promise.all([getAll('disenos_banner?select=*&order=created_at.desc'),getAll('facturas?select=*&order=fecha.desc,created_at.desc'),getAll('disenadores?select=*&order=nombre.asc')]);
+      var rb=await Promise.all([getAll('banner_disenos?select=*&order=created_at.desc'),getAll('anunciante_facturas?select=*&order=fecha.desc,created_at.desc'),getAll('disenadores?select=*&order=nombre.asc')]);
       DIS=rb[0]; FAC=rb[1]; DISENADORES=rb[2]; faseB=true;
     }catch(e){ DIS=[]; FAC=[]; DISENADORES=[]; faseB=false; }
-    try{ SOLP=await getAll('solicitudes_pueblo?select=*&order=created_at.desc'); faseC=true; }catch(e){ SOLP=[]; faseC=false; }
+    try{ SOLP=await getAll('anunciante_solicitudes?select=*&order=created_at.desc'); faseC=true; }catch(e){ SOLP=[]; faseC=false; }
     ANUN_BY=indexar(ANUN,'id'); BAN_BY=indexar(BAN,'id'); COL_BY=indexar(COL,'id'); MUN_BY=indexar(MUN,'id'); TIPO_BY=indexar(TIPOS,'id');
     MET_BY={}; MET.forEach(function(m){ (MET_BY[m.colocacion_id]=MET_BY[m.colocacion_id]||[]).push(m); });
     rellenarFiltros();
@@ -726,7 +727,7 @@ async function guardarBanner(id){
     if(!res.ok) throw new Error((d&&d.message)||'Error al guardar');
     var nuevoId=id||(d&&d[0]?d[0].id:null);
     if(!id&&nuevoId&&window._disenoActual){
-      try{ await fetch(SB_URL+'/rest/v1/disenos_banner?id=eq.'+encodeURIComponent(window._disenoActual),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({banner_id:nuevoId})}); }catch(e){}
+      try{ await fetch(SB_URL+'/rest/v1/banner_disenos?id=eq.'+encodeURIComponent(window._disenoActual),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({banner_id:nuevoId})}); }catch(e){}
       window._disenoActual=null;
     }
     toast('Banner guardado'); await cargarTodo();
@@ -1014,7 +1015,7 @@ async function guardarDiseno(id){
     var datos={anunciante_id:anun,briefing:brief,referencias:val('ds_ref')||null,origen:origen,disenador_id:origen==='disenador'?(dis||null):null,estado:val('ds_estado'),precio:val('ds_precio')!==''?parseFloat(val('ds_precio')):null,notas:val('ds_notas')||null};
     var f=document.getElementById('ds_img'); f=f&&f.files&&f.files[0];
     if(f) datos.entrega_url=await subirImagenBanner(f);
-    var res=await fetch(SB_URL+'/rest/v1/disenos_banner'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
     if(!res.ok) throw new Error(await res.text());
     cerrarModal(); toast('Solicitud guardada'); await cargarTodo();
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
@@ -1022,7 +1023,7 @@ async function guardarDiseno(id){
 async function estadoDiseno(id,estado){
   if(estado==='cancelado'&&!confirm('¿Cancelar esta solicitud de diseño?')) return;
   try{
-    var res=await fetch(SB_URL+'/rest/v1/disenos_banner?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado})});
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado})});
     if(!res.ok) throw new Error(await res.text());
     toast('Estado actualizado'); await cargarTodo();
   }catch(e){ toast('Error: '+e.message,true); }
@@ -1123,7 +1124,7 @@ async function guardarFactura(id){
   var btn=document.getElementById('fc_guardar'); btn.disabled=true;
   try{
     var datos={anunciante_id:anun,numero:val('fc_num')||null,fecha:val('fc_fecha')||hoyISO(),concepto:val('fc_concepto')||null,base_imponible:num('fc_base'),iva_importe:num('fc_iva'),importe_total:parseFloat(total),estado:val('fc_estado'),url_documento:url||null,notas:val('fc_notas')||null};
-    var res=await fetch(SB_URL+'/rest/v1/facturas'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_facturas'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
     if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('facturas_numero_uq')>=0?'Ya existe una factura con ese número':t); }
     cerrarModal(); toast('Factura guardada'); await cargarTodo();
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
@@ -1263,7 +1264,7 @@ async function resolverPueblo(id,aceptar){
         if(!r.ok) throw new Error(await r.text());
       }
     }
-    var res=await fetch(SB_URL+'/rest/v1/solicitudes_pueblo?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:aceptar?'anadido':'rechazado'})});
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_solicitudes?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:aceptar?'anadido':'rechazado'})});
     if(!res.ok) throw new Error(await res.text());
     toast(aceptar?'Pueblo añadido':'Solicitud rechazada'); await cargarTodo();
   }catch(e){ toast('Error: '+e.message,true); }
@@ -1392,7 +1393,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.04</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.05</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
