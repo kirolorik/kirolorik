@@ -1,13 +1,16 @@
 <!--
 Proyecto: Kirolorik
 Archivo: pages/anunciantes.html
-Versión: v1.00
-Fecha: 2026-11-11
+Versión: v1.01
+Fecha: 2026-11-12
 Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
 editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
 Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
 pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
 2026-11-11.
+v1.01: crear el banner y pedir visibilidad son pasos independientes. Los banners se crean en borrador, se envían a revisión cuando se quiera y,
+una vez aprobados, se solicita la visibilidad (pueblo, plan y renovación) más adelante; se pueden tener varios banners en cualquier
+estado (migración 2026-11-12).
 -->
 <!DOCTYPE html>
 <html lang="es">
@@ -119,7 +122,7 @@ pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. U
       <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseño</div>
     </div>
     <div id="tabBan">
-      <div class="nota">Crea tu banner y, cuando lo tengas, pulsa <b>«Solicitar visibilidad»</b>: elige el pueblo, el plan (mensual, trimestral o anual) y cómo quieres renovarlo. Kirolorik revisa tu banner y tu solicitud; al aprobarla se fijan las fechas según el plan. Los precios se te indican al aprobarla.</div>
+      <div class="nota"><b>Dos pasos.</b> <b>1.</b> Crea tus banners (puedes tener varios) y envíalos a revisión cuando estén listos: Kirolorik revisa el contenido. <b>2.</b> Cuando un banner esté aprobado, y cuando tú quieras, pulsa <b>«Solicitar visibilidad»</b>: elige pueblo, plan (mensual, trimestral o anual) y renovación. Al aprobar la solicitud se fijan las fechas según el plan y se te indica el precio.</div>
       <div class="bar"><button class="btn-main" data-act="nuevo-banner">＋ Nuevo banner</button></div>
       <div id="bannersList"><div class="empty-slot">Cargando...</div></div>
     </div>
@@ -295,6 +298,7 @@ function cambiarTab(t){
 }
 
 // ── MIS BANNERS ──
+const ESTADOS_CONT={borrador:['Borrador','b-muted'],revision:['En revisión','b-pur'],aprobado:['Aprobado','b-ok'],rechazado:['Rechazado','b-bad']};
 const PERIODOS={mes:'Mensual · 1 mes',trimestre:'Trimestral · 3 meses','año':'Anual · 12 meses'};
 function planDe(c){ var p=c.tarifa_id?PLANES.filter(function(x){return x.id===c.tarifa_id})[0]:null; return p?(PERIODOS[p.periodo]||p.plan):''; }
 function nombrePueblo(c){ var m=c.municipio_id?MUN.filter(function(x){return x.id===c.municipio_id})[0]:null; return c.municipio_id?(m?m.nombre:'Pueblo'):'Todos los pueblos'; }
@@ -320,7 +324,7 @@ function renderBanners(){
   if(!BAN.length){ cont.innerHTML='<div class="empty-slot">Aún no tienes banners. Crea el primero con «Nuevo banner».</div>'; return; }
   cont.innerHTML=BAN.map(function(b){
     var lineas=COL.filter(function(c){return c.banner_id===b.id}), pub=publicado(b), img=enlaceHttps(b.imagen_url);
-    var cabecera=pub?['Publicado','b-ok']:['Borrador','b-muted'];
+    var cabecera=pub?['Publicado','b-ok']:(ESTADOS_CONT[b.estado_contenido]||ESTADOS_CONT.borrador);
     var hijas=lineas.map(function(c){
       var e=estadoLinea(c), t=sumar(c), ctr=t.v>0?(t.c*100/t.v).toFixed(1)+'%':'—';
       var fechas=c.fecha_inicio?('📅 '+fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin')):'📅 Las fechas se fijan al aprobarla';
@@ -330,13 +334,24 @@ function renderBanners(){
         +(['confirmada','pausada'].indexOf(c.estado)>=0?'<div class="mets"><span>👁 <b>'+t.v+'</b> vistas</span><span>📖 <b>'+t.a+'</b> aperturas</span><span>👆 <b>'+t.c+'</b> clics</span><span>CTR <b>'+ctr+'</b></span></div>':'')
         +(c.estado==='revision'?'<div class="acts"><button class="danger" data-act="cancelar-sol" data-id="'+esc(c.id)+'">Cancelar solicitud</button></div>':'')+'</div>';
     }).join('');
-    var acts='';
-    if(!pub) acts+='<button data-act="editar-banner" data-id="'+esc(b.id)+'">✏️ Editar contenido</button>';
-    acts+='<button data-act="solicitar" data-id="'+esc(b.id)+'">🚀 Solicitar visibilidad</button>';
+    var acts='', ec=b.estado_contenido||'borrador';
+    if(!pub){
+      if(ec==='revision') acts+='<button data-act="a-borrador" data-id="'+esc(b.id)+'">↩ Volver a borrador</button>';
+      else{
+        acts+='<button data-act="editar-banner" data-id="'+esc(b.id)+'">✏️ Editar contenido</button>';
+        if(ec==='borrador'||ec==='rechazado') acts+='<button data-act="enviar-revision" data-id="'+esc(b.id)+'">📤 Enviar a revisión</button>';
+      }
+    }
+    if(ec==='aprobado') acts+='<button data-act="solicitar" data-id="'+esc(b.id)+'">🚀 Solicitar visibilidad</button>';
     if(!lineas.some(function(c){return c.estado!=='revision'})) acts+='<button class="danger" data-act="borrar-banner" data-id="'+esc(b.id)+'">Borrar</button>';
+    var avisoEstado=pub?'Este banner está publicado o reservado: para cambiar su contenido, escríbenos.'
+      :(ec==='revision'?'Kirolorik está revisando el contenido. Cuando lo apruebe podrás solicitar su visibilidad.'
+      :(ec==='rechazado'?'Revisión rechazada'+(b.motivo_rechazo?': '+b.motivo_rechazo:'')+'. Corrígelo y vuelve a enviarlo a revisión.'
+      :(ec==='aprobado'?'Contenido aprobado. Cuando quieras, solicita su visibilidad (pueblo y plan). Si lo editas, volverá a revisión.'
+      :'Borrador: cuando esté listo, envíalo a revisión.')));
     return '<div class="card"><div class="card-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'<div class="thumb"></div>')
       +'<div class="main"><div class="title">'+esc(b.nombre)+'</div><div class="sub">'+esc(b.descripcion||'Sin descripción')+'</div></div><span class="badge '+cabecera[1]+'">'+cabecera[0]+'</span></div>'
-      +(pub?'<div class="line-s" style="margin-top:8px">Este banner está publicado o reservado: para cambiar su contenido, escríbenos.</div>':'')
+      +'<div class="line-s" style="margin-top:8px;'+(ec==='rechazado'?'color:#dc2626':'')+'">'+esc(avisoEstado)+'</div>'
       +hijas+'<div class="acts">'+acts+'</div></div>';
   }).join('');
 }
@@ -346,6 +361,7 @@ let bnImagen='', bnQuitada=false, bnVista='';
 function modalBanner(b){
   var n=b||{}; bnImagen=n.imagen_url||''; bnQuitada=false; bnVista='';
   abrirModal(b?'Editar banner':'Nuevo banner',
+    (b&&b.estado_contenido==='aprobado'?'<div class="warn">Este contenido está aprobado. Si lo cambias, volverá a borrador y tendrás que enviarlo otra vez a revisión.</div>':'')+
     '<div class="field"><label>Título * <span style="font-weight:400;text-transform:none;letter-spacing:0">(el nombre de tu negocio o tu oferta)</span></label><input type="text" id="bn_nombre" maxlength="80" value="'+esc(n.nombre||'')+'" oninput="previewBanner()"></div>'
     +'<div class="field"><label>Descripción corta * <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve en la barra, unos 60 caracteres)</span></label><input type="text" id="bn_desc" maxlength="120" value="'+esc(n.descripcion||'')+'" oninput="previewBanner()"></div>'
     +'<div class="field"><label>Texto largo <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve al abrir el banner)</span></label><textarea id="bn_texto" maxlength="600" oninput="previewBanner()">'+esc(n.texto||'')+'</textarea></div>'
@@ -386,16 +402,26 @@ async function guardarBanner(id){
   if(url&&!/^(https?:\/\/|mailto:|tel:)/i.test(url)){toast('El enlace debe empezar por https://, mailto: o tel:',true);return;}
   var btn=document.getElementById('bn_guardar'); btn.disabled=true;
   try{
-    var datos={nombre:nombre,descripcion:desc,texto:val('bn_texto')||null,url_destino:url||null,activo:false};
+    var datos={nombre:nombre,descripcion:desc,texto:val('bn_texto')||null,url_destino:url||null,activo:false,estado_contenido:'borrador',motivo_rechazo:null};
     var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
     if(f) datos.imagen_url=await subirImagen(f); else if(bnQuitada) datos.imagen_url=null;
     if(!id) datos.anunciante_id=ANUN.id;
     var res=await fetch(SB_URL+'/rest/v1/banners'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify(datos)});
     var d=await res.json(); if(!res.ok) throw new Error((d&&d.message)||'No se ha podido guardar');
     if(id&&(!d||!d.length)) throw new Error('Este banner ya está publicado: escríbenos para cambiarlo');
-    cerrarModal(); toast('Banner guardado'); await recargar();
-    if(!id&&d&&d[0]) modalSolicitar(d[0].id,true);
+    cerrarModal(); toast(id?'Cambios guardados · el banner vuelve a borrador':'Banner guardado como borrador'); await recargar();
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+// Enviar el contenido a revisión (o retirarlo a borrador): independiente de la solicitud de visibilidad
+async function cambiarEstadoContenido(id,estado){
+  var b=BAN.filter(function(x){return x.id===id})[0]; if(!b) return;
+  if(estado==='revision'&&(!b.nombre||!b.descripcion)){ toast('Completa el título y la descripción antes de enviarlo',true); return; }
+  if(estado==='revision'&&!confirm('¿Enviar este banner a revisión? Mientras lo revisamos no podrás editarlo.')) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify({estado_contenido:estado})});
+    var d=await res.json(); if(!res.ok||!d.length) throw new Error((d&&d.message)||'No se ha podido actualizar el banner');
+    toast(estado==='revision'?'Enviado a revisión':'Vuelve a borrador'); await recargar();
+  }catch(e){ toast('Error: '+e.message,true); }
 }
 async function borrarBanner(id){
   if(!confirm('¿Borrar este banner?')) return;
@@ -407,8 +433,9 @@ async function borrarBanner(id){
 }
 
 // ── Solicitar visibilidad ──
-function modalSolicitar(bannerId,recien){
+function modalSolicitar(bannerId){
   var b=BAN.filter(function(x){return x.id===bannerId})[0]; if(!b) return;
+  if(b.estado_contenido!=='aprobado'){ toast('El banner debe estar aprobado para solicitar su visibilidad',true); return; }
   if(!PLANES.length){ abrirModal('Solicitar visibilidad','<div class="empty-slot">Ahora mismo no hay planes disponibles. Escríbenos a kirolorik.info@gmail.com.</div>'); return; }
   var yaPedidos={}; COL.forEach(function(c){ if(c.banner_id===b.id&&['revision','pendiente_pago','confirmada','pausada'].indexOf(c.estado)>=0&&c.municipio_id) yaPedidos[c.municipio_id]=true; });
   var pueblos=MUN.map(function(m){
@@ -419,8 +446,7 @@ function modalSolicitar(bannerId,recien){
   var planes=PLANES.map(function(p,i){return '<label class="opt"><input type="radio" name="sol_plan" value="'+esc(p.id)+'"'+(i===0?' checked':'')+'><span><b>'+esc(PERIODOS[p.periodo]||p.plan)+'</b><small>Precio: te lo indicamos al aprobar la solicitud</small></span></label>'}).join('');
   var pendientes=SOLP.filter(function(s){return s.estado==='pendiente'});
   abrirModal('Solicitar visibilidad',
-    (recien?'<div class="nota">Banner guardado. ¿Quieres solicitar ya su visibilidad? Puedes hacerlo más tarde desde «Mis banners».</div>':'')
-    +'<div class="sheet-note" style="font-size:12px;color:var(--muted);margin-bottom:10px">Banner: <b>'+esc(b.nombre)+'</b></div>'
+    '<div class="sheet-note" style="font-size:12px;color:var(--muted);margin-bottom:10px">Banner: <b>'+esc(b.nombre)+'</b></div>'
     +'<div class="field"><label>Pueblos</label><div class="opts">'+pueblos+'</div>'
     +'<button type="button" class="link" data-act="toggle-pueblo-nuevo">¿Tu pueblo no está? Solicitar uno nuevo</button>'
     +'<div id="pn_box" style="display:none;margin-top:6px"><div class="row2"><div class="field"><label>Pueblo</label><input type="text" id="pn_nombre" maxlength="100"></div><div class="field"><label>Provincia</label><input type="text" id="pn_prov" maxlength="100"></div></div><button type="button" class="btn-sec" data-act="enviar-pueblo">Enviar solicitud de pueblo</button></div>'
@@ -560,7 +586,9 @@ document.addEventListener('click',function(ev){
   else if(act==='guardar-banner') guardarBanner(id);
   else if(act==='quitar-img') quitarImagen();
   else if(act==='borrar-banner') borrarBanner(id);
-  else if(act==='solicitar') modalSolicitar(id,false);
+  else if(act==='solicitar') modalSolicitar(id);
+  else if(act==='enviar-revision') cambiarEstadoContenido(id,'revision');
+  else if(act==='a-borrador') cambiarEstadoContenido(id,'borrador');
   else if(act==='guardar-solicitud') guardarSolicitud(id);
   else if(act==='cancelar-sol') cancelarSolicitud(id);
   else if(act==='toggle-pueblo-nuevo'){ var bx=document.getElementById('pn_box'); bx.style.display=bx.style.display==='none'?'block':'none'; }
@@ -594,7 +622,7 @@ document.addEventListener('click',function(ev){
 })();
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.00</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.01</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
