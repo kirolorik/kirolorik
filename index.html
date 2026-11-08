@@ -1,7 +1,7 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.44
+Versión: v6.45
 Fecha: 2026-11-08
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.45: no se cuentan las visitas, vistas de evento, vistas, aperturas ni clics de banner de quien tiene sesión iniciada ni de los dispositivos donde alguien inició sesión alguna vez (admin, gestores de clubes, anunciantes).
 v6.44: si el pueblo no tiene anunciantes propios, se muestran los de los pueblos de los equipos visitantes de los partidos que se ven (p. ej. partido en Donosti contra un equipo de Eibar → anunciantes de Eibar). Los de «todos los pueblos» salen siempre.
 v6.43: publicidad. Los banners salen de la vista banners_publicos: solo los que están en vigor hoy (fechas) en el pueblo elegido o en todos; se cuentan vistas, aperturas del panel y clics con registrar_evento_banner.
 v6.42: sesión persistente con casilla «Mantener sesión iniciada» (sesion.js).
@@ -616,7 +617,7 @@ function openDet(idx){
   var mySeq=++detSeq;
   closeProf();closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
-  try{fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
+  try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
   var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
   document.getElementById('detTitle').textContent=detTitulo;
@@ -800,7 +801,7 @@ function mostrarAds(data){
 }
 // Métricas de la colocación: vista (se muestra en la barra) y apertura (se abre el panel) una vez por visita; clic cada vez
 function metricaBanner(tipo,b){
-  if(!b||!b.colocacion_id)return;
+  if(!b||!b.colocacion_id||KBS.sinEstadisticas())return;
   var k=tipo+'|'+b.colocacion_id+'|'+(muni||'');
   if(tipo!=='clic'){if(adMarcados[k])return;adMarcados[k]=1}
   try{fetch(SB+'/rest/v1/rpc/registrar_evento_banner',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({p_colocacion:b.colocacion_id,p_tipo:tipo,p_municipio:muni||''})}).catch(function(){})}catch(e){}
@@ -816,7 +817,7 @@ function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
 function registrarClicBanner(){
   var b=adList[adIdx];if(!b)return;
   metricaBanner('clic',b);
-  if(b.banner_id){try{fetch(SB+'/rest/v1/banner_clicks',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({banner_id:b.banner_id})}).catch(function(){});}catch(err){}}
+  if(b.banner_id&&!KBS.sinEstadisticas()){try{fetch(SB+'/rest/v1/banner_clicks',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({banner_id:b.banner_id})}).catch(function(){});}catch(err){}}
 }
 
 function closeAll(){closeDet();closeProf();closeMun()}
@@ -852,9 +853,9 @@ window.addEventListener('load',function(){
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
-try{fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
+try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.44</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.45</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
