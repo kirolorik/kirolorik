@@ -1,7 +1,7 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.45
+Versión: v6.46
 Fecha: 2026-11-08
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.46: los clics de banner solo se cuentan con registrar_evento_banner (se quita la escritura temporal en banner_clicks).
 v6.45: no se cuentan las visitas, vistas de evento, vistas, aperturas ni clics de banner de quien tiene sesión iniciada ni de los dispositivos donde alguien inició sesión alguna vez (admin, gestores de clubes, anunciantes).
 v6.44: si el pueblo no tiene anunciantes propios, se muestran los de los pueblos de los equipos visitantes de los partidos que se ven (p. ej. partido en Donosti contra un equipo de Eibar → anunciantes de Eibar). Los de «todos los pueblos» salen siempre.
 v6.43: publicidad. Los banners salen de la vista banners_publicos: solo los que están en vigor hoy (fechas) en el pueblo elegido o en todos; se cuentan vistas, aperturas del panel y clics con registrar_evento_banner.
@@ -812,12 +813,10 @@ function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPa
 function toggleAd(){adOpen=!adOpen;if(!adOpen)try{localStorage.setItem('kb_ad_seen','1')}catch(e){};var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
-// Clic en el botón del banner abierto (no bloquea la apertura del enlace). Además de las métricas diarias, se sigue escribiendo
-// banner_clicks mientras el panel de admin lea esa tabla.
+// Clic en el botón del banner abierto (no bloquea la apertura del enlace)
 function registrarClicBanner(){
   var b=adList[adIdx];if(!b)return;
   metricaBanner('clic',b);
-  if(b.banner_id&&!KBS.sinEstadisticas()){try{fetch(SB+'/rest/v1/banner_clicks',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({banner_id:b.banner_id})}).catch(function(){});}catch(err){}}
 }
 
 function closeAll(){closeDet();closeProf();closeMun()}
@@ -855,7 +854,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.45</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.46</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
