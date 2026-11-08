@@ -1,4 +1,4 @@
-// Kirolorik · sesion.js · v1.0 · 2026-11-07
+// Kirolorik · sesion.js · v1.1 · 2026-11-08 · los dispositivos donde alguien inicia sesión (admin, gestores de clubes, anunciantes) quedan marcados para no contar sus visitas en las estadísticas; (v1.0 · 2026-11-07)
 // Guarda la sesión (token de acceso, refresh token y usuario) donde corresponda:
 //  · con «Mantener sesión iniciada» marcada: localStorage (sigue al cerrar el navegador, como hace la librería de Supabase);
 //  · sin marcar: sessionStorage (se borra al cerrar la pestaña, como antes).
@@ -28,8 +28,16 @@ var KBS=(function(){
   function setPersist(on,g){
     g=g||'kb';
     try{ if(on) W.localStorage.setItem(g+'_persist','1'); else W.localStorage.removeItem(g+'_persist'); }catch(e){}
+    marcarDispositivo();
     NOMBRES.forEach(function(n){ var k=g+'_'+n, v=get(k); if(v!=null) set(k,v); });
   }
+  // Quien inicia sesión es del equipo (admin, gestor de un club, anunciante): su dispositivo deja de contar visitas, vistas y clics
+  function marcarDispositivo(){ try{ W.localStorage.setItem('kb_no_stats','1'); }catch(e){} }
+  function sinEstadisticas(){
+    try{ if(W.localStorage.getItem('kb_no_stats')==='1') return true; }catch(e){}
+    return !!(get('kb_token')||get('kb_admin_token'));
+  }
+  try{ if(get('kb_token')||get('kb_admin_token')) marcarDispositivo(); }catch(e){}
   function expMs(t){
     try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
   }
@@ -53,5 +61,5 @@ var KBS=(function(){
     var tope=new Promise(function(r){ setTimeout(r,2000); });
     return Promise.race([p.catch(function(){}),tope]).then(function(){ if(hecho) hecho(); });
   }
-  return {get:get,set:set,remove:remove,clear:clear,setPersist:setPersist,persistente:persistente,lock:lock,cerrar:cerrar,expMs:expMs};
+  return {get:get,set:set,remove:remove,clear:clear,setPersist:setPersist,persistente:persistente,lock:lock,cerrar:cerrar,expMs:expMs,sinEstadisticas:sinEstadisticas};
 })();
