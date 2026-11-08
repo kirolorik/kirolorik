@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: pages/anunciantes.html
-Versión: v1.03
+Versión: v1.04
 Fecha: 2026-11-14
 Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
 editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
 Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
 pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
 2026-11-11.
+v1.04: cabecera igual que Clubes y Gestionar eventos: flecha de vuelta a la portada y título «Zona de anunciantes» (con el nombre del anunciante debajo); enlace «Volver al inicio» en el acceso.
 v1.03: sesión propia de la zona de anunciantes (kb_anun), independiente de clubes y administración; mensaje de acceso si la cuenta no es de anunciante.
 v1.02: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
 v1.01: crear el banner y pedir visibilidad son pasos independientes. Los banners se crean en borrador, se envían a revisión cuando se quiera y,
@@ -28,6 +29,11 @@ estado (migración 2026-11-12).
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto}
 .tab{white-space:nowrap;padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;margin:-20px -16px 16px}
+.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
+.hdr-tit{flex:1;min-width:0}.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+.hdr-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr-sub:empty{display:none}
+.hdr-acts{display:flex;gap:6px;flex-shrink:0}
 .hdr-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-main{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-sec{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
@@ -84,6 +90,7 @@ estado (migración 2026-11-12).
     <button class="btn-main" id="loginBtn" onclick="login()">Entrar</button>
     <button class="link" onclick="mostrarRecuperar()">¿Has olvidado la contraseña?</button>
     <div style="font-size:12px;color:var(--muted);text-align:center">¿Aún no tienes acceso? Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a></div>
+    <div style="font-size:12px;color:var(--muted);text-align:center"><a href="/">← Volver al inicio</a></div>
   </div>
   <div id="recBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px">
     <div style="font-size:14px;font-weight:700">Recuperar contraseña</div>
@@ -103,12 +110,10 @@ estado (migración 2026-11-12).
 
 <div id="appScreen" style="display:none">
 <div class="admin-wrap">
-  <div class="admin-header">
-    <div>
-      <div class="admin-logo">Kirolorik</div>
-      <div class="admin-sub" id="subtitulo">Zona de anunciantes</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+  <div class="hdr">
+    <a class="back" href="/">←</a>
+    <div class="hdr-tit"><div class="hdr-title">Zona de anunciantes</div><div class="hdr-sub" id="subtitulo"></div></div>
+    <div class="hdr-acts">
       <button class="hdr-btn" onclick="window.location.href='/pages/faq.html'">Ayuda</button>
       <button class="hdr-btn" onclick="salir()">Cerrar sesión</button>
     </div>
@@ -624,7 +629,7 @@ document.addEventListener('click',function(ev){
 })();
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.03</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.04</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
