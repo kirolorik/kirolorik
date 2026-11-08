@@ -1,4 +1,4 @@
-<!-- Kirolorik · clubes.html · v3.00 · 2026-11-14 · zona de clubes (antes perfil.html): entrada propia con inicio de sesión y recuperación de contraseña, sesión independiente (kb_club), acceso solo para gestores de clubes (mis_roles), enlace al panel de eventos y botón de cerrar sesión; «Añadir club» solo para administración; (perfil.html v2.19 · 2026-11-14 · nombres de tablas normalizados; v2.18 · 2026-11-07 · sesión persistente) -->
+<!-- Kirolorik · clubes.html · v3.01 · 2026-11-14 · secciones reordenadas (Mi club con mis clubes y Gestionar eventos; Datos personales; Sesión con última conexión y Cerrar sesión; Zona de riesgo); (v3.00 · 2026-11-14 · zona de clubes (antes perfil.html): entrada propia con inicio de sesión y recuperación de contraseña, sesión independiente (kb_club), acceso solo para gestores de clubes (mis_roles), enlace al panel de eventos y botón de cerrar sesión; «Añadir club» solo para administración; (perfil.html v2.19 · 2026-11-14 · nombres de tablas normalizados; v2.18 · 2026-11-07 · sesión persistente) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -167,15 +167,18 @@ a{color:var(--accent)}
 
     <div class="section">
       <div class="sec-title">Mi club</div>
-      <div class="card">
+      <div class="sec-sub" style="font-size:11px;color:var(--muted);margin:-4px 0 8px">Gestionar mis clubes</div>
+      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
+      <button class="btn-add" id="btnAddClub" style="display:none" onclick="openModalClub()">
+        <div class="btn-add-ico">➕</div>
+        <div class="btn-add-txt">Añadir club</div>
+      </button>
+          <div class="card" style="margin-top:10px">
         <div class="row click" onclick="window.location.href='/pages/eventos.html'">
           <div class="rico">📋</div><div class="rlabel">Gestionar eventos</div><div class="rarrow">›</div>
         </div>
-        <div class="row click" onclick="cerrarSesion()">
-          <div class="rico">🚿</div><div class="rlabel">Cerrar sesión</div><div class="rarrow">›</div>
-        </div>
       </div>
-    </div>
+</div>
 
     <div class="section">
       <div class="sec-title">Datos personales</div>
@@ -200,12 +203,16 @@ a{color:var(--accent)}
     </div>
 
     <div class="section">
-      <div class="sec-title">Mis clubes</div>
-      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
-      <button class="btn-add" id="btnAddClub" style="display:none" onclick="openModalClub()">
-        <div class="btn-add-ico">➕</div>
-        <div class="btn-add-txt">Añadir club</div>
-      </button>
+      <div class="sec-title">Sesión</div>
+      <div class="card">
+        <div class="row">
+          <div class="rico">🕓</div><div class="rlabel">Última conexión</div>
+          <div class="rval" id="vUltima">—</div>
+        </div>
+        <div class="row click" onclick="cerrarSesion()">
+          <div class="rico">🚿</div><div class="rlabel">Cerrar sesión</div><div class="rarrow">›</div>
+        </div>
+      </div>
     </div>
 
     <div class="section" style="margin-top:8px">
@@ -910,6 +917,19 @@ async function entrarClub(){
   document.getElementById('perfilContent').style.display='block';
   document.getElementById('btnAddClub').style.display=ro.admin?'':'none';
   cargarPerfil();
+  ultimaConexion();
+}
+
+// Última conexión: fecha del último inicio de sesión de la cuenta (la devuelve el servidor)
+async function ultimaConexion(){
+  var el=document.getElementById('vUltima'); if(!el) return;
+  try{
+    var res=await fetch(SB+'/auth/v1/user',{headers:{'apikey':KEY,'Authorization':'Bearer '+tok}});
+    var d=await res.json(); var t=d&&d.last_sign_in_at;
+    if(!res.ok||!t){ el.textContent='—'; return; }
+    var f=new Date(t), p=function(n){return String(n).padStart(2,'0')};
+    el.textContent=p(f.getDate())+'/'+p(f.getMonth()+1)+'/'+f.getFullYear()+' '+p(f.getHours())+':'+p(f.getMinutes());
+  }catch(e){ el.textContent='—'; }
 }
 
 // ── INIT ──
@@ -941,7 +961,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v3.00</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v3.01</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
