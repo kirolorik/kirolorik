@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/publicidad.html
-Versión: v1.03
-Fecha: 2026-11-11
+Versión: v1.04
+Fecha: 2026-11-12
 Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
 (por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
 (pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
@@ -16,6 +16,9 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
 v1.03: pestaña Solicitudes (solicitudes de visibilidad de los anunciantes: aprobar con fechas calculadas según el plan, o rechazar con
 motivo; solicitudes de pueblo nuevo) y botón «Acceso» en cada anunciante (crear usuario, vincular uno existente, ver y quitar accesos),
 que usa la función admin-users v1.1.
+v1.04: la revisión del contenido del banner es un paso independiente de la solicitud de visibilidad: en Solicitudes aparecen «Banners por
+revisar» (aprobar o rechazar con motivo) y no se puede aprobar la visibilidad de un banner cuyo contenido no esté aprobado (migración
+2026-11-12).
 -->
 
 <!DOCTYPE html>
@@ -226,7 +229,7 @@ que usa la función admin-users v1.1.
   </div>
 
   <div id="tabSol" style="display:none">
-    <div class="nota">Aquí llegan las solicitudes de visibilidad que hacen los anunciantes desde su zona. Al <b>aprobar</b> se fijan las fechas según el plan (puedes ajustarlas); la solicitud queda <b>pendiente de pago</b> reservando el hueco y, cuando esté pagada, pasa a <b>confirmada</b> y sale en la portada. También verás los pueblos nuevos que piden.</div>
+    <div class="nota">Dos cosas distintas llegan de la zona de anunciantes. <b>1. Banners por revisar:</b> el anunciante envía el contenido a revisión; lo apruebas o lo rechazas con motivo. <b>2. Solicitudes de visibilidad:</b> solo se pueden pedir con un banner aprobado; al <b>aprobar</b> se fijan las fechas según el plan (puedes ajustarlas) y queda <b>pendiente de pago</b> reservando el hueco; cuando esté pagada pasa a <b>confirmada</b> y sale en la portada. También verás los pueblos nuevos que piden.</div>
     <div id="solList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
@@ -449,6 +452,7 @@ function rellenarFiltros(){
   sm.value=pm;
 }
 
+function tagContenido(b){ return (b.estado_contenido&&b.estado_contenido!=='aprobado')?'<span class="tag" style="color:#7e22ce">Contenido: '+esc(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+'</span>':''; }
 function filasBanners(){
   var filas=COL.map(function(c){ return {col:c, ban:BAN_BY[c.banner_id]}; }).filter(function(f){return f.ban});
   BAN.forEach(function(b){ if(!COL.some(function(c){return c.banner_id===b.id})) filas.push({col:null,ban:b}); });
@@ -487,7 +491,7 @@ function renderBanners(){
     var tn=a&&a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio].nombre:'';
     var t=c?sumar(MET_BY[c.id]):{v:0,a:0,c:0};
     var lineaFechas=c?('📍 '+esc(nombrePueblo(c))+' · 📅 '+(c.fecha_inicio?fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin'):'las fechas se fijan al aprobar')):'Este banner aún no tiene pueblos ni fechas';
-    var tags=c?((c.tarifa_id?'<span class="tag">'+esc(planNombre(c.tarifa_id))+'</span>':'')+'<span class="tag">'+esc(ORIGENES[c.origen]||c.origen)+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span>'+(b.activo?'':'<span class="tag">Banner oculto</span>')):(b.activo?'':'<span class="tag">Banner oculto</span>');
+    var tags=c?((c.tarifa_id?'<span class="tag">'+esc(planNombre(c.tarifa_id))+'</span>':'')+'<span class="tag">'+esc(ORIGENES[c.origen]||c.origen)+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span>'+(b.activo?'':'<span class="tag">Banner oculto</span>')+tagContenido(b)):(b.activo?'':'<span class="tag">Banner oculto</span>')+tagContenido(b);
     var acts='';
     if(c){
       acts+='<button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Editar</button>';
@@ -712,6 +716,7 @@ async function guardarBanner(id){
   var btn=document.getElementById('bn_guardar'); btn.disabled=true;
   try{
     var datos={anunciante_id:anun,nombre:nombre,descripcion:val('bn_desc')||null,texto:val('bn_texto')||null,url_destino:url||null,activo:document.getElementById('bn_activo').checked};
+    if(!id) datos.estado_contenido='aprobado';   // lo crea Kirolorik: no necesita revisión
     var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
     if(f) datos.imagen_url=await subirImagenBanner(f);
     else if(bnQuitada) datos.imagen_url=null;
@@ -1137,17 +1142,27 @@ function sumarMeses(iso,n){
 function pendientesSol(){ return COL.filter(function(c){return c.estado==='revision'&&!c.fecha_inicio}); }
 function renderSolicitudes(){
   var cont=document.getElementById('solList'); if(!cont) return;
-  var sc=pendientesSol(), sp=SOLP.filter(function(x){return x.estado==='pendiente'});
-  var cuenta=document.getElementById('cuentaSol'), n=sc.length+sp.length;
+  var sc=pendientesSol(), sp=SOLP.filter(function(x){return x.estado==='pendiente'}), br=BAN.filter(function(x){return x.estado_contenido==='revision'});
+  var cuenta=document.getElementById('cuentaSol'), n=sc.length+sp.length+br.length;
   if(cuenta){ cuenta.textContent=n; cuenta.style.display=n?'':'none'; }
   if(!faseC){ cont.innerHTML='<div class="empty-slot">Esta sección necesita aplicar la migración <b>2026-11-11_zona_anunciantes.sql</b> en Supabase.</div>'; return; }
-  var html='<div class="sec-title" style="margin-top:0">Solicitudes de visibilidad ('+sc.length+')</div>';
+  var html='<div class="sec-title" style="margin-top:0">Banners por revisar ('+br.length+')</div>';
+  html+=br.length?br.map(function(b){
+    var a=ANUN_BY[b.anunciante_id], img=enlaceHttps(b.imagen_url);
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(b.nombre)+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+'</div></div><span class="badge st-revision">En revisión</span></div>'
+      +'<div class="pc-line">'+esc(b.descripcion||'(sin descripción)')+'</div>'+(b.texto?'<div class="pc-line" style="white-space:pre-line;color:var(--muted)">'+esc(String(b.texto).slice(0,300))+'</div>':'')
+      +'<div class="pc-line">Enlace: '+esc(b.url_destino||'(contacto con Kirolorik)')+'</div>'
+      +'<div class="pc-act"><button data-act="aprobar-contenido" data-id="'+esc(b.id)+'">✅ Aprobar contenido</button><button class="danger" data-act="rechazar-contenido" data-id="'+esc(b.id)+'">✖ Rechazar</button><button data-act="edit-banner" data-id="'+esc(b.id)+'">✏️ Editar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay banners por revisar.</div>';
+  html+='<div class="sec-title">Solicitudes de visibilidad ('+sc.length+')</div>';
   html+=sc.length?sc.map(function(c){
     var b=BAN_BY[c.banner_id], a=b?ANUN_BY[b.anunciante_id]:null, img=b?enlaceHttps(b.imagen_url):'';
     var p=planInfo(c.tarifa_id), cs=b&&c.municipio_id?conflictos(b.id,[c.municipio_id],hoyISO(),null,c.id):[];
     return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(b?b.nombre:'(banner borrado)')+'</div>'
       +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(c.solicitada_at||c.created_at)+'</div></div><span class="badge st-revision">En revisión</span></div>'
       +'<div class="pc-line">📍 '+esc(nombrePueblo(c))+' · <span class="tag">'+esc(p?(PERIODOS_ADMIN[p.periodo]||p.plan):'Sin plan')+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span></div>'
+      +(b&&b.estado_contenido!=='aprobado'?'<div class="warn" style="margin-top:8px">⚠️ El contenido del banner no está aprobado ('+esc(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+'): apruébalo antes de aprobar la solicitud.</div>':'')
       +(cs.length?'<div class="warn" style="margin-top:8px">⚠️ Hueco ocupado hoy en ese pueblo por otro anunciante del mismo tipo: podrás aprobarla para después.</div>':'')
       +'<div class="pc-act"><button data-act="aprobar" data-id="'+esc(c.id)+'">✅ Aprobar…</button><button class="danger" data-act="rechazar" data-id="'+esc(c.id)+'">✖ Rechazar</button><button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Ver y editar</button></div></div>';
   }).join(''):'<div class="empty-slot">No hay solicitudes pendientes.</div>';
@@ -1159,10 +1174,12 @@ function renderSolicitudes(){
   }).join(''):'<div class="empty-slot">No hay pueblos pendientes.</div>';
   cont.innerHTML=html;
 }
+const ESTADOS_CONT_ADMIN={borrador:'borrador',revision:'en revisión',aprobado:'aprobado',rechazado:'rechazado'};
 const PERIODOS_ADMIN={mes:'Mensual · 1 mes',trimestre:'Trimestral · 3 meses','año':'Anual · 12 meses'};
 
 function modalAprobar(id){
   var c=COL_BY[id], b=c?BAN_BY[c.banner_id]:null; if(!c||!b) return;
+  if(b.estado_contenido!=='aprobado'){ toast('Primero hay que aprobar el contenido del banner (estado actual: '+(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+')',true); return; }
   var a=ANUN_BY[b.anunciante_id], p=planInfo(c.tarifa_id), n=p?MESES_PLAN[p.periodo]:0, ini=hoyISO();
   var img=enlaceHttps(b.imagen_url);
   abrirModal('Aprobar solicitud',
@@ -1203,6 +1220,25 @@ async function guardarAprobar(id){
     var rb=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(c.banner_id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({activo:true})});
     if(!rb.ok) throw new Error(await rb.text());
     cerrarModal(); toast(estado==='confirmada'?'Aprobada y confirmada':'Aprobada: pendiente de pago'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function aprobarContenido(id){
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado_contenido:'aprobado',motivo_rechazo:null})});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Contenido aprobado: el anunciante ya puede solicitar visibilidad'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+function modalRechazarContenido(id){
+  abrirModal('Rechazar el contenido del banner','<div class="field"><label>Motivo (lo verá el anunciante)</label><textarea id="rcc_motivo" placeholder="Por ejemplo: la imagen no es legible o el texto no es válido…"></textarea></div><button class="btn-main" style="width:100%" id="rcc_guardar" data-act="guardar-rechazo-contenido" data-id="'+esc(id)+'">Rechazar contenido</button>');
+}
+async function guardarRechazoContenido(id){
+  var m=val('rcc_motivo'); if(!m){toast('Indica el motivo',true);return;}
+  var btn=document.getElementById('rcc_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado_contenido:'rechazado',motivo_rechazo:m})});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Contenido rechazado'); await cargarTodo();
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
 }
 function modalRechazar(id){
@@ -1324,6 +1360,9 @@ document.addEventListener('click',function(ev){
   else if(act==='guardar-fac') guardarFactura(id);
   else if(act==='calc-iva') calcularIVA();
   else if(act==='aprobar') modalAprobar(id);
+  else if(act==='aprobar-contenido') aprobarContenido(id);
+  else if(act==='rechazar-contenido') modalRechazarContenido(id);
+  else if(act==='guardar-rechazo-contenido') guardarRechazoContenido(id);
   else if(act==='guardar-aprobar') guardarAprobar(id);
   else if(act==='rechazar') modalRechazar(id);
   else if(act==='guardar-rechazo') guardarRechazo(id);
@@ -1353,7 +1392,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.03</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.04</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
