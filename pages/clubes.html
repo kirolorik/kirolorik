@@ -1,4 +1,4 @@
-<!-- Kirolorik · clubes.html · v3.01 · 2026-11-14 · secciones reordenadas (Mi club con mis clubes y Gestionar eventos; Datos personales; Sesión con última conexión y Cerrar sesión; Zona de riesgo); (v3.00 · 2026-11-14 · zona de clubes (antes perfil.html): entrada propia con inicio de sesión y recuperación de contraseña, sesión independiente (kb_club), acceso solo para gestores de clubes (mis_roles), enlace al panel de eventos y botón de cerrar sesión; «Añadir club» solo para administración; (perfil.html v2.19 · 2026-11-14 · nombres de tablas normalizados; v2.18 · 2026-11-07 · sesión persistente) -->
+<!-- Kirolorik · clubes.html · v3.02 · 2026-11-14 · «Gestionar mis clubes» es una fila aparte que abre la lista de clubes (equipos, edición y añadir) en su propia pantalla, con flecha de vuelta y contador de clubes; (v3.01 · 2026-11-14 · secciones reordenadas (Mi club con mis clubes y Gestionar eventos; Datos personales; Sesión con última conexión y Cerrar sesión; Zona de riesgo); (v3.00 · 2026-11-14 · zona de clubes (antes perfil.html): entrada propia con inicio de sesión y recuperación de contraseña, sesión independiente (kb_club), acceso solo para gestores de clubes (mis_roles), enlace al panel de eventos y botón de cerrar sesión; «Añadir club» solo para administración; (perfil.html v2.19 · 2026-11-14 · nombres de tablas normalizados; v2.18 · 2026-11-07 · sesión persistente) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -114,8 +114,8 @@ a{color:var(--accent)}
 <div class="wrap" id="wrap">
 
   <div class="hdr">
-    <a class="back" href="/">←</a>
-    <span class="hdr-title">Zona de clubes</span>
+    <a class="back" id="btnBack" href="/" onclick="return atras()">←</a>
+    <span class="hdr-title" id="hdrTitle">Zona de clubes</span>
   </div>
 
   <!-- Sin sesión: acceso de clubes -->
@@ -159,28 +159,26 @@ a{color:var(--accent)}
   <!-- Con sesión -->
   <div id="perfilContent" style="display:none">
 
-    <div class="hero">
+    <div class="hero vp">
       <div class="avatar" id="avEl">?</div>
       <div class="hero-alias" id="aliasEl">—</div>
       <div class="hero-email" id="emailEl">—</div>
     </div>
 
-    <div class="section">
+    <div class="section vp">
       <div class="sec-title">Mi club</div>
-      <div class="sec-sub" style="font-size:11px;color:var(--muted);margin:-4px 0 8px">Gestionar mis clubes</div>
-      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
-      <button class="btn-add" id="btnAddClub" style="display:none" onclick="openModalClub()">
-        <div class="btn-add-ico">➕</div>
-        <div class="btn-add-txt">Añadir club</div>
-      </button>
-          <div class="card" style="margin-top:10px">
+      <div class="card">
+        <div class="row click" onclick="vista('clubes')">
+          <div class="rico">🏟️</div><div class="rlabel">Gestionar mis clubes</div>
+          <div class="rval" id="vNumClubes"></div><div class="rarrow">›</div>
+        </div>
         <div class="row click" onclick="window.location.href='/pages/eventos.html'">
           <div class="rico">📋</div><div class="rlabel">Gestionar eventos</div><div class="rarrow">›</div>
         </div>
       </div>
-</div>
+    </div>
 
-    <div class="section">
+    <div class="section vp">
       <div class="sec-title">Datos personales</div>
       <div class="card">
         <div class="row click" onclick="openModal('mAlias')">
@@ -202,7 +200,7 @@ a{color:var(--accent)}
       </div>
     </div>
 
-    <div class="section">
+    <div class="section vp">
       <div class="sec-title">Sesión</div>
       <div class="card">
         <div class="row">
@@ -215,13 +213,23 @@ a{color:var(--accent)}
       </div>
     </div>
 
-    <div class="section" style="margin-top:8px">
+    <div class="section vp" style="margin-top:8px">
       <div class="sec-title">Zona de riesgo</div>
       <div class="danger-card">
         <div class="danger-title">Eliminar perfil</div>
         <div class="danger-txt">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Pasado ese plazo, todos tus datos se borrarán permanentemente.</div>
         <button class="btn-danger" onclick="openModal('mBaja')">Solicitar eliminación de cuenta</button>
       </div>
+    </div>
+
+
+    <div class="section vc" style="display:none">
+      <div class="sec-title">Mis clubes</div>
+      <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
+      <button class="btn-add" id="btnAddClub" style="display:none" onclick="openModalClub()">
+        <div class="btn-add-ico">➕</div>
+        <div class="btn-add-txt">Añadir club</div>
+      </button>
     </div>
 
   </div>
@@ -571,6 +579,7 @@ async function cargarClubes(){
   try {
     const res = await fetch(`${SB}/rest/v1/club_gestores?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,nombre_corto,escudo_url,municipio,descripcion)`, {headers:H()});
     const data = await res.json();
+    var nc=document.getElementById('vNumClubes'); if(nc) nc.textContent=(data&&data.length)?String(data.length):'';
     if(!data || !data.length){
       list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún club.</div>';
       return;
@@ -856,6 +865,19 @@ async function confirmarBaja(){
   } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
 }
 
+// ── VISTAS: principal / mis clubes (se recuerda en #clubes para que «atrás» del navegador funcione) ──
+function vista(v,sinHistorial){
+  var clubes=(v==='clubes');
+  document.querySelectorAll('#perfilContent .vp').forEach(function(e){ e.style.display=clubes?'none':''; });
+  document.querySelectorAll('#perfilContent .vc').forEach(function(e){ e.style.display=clubes?'':'none'; });
+  document.getElementById('hdrTitle').textContent=clubes?'Mis clubes':'Zona de clubes';
+  document.getElementById('btnBack').setAttribute('href',clubes?'#':'/');
+  if(!sinHistorial){ try{ if(clubes) history.pushState(null,'','#clubes'); else if(location.hash==='#clubes') history.back(); }catch(e){} }
+  window.scrollTo(0,0);
+}
+function atras(){ if(document.querySelector('#perfilContent .vc')&&document.querySelector('#perfilContent .vc').style.display!=='none'){ vista('principal'); return false; } return true; }
+window.addEventListener('popstate',function(){ if(document.getElementById('perfilContent').style.display!=='none') vista(location.hash==='#clubes'?'clubes':'principal',true); });
+
 // ── ACCESO ──
 function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
 function mostrarLogin(){ document.getElementById('loginBox').style.display='flex'; document.getElementById('recBox').style.display='none'; document.getElementById('newPassBox').style.display='none'; }
@@ -918,6 +940,7 @@ async function entrarClub(){
   document.getElementById('btnAddClub').style.display=ro.admin?'':'none';
   cargarPerfil();
   ultimaConexion();
+  vista(location.hash==='#clubes'?'clubes':'principal',true);
 }
 
 // Última conexión: fecha del último inicio de sesión de la cuenta (la devuelve el servidor)
@@ -961,7 +984,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v3.01</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v3.02</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
