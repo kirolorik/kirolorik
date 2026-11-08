@@ -16,6 +16,9 @@
 --   recrea las 6 funciones que citaban los nombres antiguos y deja VISTAS DE COMPATIBILIDAD con los nombres viejos
 --   (security_invoker → siguen aplicando RLS) para que el sitio ya publicado funcione hasta que se fusione el código nuevo.
 --   Las vistas se quitan después con 2026-11-14b_quitar_vistas_compat.sql.
+-- Nota: el editor de Supabase avisa de "tabla sin RLS" por la tabla temporal _ren; si se acepta "enable RLS" añade un
+--   ALTER TABLE _ren al final y da «relation "_ren" does not exist» (la tabla temporal ya se borró al hacer COMMIT).
+--   Es inofensivo: la migración ya está aplicada entera. Mejor responder «Run without RLS».
 -- Reversión: 2026-11-14_REVERTIR_renombrar_tablas.sql.
 
 BEGIN;
