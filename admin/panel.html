@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/panel.html
-Versión: v1.21
+Versión: v1.22
 Fecha: 2026-11-08
 Descripción: Panel de control (admin). v1.14: sección de clics en banners (vista banner_clicks_resumen).
 v1.15: los clics pasan a una pestaña propia "Publicidad" (totales + clics por banner); se quitan de Estadísticas.
 v1.16: etiqueta de versión en la esquina inferior derecha.
 v1.17: etiqueta más corta (#v9).
 v1.18: la sesión caducada (JWT expired) se renueva sola; si no se puede, vuelve al login con aviso.
+v1.22: la pestaña Publicidad pasa a /admin/publicidad.html (gestión completa) y el encabezado enlaza a ella.
 v1.21: si la función de usuarios responde «Acceso denegado» porque la sesión se revocó (p. ej. se cerró en otro sitio), el panel intenta renovarla y, si no puede, vuelve al login en vez de quedarse en «Acceso denegado».
 v1.20: sesión persistente con casilla «Mantener sesión iniciada» (sesion.js) y botón «Cerrar sesión».
 v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro del onclick: usan data-id/data-email y un único listener.
@@ -94,6 +95,7 @@ v1.19: seguridad. Los botones de usuario ya no llevan el id ni el email dentro d
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="window.location.href='/'" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">← Inicio</button>
       <button onclick="window.location.href='/admin/eventos.html'" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">📋 Eventos</button>
+      <button onclick="window.location.href='/admin/publicidad.html'" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">📣 Publicidad</button>
       <button onclick="KBS.cerrar(SB_URL,SB_KEY,'kb_admin',function(){window.location.href='/'})" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">Cerrar sesión</button>
     </div>
   </div>
@@ -499,36 +501,14 @@ async function loadStats(){
   }
 }
 
-// ── PUBLICIDAD: CLICS EN BANNERS (vista banner_clicks_resumen) ──
+// ── PUBLICIDAD ──
+// La gestión (anunciantes, banners, colocaciones y métricas) está en /admin/publicidad.html
 async function loadPubli(){
   var box=document.getElementById('adsContent');
-  box.innerHTML='<div class="empty-slot">Cargando...</div>';
-  try{
-    var res=await fetch(SB_URL+'/rest/v1/banner_clicks_resumen?select=*&order=clics_total.desc',{headers:H()});
-    var data=await res.json();
-    if(!res.ok||!Array.isArray(data)) throw new Error((data&&data.message)||'Error');
-
-    var tot=0,t7=0,t30=0;
-    data.forEach(function(c){tot+=(c.clics_total||0);t7+=(c.clics_7_dias||0);t30+=(c.clics_30_dias||0)});
-
-    var html='<div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr">'
-      +'<div class="stat-card"><div class="stat-num">'+tot+'</div><div class="stat-label">Clics totales</div></div>'
-      +'<div class="stat-card"><div class="stat-num">'+t7+'</div><div class="stat-label">Últimos 7 días</div></div>'
-      +'<div class="stat-card"><div class="stat-num">'+t30+'</div><div class="stat-label">Últimos 30 días</div></div>'
-      +'</div>';
-
-    html+='<div class="stats-section-title">Clics por banner</div>';
-    if(!data.length){
-      html+='<div class="empty-slot">Sin banners</div>';
-    }else{
-      html+=data.map(function(c){
-        return '<div class="rank-row"><div><div class="rank-name">'+esc(c.banner)+'</div><div class="rank-meta">'+esc(c.anunciante||'')+' · 7 días: '+(c.clics_7_dias||0)+' · 30 días: '+(c.clics_30_dias||0)+'</div></div><div class="rank-value">'+(c.clics_total||0)+' clic'+(c.clics_total===1?'':'s')+'</div></div>';
-      }).join('');
-    }
-    box.innerHTML=html;
-  }catch(e){
-    box.innerHTML='<div class="empty-slot" style="color:#dc2626">Error cargando publicidad: '+esc(e.message)+'</div>';
-  }
+  box.innerHTML='<div class="stat-card" style="text-align:center;padding:24px 16px"><div style="font-size:28px">📣</div>'
+    +'<div style="font-size:14px;font-weight:700;margin:8px 0 4px">Gestión de publicidad</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Anunciantes, banners por pueblo y fechas, exclusividad y métricas de vistas, aperturas y clics.</div>'
+    +'<button onclick="window.location.href=\'/admin/publicidad.html\'" style="background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;font-weight:800;cursor:pointer;font-family:\'DM Sans\',sans-serif">Abrir gestión de publicidad</button></div>';
 }
 
 // ── INIT ──
@@ -550,7 +530,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.21</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">panel v1.22</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
