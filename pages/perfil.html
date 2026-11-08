@@ -1,4 +1,4 @@
-<!-- Kirolorik · perfil.html · v2.18 · 2026-11-07 · sesión persistente (sesion.js: lee y renueva la sesión donde esté guardada); (v2.17 · 2026-10-24 · el equipo se define con división, nombre propio y tipo, y el nombre se compone solo; nombre corto del club; deportes nuevos; la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
+<!-- Kirolorik · perfil.html · v2.19 · 2026-11-14 · nombres de tablas normalizados (equipos, club_gestores, analitica_*, anunciante_*, banner_disenos, usuarios_perfil); (v2.18 · 2026-11-07 · sesión persistente (sesion.js: lee y renueva la sesión donde esté guardada); (v2.17 · 2026-10-24 · el equipo se define con división, nombre propio y tipo, y el nombre se compone solo; nombre corto del club; deportes nuevos; la sesión caducada (JWT expired) se renueva sola; etiqueta más corta; etiqueta de versión visible; seguridad: esc() en la lista de clubes y equipos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -427,7 +427,7 @@ async function cargarPerfil(){
   document.getElementById('vEmail').textContent  = email;
 
   try {
-    const res  = await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}&select=*`, { headers: H() });
+    const res  = await fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}&select=*`, { headers: H() });
     const data = await res.json();
 
     if(data && data.length > 0){
@@ -435,7 +435,7 @@ async function cargarPerfil(){
       idiomaActual = perfil.idioma || 'cas';
     } else {
       // Crear perfil vacío
-      await fetch(`${SB}/rest/v1/perfiles`, {
+      await fetch(`${SB}/rest/v1/usuarios_perfil`, {
         method:'POST',
         headers: {...H(), 'Prefer':'return=minimal'},
         body: JSON.stringify({id: user.id, idioma:'cas'})
@@ -460,7 +460,7 @@ async function cargarPerfil(){
 function guardarAlias(){
   const alias = document.getElementById('inputAlias').value.trim();
   if(!alias){ toast('El alias no puede estar vacío','err'); return; }
-  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+  fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
     method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({alias})
   }).then(r => {
     if(!r.ok) throw new Error();
@@ -484,7 +484,7 @@ function renderLangOpts(){
 
 function selIdioma(lang){
   idiomaActual = lang;
-  fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+  fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
     method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({idioma:lang})
   }).then(r => {
     if(!r.ok) throw new Error();
@@ -518,7 +518,7 @@ function guardarPass(){
 async function cargarClubes(){
   const list = document.getElementById('clubesList');
   try {
-    const res = await fetch(`${SB}/rest/v1/perfil_club?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,nombre_corto,escudo_url,municipio,descripcion)`, {headers:H()});
+    const res = await fetch(`${SB}/rest/v1/club_gestores?user_id=eq.${user.id}&activo=eq.true&select=club_id,rol,clubes(id,nombre,nombre_corto,escudo_url,municipio,descripcion)`, {headers:H()});
     const data = await res.json();
     if(!data || !data.length){
       list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Todavía no has añadido ningún club.</div>';
@@ -529,7 +529,7 @@ async function cargarClubes(){
       const club = pc.clubes;
       if(!club) continue;
       clubesPerfil[club.id] = club;
-      const resEq = await fetch(`${SB}/rest/v1/mis_equipos?club_id=eq.${club.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
+      const resEq = await fetch(`${SB}/rest/v1/equipos?club_id=eq.${club.id}&activo=eq.true&order=created_at.asc`, {headers:H()});
       const equipos = await resEq.json() || [];
       const equiposHtml = equipos.map(eq => `
         <div class="eq-card">
@@ -625,7 +625,7 @@ async function guardarClub(){
       const resData = await res.json();
       if(!res.ok) throw new Error(resData.message||resData.error||'Error al crear club');
       const [club] = resData;
-      const res2 = await fetch(`${SB}/rest/v1/perfil_club`, {
+      const res2 = await fetch(`${SB}/rest/v1/club_gestores`, {
         method:'POST', headers:{...H(),'Prefer':'return=minimal'},
         body:JSON.stringify({user_id:user.id, club_id:club.id, rol:'admin', activo:true})
       });
@@ -643,7 +643,7 @@ async function borrarClub(id){
     await fetch(`${SB}/rest/v1/clubes?id=eq.${id}`, {
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
-    await fetch(`${SB}/rest/v1/perfil_club?club_id=eq.${id}`, {
+    await fetch(`${SB}/rest/v1/club_gestores?club_id=eq.${id}`, {
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
     toast('Club eliminado','ok');
@@ -760,12 +760,12 @@ async function guardarEquipo(){
   const editId = document.getElementById('eqId').value;
   try {
     if(editId){
-      await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${editId}`, {
+      await fetch(`${SB}/rest/v1/equipos?id=eq.${editId}`, {
         method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
       });
       toast('Equipo actualizado','ok');
     } else {
-      await fetch(`${SB}/rest/v1/mis_equipos`, {
+      await fetch(`${SB}/rest/v1/equipos`, {
         method:'POST', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify(datos)
       });
       toast('Equipo añadido','ok');
@@ -778,7 +778,7 @@ async function guardarEquipo(){
 async function borrarEquipo(id){
   if(!confirm('¿Eliminar este equipo?')) return;
   try {
-    await fetch(`${SB}/rest/v1/mis_equipos?id=eq.${id}`, {
+    await fetch(`${SB}/rest/v1/equipos?id=eq.${id}`, {
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({activo:false})
     });
     toast('Equipo eliminado','ok');
@@ -793,7 +793,7 @@ async function confirmarBaja(){
   err.textContent = '';
   if(mail !== user.email){ err.textContent = 'El email no coincide'; return; }
   try {
-    await fetch(`${SB}/rest/v1/perfiles?id=eq.${user.id}`, {
+    await fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
       method:'PATCH', headers:{...H(),'Prefer':'return=minimal'},
       body: JSON.stringify({activo:false, baja_solicitada_at: new Date().toISOString()})
     });
@@ -828,7 +828,7 @@ document.getElementById('inputAlias').addEventListener('keydown', e => {
   if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.18</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">perfil v2.19</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

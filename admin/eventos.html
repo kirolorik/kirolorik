@@ -1,4 +1,4 @@
-<!-- Kirolorik · eventos.html · v3.39 · 2026-11-07 · botón «Quitar imagen» al crear, editar y revisar borradores (antes solo se podía sustituir); tras guardar un evento nuevo se limpia el cartel elegido; sesión persistente con casilla «Mantener sesión iniciada» (sesion.js); cerrar sesión revoca la sesión en el servidor; lista de eventos con buscador y filtros por club y por equipo (y próximos/pasados); rediseño del admin: Nuevo evento y Borradores con campos de una línea, botones tocables (género, competición, entrada), "Más detalles" plegado y borradores como filas compactas; Vistas: los nombres largos ya no empujan el número de vistas/día fuera de pantalla; equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
+<!-- Kirolorik · eventos.html · v3.40 · 2026-11-14 · nombres de tablas normalizados (equipos, club_gestores, analitica_*, anunciante_*, banner_disenos, usuarios_perfil); (v3.39 · 2026-11-07 · botón «Quitar imagen» al crear, editar y revisar borradores (antes solo se podía sustituir); tras guardar un evento nuevo se limpia el cartel elegido; sesión persistente con casilla «Mantener sesión iniciada» (sesion.js); cerrar sesión revoca la sesión en el servidor; lista de eventos con buscador y filtros por club y por equipo (y próximos/pasados); rediseño del admin: Nuevo evento y Borradores con campos de una línea, botones tocables (género, competición, entrada), "Más detalles" plegado y borradores como filas compactas; Vistas: los nombres largos ya no empujan el número de vistas/día fuera de pantalla; equipos agrupados por club y campo Organiza (club); deportes nuevos (billar, trec, triatlon, gimnasia ritmica, pelota, trail); la sesión se renueva sola cuando caduca el token (JWT expired) y, si no se puede, vuelve al login con aviso; el borrador empareja el equipo entre varios del mismo club por género, categoría y competición, y avisa si hay duda; al borrar un evento se borra también el borrador que lo originó; borradores con el mismo formulario y orden que Nuevo evento, con selector de mis equipos; borradores sin referencias a Telegram; pestaña Hoja operativa (pegar varias filas, normaliza y valida); pestaña Borradores (revisar y publicar eventos guardados como borrador); equipo_visitante_id (escudo del visitante propio); etiqueta más corta; etiqueta de versión visible; aviso de evento duplicado al crear, editar y pegar hoja; ojo activar/desactivar arreglado (RLS + estado visual); selector de mis equipos como visitante; campo participantes en alta y edición; seguridad: esc() en lista, modal de edición y equipos; subida solo de imágenes -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -431,9 +431,9 @@ async function loadUserTeams(){
   if(!authUser) return;
   try{
     const r=await Promise.all([
-      fetch(`${SB_URL}/rest/v1/mis_equipos?user_id=eq.${authUser.id}&activo=eq.true&order=nombre.asc`,{headers:H()}),
+      fetch(`${SB_URL}/rest/v1/equipos?user_id=eq.${authUser.id}&activo=eq.true&order=nombre.asc`,{headers:H()}),
       fetch(`${SB_URL}/rest/v1/clubes?select=id,nombre,nombre_corto&activo=eq.true&order=nombre.asc`,{headers:H()}),
-      fetch(`${SB_URL}/rest/v1/perfil_club?select=club_id&user_id=eq.${authUser.id}&activo=eq.true`,{headers:H()})
+      fetch(`${SB_URL}/rest/v1/club_gestores?select=club_id&user_id=eq.${authUser.id}&activo=eq.true`,{headers:H()})
     ]);
     const eq=await r[0].json(), cl=await r[1].json(), pc=await r[2].json();
     userTeams=Array.isArray(eq)?eq:[];
@@ -1504,7 +1504,7 @@ async function cargarStatsClub(){
 
     var ids=misEventos.map(function(e){return e.id});
     var idsParam=ids.join(',');
-    var vres=await fetch(`${SB_URL}/rest/v1/evento_views?select=evento_id&evento_id=in.(${idsParam})`,{headers:H()});
+    var vres=await fetch(`${SB_URL}/rest/v1/analitica_eventos?select=evento_id&evento_id=in.(${idsParam})`,{headers:H()});
     var views=await vres.json()||[];
 
     var countByEvento={};
@@ -1574,7 +1574,7 @@ function rellenarFiltroEquipos(){
 async function cargarFiltrosLista(){
   if(listaEquiposCargados) return;
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/mis_equipos?select=id,nombre,club_id&activo=eq.true&order=nombre.asc&limit=1000`,{headers:H()});
+    const res=await fetch(`${SB_URL}/rest/v1/equipos?select=id,nombre,club_id&activo=eq.true&order=nombre.asc&limit=1000`,{headers:H()});
     const d=await res.json();
     if(!Array.isArray(d)) throw new Error('equipos');
     listaEquipos=d; listaEquiposCargados=true;
@@ -1720,7 +1720,7 @@ if(savedToken&&savedUser){
   document.getElementById('loginScreen').style.display='flex';
 }
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.39</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">eventos v3.40</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

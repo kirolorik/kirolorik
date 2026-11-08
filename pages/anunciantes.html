@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: pages/anunciantes.html
-Versión: v1.01
-Fecha: 2026-11-12
+Versión: v1.02
+Fecha: 2026-11-14
 Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
 editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
 Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
 pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
 2026-11-11.
+v1.02: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
 v1.01: crear el banner y pedir visibilidad son pasos independientes. Los banners se crean en borrador, se envían a revisión cuando se quiera y,
 una vez aprobados, se solicita la visibilidad (pueblo, plan y renovación) más adelante; se pueden tener varios banners en cualquier
 estado (migración 2026-11-12).
@@ -257,7 +258,7 @@ async function rpc(nombre,args){
 async function entrar(){
   document.getElementById('loginScreen').style.display='none'; document.getElementById('appScreen').style.display='block';
   try{
-    var r=await getAll('anunciante_usuarios?select=anunciante_id,rol,activo,anunciantes(*)&activo=eq.true');
+    var r=await getAll('anunciante_gestores?select=anunciante_id,rol,activo,anunciantes(*)&activo=eq.true');
     MIS=r.filter(function(x){return x.anunciantes}).map(function(x){return x.anunciantes});
     if(!MIS.length){ document.getElementById('sinAnun').style.display='block'; document.getElementById('contenido').style.display='none'; return; }
     var sel=document.getElementById('selAnunSelect');
@@ -278,9 +279,9 @@ async function recargar(){
       getAll('banners?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc'),
       getAll('municipios?select=id,nombre,provincia&activo=eq.true&order=orden.asc'),
       rpc('planes_solicitables'), rpc('huecos_ocupados',{p_anunciante:ANUN.id}),
-      getAll('facturas?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=fecha.desc'),
-      getAll('disenos_banner?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc'),
-      getAll('solicitudes_pueblo?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc')
+      getAll('anunciante_facturas?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=fecha.desc'),
+      getAll('banner_disenos?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc'),
+      getAll('anunciante_solicitudes?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc')
     ]);
     BAN=r[0]; MUN=r[1]; PLANES=r[2]; HUECOS={}; (r[3]||[]).forEach(function(h){HUECOS[h.municipio_id]=h}); FAC=r[4]; DIS=r[5]; SOLP=r[6];
     var ids=BAN.map(function(b){return b.id});
@@ -485,7 +486,7 @@ async function enviarPueblo(){
   var nombre=val('pn_nombre'), prov=val('pn_prov');
   if(nombre.length<2){toast('Escribe el nombre del pueblo',true);return;}
   try{
-    var res=await fetch(SB_URL+'/rest/v1/solicitudes_pueblo',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,nombre:nombre,provincia:prov||null,solicitada_por:authUser.id})});
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_solicitudes',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,nombre:nombre,provincia:prov||null,solicitada_por:authUser.id})});
     if(!res.ok) throw new Error(await res.text());
     toast('Solicitud de pueblo enviada: te avisaremos'); document.getElementById('pn_nombre').value=''; document.getElementById('pn_prov').value='';
     document.getElementById('pn_box').style.display='none'; SOLP.unshift({nombre:nombre,estado:'pendiente'});
@@ -565,7 +566,7 @@ async function guardarDiseno(){
   var brief=val('ds_brief'); if(!brief){toast('Cuéntanos qué quieres anunciar',true);return;}
   var btn=document.getElementById('ds_guardar'); btn.disabled=true;
   try{
-    var res=await fetch(SB_URL+'/rest/v1/disenos_banner',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,briefing:brief,referencias:val('ds_ref')||null,solicitado_por:authUser.id})});
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,briefing:brief,referencias:val('ds_ref')||null,solicitado_por:authUser.id})});
     if(!res.ok) throw new Error(await res.text());
     cerrarModal(); toast('Solicitud enviada'); await recargar(); cambiarTab('dis');
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
@@ -622,7 +623,7 @@ document.addEventListener('click',function(ev){
 })();
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.01</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.02</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

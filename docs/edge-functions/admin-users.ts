@@ -1,4 +1,5 @@
-// Kirolorik · admin-users edge function · v1.1 · 2026-11-11
+// Kirolorik · admin-users edge function · v1.2 · 2026-11-14
+// v1.2: la tabla de accesos de anunciantes pasa a llamarse anunciante_gestores (antes anunciante_usuarios).
 // Gestiona acciones administrativas sobre usuarios: reset password, cambio email, listado, desactivar y, desde la v1.1, accesos de
 // anunciantes (crear usuario, vincular a un anunciante, listar accesos y quitar acceso).
 // Solo accesible para kirolorik.app@gmail.com — verificado contra el JWT del caller.
@@ -93,7 +94,7 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await adminClient.auth.admin.createUser({ email: String(email).trim().toLowerCase(), password: pwd, email_confirm: true });
       if (error) throw error;
       if (anunciante_id) {
-        const { error: e2 } = await adminClient.from("anunciante_usuarios")
+        const { error: e2 } = await adminClient.from("anunciante_gestores")
           .insert({ user_id: data.user.id, anunciante_id, rol: "propietario" });
         if (e2) throw e2;
       }
@@ -107,7 +108,7 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       const u = data.users.find((x) => (x.email || "").toLowerCase() === String(email).trim().toLowerCase());
       if (!u) throw new Error("No existe ningún usuario con ese email");
-      const { error: e2 } = await adminClient.from("anunciante_usuarios")
+      const { error: e2 } = await adminClient.from("anunciante_gestores")
         .upsert({ user_id: u.id, anunciante_id, rol: "propietario", activo: true }, { onConflict: "user_id,anunciante_id" });
       if (e2) throw e2;
       return json({ ok: true, user_id: u.id });
@@ -115,14 +116,14 @@ Deno.serve(async (req: Request) => {
 
     if (action === "unlink_user") {
       if (!target_user_id || !anunciante_id) throw new Error("Faltan parámetros");
-      const { error } = await adminClient.from("anunciante_usuarios").delete()
+      const { error } = await adminClient.from("anunciante_gestores").delete()
         .eq("user_id", target_user_id).eq("anunciante_id", anunciante_id);
       if (error) throw error;
       return json({ ok: true });
     }
 
     if (action === "accesos") {
-      let q = adminClient.from("anunciante_usuarios").select("user_id, anunciante_id, rol, activo, created_at");
+      let q = adminClient.from("anunciante_gestores").select("user_id, anunciante_id, rol, activo, created_at");
       if (anunciante_id) q = q.eq("anunciante_id", anunciante_id);
       const { data: filas, error } = await q;
       if (error) throw error;
