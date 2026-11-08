@@ -1,13 +1,13 @@
-// Kirolorik · sesion.js · v1.1 · 2026-11-08 · los dispositivos donde alguien inicia sesión (admin, gestores de clubes, anunciantes) quedan marcados para no contar sus visitas en las estadísticas; (v1.0 · 2026-11-07)
+// Kirolorik · sesion.js · v1.2 · 2026-11-14 · una sesión independiente por zona (kb_club, kb_anun, kb_admin) y roles(): consulta mis_roles() para comprobar el acceso a cada zona; (v1.1 · 2026-11-08 · los dispositivos donde alguien inicia sesión (admin, gestores de clubes, anunciantes) quedan marcados para no contar sus visitas en las estadísticas; (v1.0 · 2026-11-07)
 // Guarda la sesión (token de acceso, refresh token y usuario) donde corresponda:
 //  · con «Mantener sesión iniciada» marcada: localStorage (sigue al cerrar el navegador, como hace la librería de Supabase);
 //  · sin marcar: sessionStorage (se borra al cerrar la pestaña, como antes).
-// Dos grupos de claves independientes: 'kb' (kb_token, kb_user, kb_refresh) y 'kb_admin' (kb_admin_token, kb_admin_user, kb_admin_refresh).
+// Grupos de claves independientes, uno por zona: 'kb_club' (clubes), 'kb_anun' (anunciantes) y 'kb_admin' (administración); 'kb' queda solo para sesiones antiguas.
 // Si ya había una sesión en sessionStorage (de antes de esta versión), se sigue leyendo y se renueva donde está.
 var KBS=(function(){
   var W=window;
   var NOMBRES=['token','user','refresh'];
-  function grupo(k){ return String(k).indexOf('kb_admin_')===0?'kb_admin':'kb'; }
+  function grupo(k){ k=String(k); return k.indexOf('kb_admin_')===0?'kb_admin':k.indexOf('kb_club_')===0?'kb_club':k.indexOf('kb_anun_')===0?'kb_anun':'kb'; }
   function persistente(g){ try{ return W.localStorage.getItem(g+'_persist')==='1'; }catch(e){ return false; } }
   function get(k){
     try{ var v=W.localStorage.getItem(k); if(v!=null) return v; }catch(e){}
@@ -35,9 +35,9 @@ var KBS=(function(){
   function marcarDispositivo(){ try{ W.localStorage.setItem('kb_no_stats','1'); }catch(e){} }
   function sinEstadisticas(){
     try{ if(W.localStorage.getItem('kb_no_stats')==='1') return true; }catch(e){}
-    return !!(get('kb_token')||get('kb_admin_token'));
+    return !!(get('kb_token')||get('kb_admin_token')||get('kb_club_token')||get('kb_anun_token'));
   }
-  try{ if(get('kb_token')||get('kb_admin_token')) marcarDispositivo(); }catch(e){}
+  try{ if(get('kb_token')||get('kb_admin_token')||get('kb_club_token')||get('kb_anun_token')) marcarDispositivo(); }catch(e){}
   function expMs(t){
     try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
   }
@@ -61,5 +61,10 @@ var KBS=(function(){
     var tope=new Promise(function(r){ setTimeout(r,2000); });
     return Promise.race([p.catch(function(){}),tope]).then(function(){ if(hecho) hecho(); });
   }
-  return {get:get,set:set,remove:remove,clear:clear,setPersist:setPersist,persistente:persistente,lock:lock,cerrar:cerrar,expMs:expMs,sinEstadisticas:sinEstadisticas};
+  // Roles del usuario según la base de datos (admin, club, anunciante y sus ids): null si no se puede comprobar
+  function roles(SB,KEY,tk){
+    return W.fetch(SB+'/rest/v1/rpc/mis_roles',{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+tk,'Content-Type':'application/json'},body:'{}'})
+      .then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; });
+  }
+  return {roles:roles,get:get,set:set,remove:remove,clear:clear,setPersist:setPersist,persistente:persistente,lock:lock,cerrar:cerrar,expMs:expMs,sinEstadisticas:sinEstadisticas};
 })();
