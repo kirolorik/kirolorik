@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: pages/anunciantes.html
-Versión: v1.04
-Fecha: 2026-11-14
+Versión: v2.00
+Fecha: 2026-11-15
 Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
 editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
 Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
 pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
 2026-11-11.
+v2.00: se apoya en zona.js y zona.css para ser igual que la zona de clubes: cabecera con flecha, ficha de la persona, Mi negocio (Gestionar mis banners, Solicitar diseño, Facturas y Datos de empresa, cada una en su pantalla en vez de pestañas), Datos personales (nombre, teléfono, idioma, email, contraseña y avisos), Sesión (última conexión, ayuda y cerrar sesión) y Zona de riesgo (baja de cuenta). Las contraseñas ya no se cambian en Datos de empresa.
 v1.04: cabecera igual que Clubes y Gestionar eventos: flecha de vuelta a la portada y título «Zona de anunciantes» (con el nombre del anunciante debajo); enlace «Volver al inicio» en el acceso.
 v1.03: sesión propia de la zona de anunciantes (kb_anun), independiente de clubes y administración; mensaje de acceso si la cuenta no es de anunciante.
 v1.02: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
@@ -24,17 +25,12 @@ estado (migración 2026-11-12).
 <meta name="robots" content="noindex, nofollow">
 <title>Kirolorik · Zona de anunciantes</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/zona.css">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
 .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto}
 .tab{white-space:nowrap;padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;margin:-20px -16px 16px}
-.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
-.hdr-tit{flex:1;min-width:0}.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
-.hdr-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr-sub:empty{display:none}
-.hdr-acts{display:flex;gap:6px;flex-shrink:0}
-.hdr-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-main{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-sec{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-main:disabled,.btn-sec:disabled{opacity:.5}
@@ -79,173 +75,72 @@ estado (migración 2026-11-12).
 </head>
 <body>
 
-<div id="loginScreen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:18px;padding:32px 16px">
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)">KIROLORIK</div>
-  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-12px">Zona de anunciantes</div>
-  <div id="loginBox" style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px">
-    <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" autocomplete="username"></div>
-    <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
-    <label class="chk" style="margin:0"><input type="checkbox" id="loginRecordar" checked> Mantener sesión iniciada</label>
-    <div id="loginError" style="font-size:12px;color:#dc2626;min-height:16px"></div>
-    <button class="btn-main" id="loginBtn" onclick="login()">Entrar</button>
-    <button class="link" onclick="mostrarRecuperar()">¿Has olvidado la contraseña?</button>
-    <div style="font-size:12px;color:var(--muted);text-align:center">¿Aún no tienes acceso? Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a></div>
-    <div style="font-size:12px;color:var(--muted);text-align:center"><a href="/">← Volver al inicio</a></div>
-  </div>
-  <div id="recBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px">
-    <div style="font-size:14px;font-weight:700">Recuperar contraseña</div>
-    <div class="field" style="margin:0"><label>Email</label><input type="email" id="recEmail"></div>
-    <div id="recMsg" style="font-size:12px;min-height:16px"></div>
-    <button class="btn-main" id="recBtn" onclick="enviarRecuperar()">Enviar enlace</button>
-    <button class="link" onclick="mostrarLogin()">← Volver</button>
-  </div>
-  <div id="newPassBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px">
-    <div style="font-size:14px;font-weight:700">Elige una contraseña nueva</div>
-    <div class="field" style="margin:0"><label>Contraseña nueva (mín. 8 caracteres)</label><input type="password" id="npPass1" autocomplete="new-password"></div>
-    <div class="field" style="margin:0"><label>Repítela</label><input type="password" id="npPass2" autocomplete="new-password"></div>
-    <div id="npMsg" style="font-size:12px;min-height:16px;color:#dc2626"></div>
-    <button class="btn-main" id="npBtn" onclick="guardarNuevaPass()">Guardar contraseña</button>
-  </div>
-</div>
+<div id="z-acceso"></div>
+<div id="z-app" class="z-wrap" style="display:none">
+  <div id="z-hdr"></div>
 
-<div id="appScreen" style="display:none">
-<div class="admin-wrap">
-  <div class="hdr">
-    <a class="back" href="/">←</a>
-    <div class="hdr-tit"><div class="hdr-title">Zona de anunciantes</div><div class="hdr-sub" id="subtitulo"></div></div>
-    <div class="hdr-acts">
-      <button class="hdr-btn" onclick="window.location.href='/pages/faq.html'">Ayuda</button>
-      <button class="hdr-btn" onclick="salir()">Cerrar sesión</button>
-    </div>
-  </div>
-  <div id="selAnun" style="display:none;margin-bottom:12px"><select id="selAnunSelect" onchange="elegirAnunciante(this.value)" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text)"></select></div>
-  <div id="sinAnun" class="empty-slot" style="display:none">Esta zona es solo para anunciantes y tu cuenta no está vinculada a ningún anunciante. Si gestionas un club, entra en <a href="/pages/clubes.html">la zona de clubes</a>. Si eres anunciante, escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</div>
+  <!-- Pantalla principal -->
+  <div data-vista="principal">
+    <div id="z-hero"></div>
 
-  <div id="contenido" style="display:none">
-    <div class="tabs">
-      <div class="tab active" id="tabBtnBan" onclick="cambiarTab('ban')">📣 Mis banners</div>
-      <div class="tab" id="tabBtnPer" onclick="cambiarTab('per')">👤 Perfil</div>
-      <div class="tab" id="tabBtnFac" onclick="cambiarTab('fac')">🧾 Facturas</div>
-      <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseño</div>
+    <div class="z-sec">
+      <div class="z-sec-title">Mi negocio</div>
+  <div id="selAnun" style="display:none;margin-bottom:10px"><select id="selAnunSelect" onchange="elegirAnunciante(this.value)" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text)"></select></div>
+      <div class="z-card">
+        <div class="z-row click" data-z="vista:banners">
+          <div class="z-rico">📣</div><div class="z-rlabel">Gestionar mis banners</div>
+          <div class="z-rval" id="vNumBan"></div><div class="z-rarrow">›</div>
+        </div>
+        <div class="z-row click" data-z="vista:disenos">
+          <div class="z-rico">🎨</div><div class="z-rlabel">Solicitar diseño</div>
+          <div class="z-rval" id="vNumDis"></div><div class="z-rarrow">›</div>
+        </div>
+        <div class="z-row click" data-z="vista:facturas">
+          <div class="z-rico">🧾</div><div class="z-rlabel">Facturas</div>
+          <div class="z-rval" id="vNumFac"></div><div class="z-rarrow">›</div>
+        </div>
+        <div class="z-row click" data-z="vista:empresa">
+          <div class="z-rico">🏢</div><div class="z-rlabel">Datos de empresa</div><div class="z-rarrow">›</div>
+        </div>
+      </div>
     </div>
-    <div id="tabBan">
+
+    <div id="z-datos"></div>
+    <div id="z-sesion"></div>
+    <div id="z-riesgo"></div>
+  </div>
+
+  <!-- Pantallas de Mi negocio -->
+  <div data-vista="banners" data-titulo="Mis banners" style="display:none"><div class="z-sec" id="tabBan">
       <div class="nota"><b>Dos pasos.</b> <b>1.</b> Crea tus banners (puedes tener varios) y envíalos a revisión cuando estén listos: Kirolorik revisa el contenido. <b>2.</b> Cuando un banner esté aprobado, y cuando tú quieras, pulsa <b>«Solicitar visibilidad»</b>: elige pueblo, plan (mensual, trimestral o anual) y renovación. Al aprobar la solicitud se fijan las fechas según el plan y se te indica el precio.</div>
       <div class="bar"><button class="btn-main" data-act="nuevo-banner">＋ Nuevo banner</button></div>
       <div id="bannersList"><div class="empty-slot">Cargando...</div></div>
-    </div>
-    <div id="tabPer" style="display:none"></div>
-    <div id="tabFac" style="display:none"></div>
-    <div id="tabDis" style="display:none"></div>
-  </div>
-</div>
+  </div></div>
+  <div data-vista="disenos" data-titulo="Diseño de banners" style="display:none"><div class="z-sec"><div id="tabDis"></div></div></div>
+  <div data-vista="facturas" data-titulo="Facturas" style="display:none"><div class="z-sec"><div id="tabFac"></div></div></div>
+  <div data-vista="empresa" data-titulo="Datos de empresa" style="display:none"><div class="z-sec"><div id="tabPer"></div></div></div>
 </div>
 
 <div id="modalHost"></div>
 <div class="toast" id="toast"></div>
 
 <script src="/assets/js/sesion.js"></script>
+<script src="/assets/js/zona.js"></script>
 <script>
 const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 
-let authToken=null, authUser=null;
 let MIS=[], ANUN=null;                       // anunciantes de este usuario y el elegido
 let BAN=[], COL=[], MET=[], MUN=[], PLANES=[], HUECOS={}, FAC=[], DIS=[], SOLP=[];
 
-// ── SESIÓN (misma lógica que el resto de la web: se renueva sola) ──
-var _fetchOriginal=window.fetch.bind(window), refrescando=null;
-function jwtExp(t){ try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; } }
-function refrescarSesion(){
-  if(refrescando) return refrescando;
-  refrescando=KBS.lock('kb_anun_refresh',function(){
-    var tk=KBS.get('kb_anun_token');
-    if(tk&&tk!==authToken&&jwtExp(tk)-Date.now()>60000){ authToken=tk; return true; }
-    var rt=KBS.get('kb_anun_refresh'); if(!rt) return false;
-    return _fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})})
-      .then(function(r){return r.ok?r.json():null}).then(function(d){
-        if(!d||!d.access_token) return false;
-        authToken=d.access_token; KBS.set('kb_anun_token',authToken);
-        if(d.refresh_token) KBS.set('kb_anun_refresh',d.refresh_token);
-        if(d.user){ authUser=d.user; KBS.set('kb_anun_user',JSON.stringify(d.user)); }
-        return true;
-      });
-  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
-  return refrescando;
-}
-window.fetch=function(url,opts){
-  return _fetchOriginal(url,opts).then(function(res){
-    if(res.status!==401||!authToken||typeof url!=='string'||url.indexOf(SB_URL)!==0||url.indexOf('/auth/v1/')>=0) return res;
-    return refrescarSesion().then(function(ok){
-      if(!ok){ sesionCaducada(); return res; }
-      var o=Object.assign({},opts||{}); o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+authToken});
-      return _fetchOriginal(url,o);
-    });
-  });
-};
-setInterval(function(){ if(authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); },60000);
-document.addEventListener('visibilitychange',function(){ if(!document.hidden&&authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); });
-function sesionCaducada(){
-  KBS.clear('kb_anun'); authToken=null; authUser=null;
-  document.getElementById('appScreen').style.display='none'; mostrarLogin();
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('loginError').textContent='La sesión ha caducado. Entra de nuevo.';
-}
-function salir(){ KBS.cerrar(SB_URL,SB_KEY,'kb_anun',function(){ window.location.href='/pages/anunciantes.html'; }); }
-
-function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+// La sesión, el acceso y los datos personales los gestiona zona.js
+function H(){ return KBZ.H(); }
 function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' error':''); setTimeout(function(){t.className='toast'},3500); }
 function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
 function hoyISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function fmtF(iso){ if(!iso) return '—'; var p=String(iso).slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
 function enlaceHttps(u){ return /^https:\/\//i.test(String(u||''))?String(u):''; }
-
-// ── ACCESO ──
-function mostrarLogin(){ document.getElementById('loginBox').style.display='flex'; document.getElementById('recBox').style.display='none'; document.getElementById('newPassBox').style.display='none'; }
-function mostrarRecuperar(){ document.getElementById('loginBox').style.display='none'; document.getElementById('recBox').style.display='flex'; document.getElementById('recEmail').value=val('loginEmail'); document.getElementById('recMsg').textContent=''; }
-async function login(){
-  var email=val('loginEmail'), pass=document.getElementById('loginPass').value, err=document.getElementById('loginError'), btn=document.getElementById('loginBtn');
-  err.textContent=''; if(!email||!pass){ err.textContent='Escribe tu email y tu contraseña'; return; }
-  btn.disabled=true; btn.textContent='...';
-  try{
-    var res=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
-    var d=await res.json(); if(!res.ok) throw new Error(d.error_description||'Email o contraseña incorrectos');
-    authToken=d.access_token; authUser=d.user;
-    KBS.setPersist(!!document.getElementById('loginRecordar').checked,'kb_anun');
-    KBS.set('kb_anun_token',authToken); KBS.set('kb_anun_user',JSON.stringify(authUser)); if(d.refresh_token) KBS.set('kb_anun_refresh',d.refresh_token);
-    entrar();
-  }catch(e){ err.textContent=e.message; btn.disabled=false; btn.textContent='Entrar'; }
-}
-async function enviarRecuperar(){
-  var email=val('recEmail'), msg=document.getElementById('recMsg'), btn=document.getElementById('recBtn');
-  if(!email){ msg.style.color='#dc2626'; msg.textContent='Escribe tu email'; return; }
-  btn.disabled=true;
-  try{
-    await fetch(SB_URL+'/auth/v1/recover',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,redirect_to:location.origin+'/pages/anunciantes.html'})});
-    msg.style.color='#16a34a'; msg.textContent='Si el email existe, recibirás un enlace para elegir una contraseña nueva.';
-  }catch(e){ msg.style.color='#dc2626'; msg.textContent='No se ha podido enviar. Inténtalo de nuevo.'; }
-  btn.disabled=false;
-}
-// Enlace de recuperación: llega con #access_token=…&type=recovery
-function hashRecuperacion(){
-  var h=location.hash.replace(/^#/,''); if(!h) return null;
-  var p={}; h.split('&').forEach(function(x){ var kv=x.split('='); p[kv[0]]=decodeURIComponent(kv[1]||''); });
-  return (p.type==='recovery'&&p.access_token)?p.access_token:null;
-}
-async function guardarNuevaPass(){
-  var a=document.getElementById('npPass1').value, b=document.getElementById('npPass2').value, msg=document.getElementById('npMsg'), btn=document.getElementById('npBtn');
-  msg.style.color='#dc2626';
-  if(a.length<8){ msg.textContent='La contraseña debe tener al menos 8 caracteres'; return; }
-  if(a!==b){ msg.textContent='Las contraseñas no coinciden'; return; }
-  btn.disabled=true;
-  try{
-    var res=await _fetchOriginal(SB_URL+'/auth/v1/user',{method:'PUT',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+window._tokenRecuperacion,'Content-Type':'application/json'},body:JSON.stringify({password:a})});
-    var d=await res.json(); if(!res.ok) throw new Error(d.msg||d.error_description||'No se ha podido guardar la contraseña');
-    history.replaceState(null,'',location.pathname); window._tokenRecuperacion=null;
-    mostrarLogin(); document.getElementById('loginError').style.color='#16a34a'; document.getElementById('loginError').textContent='Contraseña guardada. Ya puedes entrar.';
-  }catch(e){ msg.textContent=e.message; }
-  btn.disabled=false;
-}
 
 // ── DATOS ──
 async function getAll(path){
@@ -262,11 +157,10 @@ async function rpc(nombre,args){
   var d=await res.json(); if(!res.ok) throw new Error((d&&d.message)||'Error'); return d;
 }
 async function entrar(){
-  document.getElementById('loginScreen').style.display='none'; document.getElementById('appScreen').style.display='block';
   try{
     var r=await getAll('anunciante_gestores?select=anunciante_id,rol,activo,anunciantes(*)&activo=eq.true');
     MIS=r.filter(function(x){return x.anunciantes}).map(function(x){return x.anunciantes});
-    if(!MIS.length){ document.getElementById('sinAnun').style.display='block'; document.getElementById('contenido').style.display='none'; return; }
+    if(!MIS.length){ KBZ.sinPermiso(); return; }
     var sel=document.getElementById('selAnunSelect');
     sel.innerHTML=MIS.map(function(a){return '<option value="'+esc(a.id)+'">'+esc(a.nombre)+' ('+esc(a.codigo)+')</option>'}).join('');
     document.getElementById('selAnun').style.display=MIS.length>1?'block':'none';
@@ -275,8 +169,7 @@ async function entrar(){
 }
 async function elegirAnunciante(id){
   ANUN=MIS.filter(function(a){return a.id===id})[0]; if(!ANUN) return;
-  document.getElementById('sinAnun').style.display='none'; document.getElementById('contenido').style.display='block';
-  document.getElementById('subtitulo').textContent=ANUN.nombre;
+  KBZ.heroExtra(ANUN.nombre+(ANUN.codigo?' · '+ANUN.codigo:''));
   await recargar();
 }
 async function recargar(){
@@ -297,12 +190,12 @@ async function recargar(){
     renderTodo();
   }catch(e){ document.getElementById('bannersList').innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar: '+esc(e.message)+'</div>'; }
 }
-function renderTodo(){ renderBanners(); renderPerfil(); renderFacturas(); renderDisenos(); }
-function cambiarTab(t){
-  [['ban','tabBan','tabBtnBan'],['per','tabPer','tabBtnPer'],['fac','tabFac','tabBtnFac'],['dis','tabDis','tabBtnDis']].forEach(function(x){
-    document.getElementById(x[1]).style.display=(x[0]===t?'block':'none'); document.getElementById(x[2]).classList.toggle('active',x[0]===t);
-  });
+function renderTodo(){ renderBanners(); renderPerfil(); renderFacturas(); renderDisenos(); contadores(); }
+function contadores(){
+  var f=function(id,n){ var e=document.getElementById(id); if(e) e.textContent=n?String(n):''; };
+  f('vNumBan',BAN.length); f('vNumDis',DIS.length); f('vNumFac',FAC.length);
 }
+function cambiarTab(t){ KBZ.vista({ban:'banners',per:'empresa',fac:'facturas',dis:'disenos'}[t]||'principal'); }
 
 // ── MIS BANNERS ──
 const ESTADOS_CONT={borrador:['Borrador','b-muted'],revision:['En revisión','b-pur'],aprobado:['Aprobado','b-ok'],rechazado:['Rechazado','b-bad']};
@@ -398,7 +291,7 @@ async function subirImagen(file){
   if(!ext) throw new Error('Formato no permitido (usa JPG, PNG, WEBP o GIF)');
   if(file.size>5*1024*1024) throw new Error('Imagen demasiado grande (máx. 5 MB)');
   var nombre=ANUN.id+'/banner_'+Date.now()+'.'+ext;
-  var res=await fetch(SB_URL+'/storage/v1/object/banners/'+nombre,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken,'Content-Type':file.type},body:file});
+  var res=await fetch(SB_URL+'/storage/v1/object/banners/'+nombre,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+KBZ.token(),'Content-Type':file.type},body:file});
   if(!res.ok) throw new Error('Error al subir la imagen');
   return SB_URL+'/storage/v1/object/public/banners/'+nombre;
 }
@@ -474,7 +367,7 @@ async function guardarSolicitud(bannerId){
   if(!b||!b.nombre||!b.descripcion){toast('Completa el título y la descripción del banner antes de solicitar',true);return;}
   var btn=document.getElementById('sol_guardar'); btn.disabled=true;
   try{
-    var filas=mids.map(function(m){return {banner_id:bannerId,municipio_id:m,estado:'revision',origen:'pago',modo_renovacion:ren?ren.value:'prepago',tarifa_id:plan.value,orden:0,solicitada_por:authUser.id}});
+    var filas=mids.map(function(m){return {banner_id:bannerId,municipio_id:m,estado:'revision',origen:'pago',modo_renovacion:ren?ren.value:'prepago',tarifa_id:plan.value,orden:0,solicitada_por:KBZ.user().id}});
     var res=await fetch(SB_URL+'/rest/v1/colocaciones',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(filas)});
     if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('colocaciones_solicitud_uq')>=0?'Ya tienes una solicitud pendiente de este banner en alguno de esos pueblos':t); }
     cerrarModal(); toast(mids.length>1?mids.length+' solicitudes enviadas':'Solicitud enviada'); await recargar();
@@ -492,7 +385,7 @@ async function enviarPueblo(){
   var nombre=val('pn_nombre'), prov=val('pn_prov');
   if(nombre.length<2){toast('Escribe el nombre del pueblo',true);return;}
   try{
-    var res=await fetch(SB_URL+'/rest/v1/anunciante_solicitudes',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,nombre:nombre,provincia:prov||null,solicitada_por:authUser.id})});
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_solicitudes',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,nombre:nombre,provincia:prov||null,solicitada_por:KBZ.user().id})});
     if(!res.ok) throw new Error(await res.text());
     toast('Solicitud de pueblo enviada: te avisaremos'); document.getElementById('pn_nombre').value=''; document.getElementById('pn_prov').value='';
     document.getElementById('pn_box').style.display='none'; SOLP.unshift({nombre:nombre,estado:'pendiente'});
@@ -509,11 +402,7 @@ function renderPerfil(){
     +'<div class="field"><label>Dirección fiscal</label><input type="text" id="pf_dir" value="'+esc(a.direccion_fiscal||'')+'"></div>'
     +'<div class="row2"><div class="field"><label>Ciudad / pueblo</label><input type="text" id="pf_mun" value="'+esc(a.municipio||'')+'"></div><div class="field"><label>Provincia</label><input type="text" id="pf_prov" value="'+esc(a.provincia||'')+'"></div></div>'
     +'<div class="row2"><div class="field"><label>Persona de contacto</label><input type="text" id="pf_contacto" value="'+esc(a.contacto_nombre||'')+'"></div><div class="field"><label>Email de contacto</label><input type="email" id="pf_email" value="'+esc(a.email||'')+'"></div></div>'
-    +'<button class="btn-main" style="width:100%" id="pf_guardar" data-act="guardar-perfil">Guardar datos</button>'
-    +'<div class="sec" style="margin:24px 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Contraseña</div>'
-    +'<div class="nota">Cuenta: '+esc(authUser?authUser.email:'')+'</div>'
-    +'<div class="row2"><div class="field"><label>Contraseña nueva</label><input type="password" id="pw1" autocomplete="new-password"></div><div class="field"><label>Repítela</label><input type="password" id="pw2" autocomplete="new-password"></div></div>'
-    +'<button class="btn-sec" id="pw_guardar" data-act="cambiar-pass">Cambiar contraseña</button>';
+    +'<button class="btn-main" style="width:100%" id="pf_guardar" data-act="guardar-perfil">Guardar datos</button>';
 }
 async function guardarPerfil(){
   var btn=document.getElementById('pf_guardar'); btn.disabled=true;
@@ -524,17 +413,6 @@ async function guardarPerfil(){
   }catch(e){ toast('Error: '+e.message,true); }
   btn.disabled=false;
 }
-async function cambiarPass(){
-  var a=document.getElementById('pw1').value, b=document.getElementById('pw2').value;
-  if(a.length<8){toast('La contraseña debe tener al menos 8 caracteres',true);return;}
-  if(a!==b){toast('Las contraseñas no coinciden',true);return;}
-  try{
-    var res=await fetch(SB_URL+'/auth/v1/user',{method:'PUT',headers:H(),body:JSON.stringify({password:a})});
-    var d=await res.json(); if(!res.ok) throw new Error(d.msg||d.error_description||'No se ha podido cambiar');
-    document.getElementById('pw1').value=''; document.getElementById('pw2').value=''; toast('Contraseña cambiada');
-  }catch(e){ toast('Error: '+e.message,true); }
-}
-
 // ── FACTURAS ──
 function eur(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
 function renderFacturas(){
@@ -572,7 +450,7 @@ async function guardarDiseno(){
   var brief=val('ds_brief'); if(!brief){toast('Cuéntanos qué quieres anunciar',true);return;}
   var btn=document.getElementById('ds_guardar'); btn.disabled=true;
   try{
-    var res=await fetch(SB_URL+'/rest/v1/banner_disenos',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,briefing:brief,referencias:val('ds_ref')||null,solicitado_por:authUser.id})});
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,briefing:brief,referencias:val('ds_ref')||null,solicitado_por:KBZ.user().id})});
     if(!res.ok) throw new Error(await res.text());
     cerrarModal(); toast('Solicitud enviada'); await recargar(); cambiarTab('dis');
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
@@ -601,35 +479,24 @@ document.addEventListener('click',function(ev){
   else if(act==='toggle-pueblo-nuevo'){ var bx=document.getElementById('pn_box'); bx.style.display=bx.style.display==='none'?'block':'none'; }
   else if(act==='enviar-pueblo') enviarPueblo();
   else if(act==='guardar-perfil') guardarPerfil();
-  else if(act==='cambiar-pass') cambiarPass();
   else if(act==='nuevo-diseno') modalDiseno('');
   else if(act==='pedir-diseno-desde-banner'){ var n=val('bn_nombre'); cerrarModal(); modalDiseno(n?'Banner para: '+n:''); }
   else if(act==='guardar-diseno') guardarDiseno();
 });
 
-// ── INIT ──
-(function(){
-  var tokRec=hashRecuperacion();
-  if(tokRec){
-    window._tokenRecuperacion=tokRec;
-    document.getElementById('loginScreen').style.display='flex';
-    document.getElementById('loginBox').style.display='none'; document.getElementById('newPassBox').style.display='flex';
-    return;
-  }
-  var t=KBS.get('kb_anun_token'), u=KBS.get('kb_anun_user');
-  if(t&&u){
-    authToken=t; try{ authUser=JSON.parse(u); }catch(e){ authUser=null; }
-    if(authUser){
-      if(jwtExp(t)-Date.now()<60000) refrescarSesion().then(function(ok){ if(ok) entrar(); else sesionCaducada(); });
-      else entrar();
-      return;
-    }
-  }
-  document.getElementById('loginScreen').style.display='flex';
-})();
+// ── ZONA ──
+KBZ.iniciar({
+  zona:'anun', grupo:'kb_anun', inicio:'/pages/anunciantes.html', titulo:'Zona de anunciantes', sb:SB_URL, key:SB_KEY,
+  permiso:function(ro){ return !!ro.anunciante; },
+  sinPermisoTitulo:'Esta cuenta no es de un anunciante',
+  sinPermiso:'Esta zona es solo para anunciantes y tu cuenta no está vinculada a ningún negocio. Si gestionas un club, entra en <a href="/pages/clubes.html">la zona de clubes</a>. Si eres anunciante, escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.',
+  textoBaja:'Al solicitar la eliminación, tu cuenta se desactivará durante 30 días y perderás el acceso a tu negocio. Las facturas se conservan por obligación legal. Pasado ese plazo, tus datos personales se borrarán.',
+  avisoBaja:'Si eres la única persona con acceso a tu negocio, sus banners se pausarán.',
+  alEntrar:function(ctx){ entrar(); }
+});
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.04</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v2.00</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

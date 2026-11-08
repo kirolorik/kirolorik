@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/publicidad.html
-Versión: v1.05
-Fecha: 2026-11-14
+Versión: v1.06
+Fecha: 2026-11-15
 Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
 (por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
 (pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
@@ -16,6 +16,7 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
 v1.03: pestaña Solicitudes (solicitudes de visibilidad de los anunciantes: aprobar con fechas calculadas según el plan, o rechazar con
 motivo; solicitudes de pueblo nuevo) y botón «Acceso» en cada anunciante (crear usuario, vincular uno existente, ver y quitar accesos),
 que usa la función admin-users v1.1.
+v1.06: aviso «Baja solicitada» en los anunciantes que se han dado de baja (sin accesos y con banners confirmados pausados).
 v1.05: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores). El botón «Panel» va a /admin/admin.html.
 v1.04: la revisión del contenido del banner es un paso independiente de la solicitud de visibilidad: en Solicitudes aparecen «Banners por
 revisar» (aprobar o rechazar con motivo) y no se puede aprobar la visibilidad de un banner cuyo contenido no esté aprobado (migración
@@ -538,6 +539,7 @@ function renderAnun(){
     return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(a.nombre)+'</div>'
       +'<div class="pc-sub"><span class="cod">'+esc(a.codigo)+'</span>'+(a.razon_social?' · '+esc(a.razon_social):'')+(a.cif?' · CIF '+esc(a.cif):'')+'</div></div>'
       +'<span class="badge '+(a.estado==='activo'&&a.activo?'st-activa':'st-pausada')+'">'+esc(a.estado==='activo'&&a.activo?'Activo':(a.estado||'Inactivo'))+'</span></div>'
+      +(a.baja_solicitada_at?'<div class="pc-line" style="color:#dc2626;font-weight:700">⚠️ Baja solicitada el '+esc(String(a.baja_solicitada_at).slice(0,10).split('-').reverse().join('/'))+': sin accesos y banners confirmados pausados. Reactiva el acceso en 🔑 Acceso si es un error.</div>':'')
       +'<div class="pc-line">'+esc(tn||'Sin tipo de negocio')+(ubic?' · 📍 '+esc(ubic):'')+'</div>'
       +(a.email||a.telefono?'<div class="pc-line">'+esc([a.contacto_nombre,a.email,a.telefono].filter(Boolean).join(' · '))+'</div>':'')
       +'<div class="pc-metrics"><span>Banners <b>'+bans.length+'</b></span><span>En vigor <b>'+vigor+'</b></span><span>👁 <b>'+t.v+'</b></span><span>👆 <b>'+t.c+'</b></span><span>CTR <b>'+ctr(t)+'</b></span></div>'
@@ -1393,7 +1395,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.05</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.06</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
