@@ -1,6 +1,6 @@
-/* Kirolorik · sw.js · v14 · 2026-11-07 · guarda también sesion.js; (v13 · 2026-10-31 · pantalla de «sin conexión» con explicación (posible bloqueo del operador); (v12: guarda también faq.html y legal.html para abrirlas sin red; (v11: espera de red de 1,5 s en vez de 4 s para que la app abra rápido con la web bloqueada; (v10: la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10) · cache v12) */
+/* Kirolorik · sw.js · v15 · 2026-11-14 · la portada ya no tiene inicio de sesión; zonas de clubes, anunciantes y administración con sesión propia; (v14 · 2026-11-07 · guarda también sesion.js; (v13 · 2026-10-31 · pantalla de «sin conexión» con explicación (posible bloqueo del operador); (v12: guarda también faq.html y legal.html para abrirlas sin red; (v11: espera de red de 1,5 s en vez de 4 s para que la app abra rápido con la web bloqueada; (v10: la portada, el CSS y los scripts quedan guardados al instalar y se sirven si falla la red (bloqueos de IPs en días de partido); cache v10) · cache v12) */
 
-const CACHE = 'kirolorik-v14';
+const CACHE = 'kirolorik-v15';
 
 // Se guardan al instalar para poder abrir la app sin red
 const PRECACHE = ['/', '/index.html', '/assets/css/style.css', '/assets/js/i18n.js', '/assets/js/sesion.js', '/pages/faq.html', '/pages/legal.html'];

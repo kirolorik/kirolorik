@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /pages/clubes.html
+Disallow: /pages/eventos.html
+Disallow: /pages/anunciantes.html
 Disallow: /pages/perfil.html
 
 Sitemap: https://kirolorik.app/sitemap.xml

@@ -1,13 +1,14 @@
 <!--
 Proyecto: Kirolorik
 Archivo: pages/anunciantes.html
-Versión: v1.02
+Versión: v1.03
 Fecha: 2026-11-14
 Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
 editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
 Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
 pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
 2026-11-11.
+v1.03: sesión propia de la zona de anunciantes (kb_anun), independiente de clubes y administración; mensaje de acceso si la cuenta no es de anunciante.
 v1.02: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
 v1.01: crear el banner y pedir visibilidad son pasos independientes. Los banners se crean en borrador, se envían a revisión cuando se quiera y,
 una vez aprobados, se solicita la visibilidad (pueblo, plan y renovación) más adelante; se pueden tener varios banners en cualquier
@@ -113,7 +114,7 @@ estado (migración 2026-11-12).
     </div>
   </div>
   <div id="selAnun" style="display:none;margin-bottom:12px"><select id="selAnunSelect" onchange="elegirAnunciante(this.value)" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text)"></select></div>
-  <div id="sinAnun" class="empty-slot" style="display:none">Tu cuenta aún no está vinculada a ningún anunciante. Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</div>
+  <div id="sinAnun" class="empty-slot" style="display:none">Esta zona es solo para anunciantes y tu cuenta no está vinculada a ningún anunciante. Si gestionas un club, entra en <a href="/pages/clubes.html">la zona de clubes</a>. Si eres anunciante, escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</div>
 
   <div id="contenido" style="display:none">
     <div class="tabs">
@@ -151,16 +152,16 @@ var _fetchOriginal=window.fetch.bind(window), refrescando=null;
 function jwtExp(t){ try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; } }
 function refrescarSesion(){
   if(refrescando) return refrescando;
-  refrescando=KBS.lock('kb_refresh',function(){
-    var tk=KBS.get('kb_token');
+  refrescando=KBS.lock('kb_anun_refresh',function(){
+    var tk=KBS.get('kb_anun_token');
     if(tk&&tk!==authToken&&jwtExp(tk)-Date.now()>60000){ authToken=tk; return true; }
-    var rt=KBS.get('kb_refresh'); if(!rt) return false;
+    var rt=KBS.get('kb_anun_refresh'); if(!rt) return false;
     return _fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})})
       .then(function(r){return r.ok?r.json():null}).then(function(d){
         if(!d||!d.access_token) return false;
-        authToken=d.access_token; KBS.set('kb_token',authToken);
-        if(d.refresh_token) KBS.set('kb_refresh',d.refresh_token);
-        if(d.user){ authUser=d.user; KBS.set('kb_user',JSON.stringify(d.user)); }
+        authToken=d.access_token; KBS.set('kb_anun_token',authToken);
+        if(d.refresh_token) KBS.set('kb_anun_refresh',d.refresh_token);
+        if(d.user){ authUser=d.user; KBS.set('kb_anun_user',JSON.stringify(d.user)); }
         return true;
       });
   }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
@@ -179,12 +180,12 @@ window.fetch=function(url,opts){
 setInterval(function(){ if(authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); },60000);
 document.addEventListener('visibilitychange',function(){ if(!document.hidden&&authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); });
 function sesionCaducada(){
-  KBS.clear('kb'); authToken=null; authUser=null;
+  KBS.clear('kb_anun'); authToken=null; authUser=null;
   document.getElementById('appScreen').style.display='none'; mostrarLogin();
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('loginError').textContent='La sesión ha caducado. Entra de nuevo.';
 }
-function salir(){ KBS.cerrar(SB_URL,SB_KEY,'kb',function(){ window.location.href='/pages/anunciantes.html'; }); }
+function salir(){ KBS.cerrar(SB_URL,SB_KEY,'kb_anun',function(){ window.location.href='/pages/anunciantes.html'; }); }
 
 function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
 function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' error':''); setTimeout(function(){t.className='toast'},3500); }
@@ -205,8 +206,8 @@ async function login(){
     var res=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
     var d=await res.json(); if(!res.ok) throw new Error(d.error_description||'Email o contraseña incorrectos');
     authToken=d.access_token; authUser=d.user;
-    KBS.setPersist(!!document.getElementById('loginRecordar').checked,'kb');
-    KBS.set('kb_token',authToken); KBS.set('kb_user',JSON.stringify(authUser)); if(d.refresh_token) KBS.set('kb_refresh',d.refresh_token);
+    KBS.setPersist(!!document.getElementById('loginRecordar').checked,'kb_anun');
+    KBS.set('kb_anun_token',authToken); KBS.set('kb_anun_user',JSON.stringify(authUser)); if(d.refresh_token) KBS.set('kb_anun_refresh',d.refresh_token);
     entrar();
   }catch(e){ err.textContent=e.message; btn.disabled=false; btn.textContent='Entrar'; }
 }
@@ -610,7 +611,7 @@ document.addEventListener('click',function(ev){
     document.getElementById('loginBox').style.display='none'; document.getElementById('newPassBox').style.display='flex';
     return;
   }
-  var t=KBS.get('kb_token'), u=KBS.get('kb_user');
+  var t=KBS.get('kb_anun_token'), u=KBS.get('kb_anun_user');
   if(t&&u){
     authToken=t; try{ authUser=JSON.parse(u); }catch(e){ authUser=null; }
     if(authUser){
@@ -623,7 +624,7 @@ document.addEventListener('click',function(ev){
 })();
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.02</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.03</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
