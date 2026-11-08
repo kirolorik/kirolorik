@@ -1,0 +1,600 @@
+<!--
+Proyecto: Kirolorik
+Archivo: pages/anunciantes.html
+Versión: v1.00
+Fecha: 2026-11-11
+Descripción: Zona de anunciantes. Acceso con email y contraseña (recordar sesión, recuperar contraseña). Pestañas: Mis banners (crear y
+editar el contenido mientras no esté publicado, ver estado y métricas, solicitar visibilidad por pueblo y plan, cancelar solicitudes),
+Perfil (datos fiscales y contraseña), Facturas (solo lectura) y Diseño (pedir que Kirolorik diseñe el banner). Las solicitudes quedan
+pendientes de la aprobación de Kirolorik, que fija las fechas según el plan. Usa las tablas de las migraciones 2026-11-08, 2026-11-09 y
+2026-11-11.
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<meta name="robots" content="noindex, nofollow">
+<title>Kirolorik · Zona de anunciantes</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab{white-space:nowrap;padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.hdr-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-main{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-sec{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-main:disabled,.btn-sec:disabled{opacity:.5}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+.card-top{display:flex;gap:10px;align-items:flex-start}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;background:var(--surface2,var(--bg))}
+.main{min-width:0;flex:1}
+.title{font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.sub{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.b-ok{background:rgba(22,163,74,.12);color:#16a34a}.b-info{background:rgba(37,99,235,.12);color:#2563eb}.b-warn{background:rgba(234,88,12,.12);color:#c2410c}
+.b-muted{background:rgba(100,116,139,.15);color:#64748b}.b-bad{background:rgba(220,38,38,.12);color:#dc2626}.b-pur{background:rgba(147,51,234,.12);color:#7e22ce}
+.line{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}
+.line-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.line-t{font-size:13px;font-weight:600}
+.line-s{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.mets{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}.mets b{color:var(--text)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.acts button{font-size:11px;font-weight:600;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif}
+.acts button.danger:hover{border-color:#dc2626;color:#dc2626}
+.nota{font-size:12px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;line-height:1.5}
+.warn{font-size:12px;line-height:1.4;color:#b45309;background:rgba(234,179,8,.12);border-radius:8px;padding:8px 10px;margin:0 0 12px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 16px 40px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet-t{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+.sheet-x{font-size:22px;cursor:pointer;color:var(--muted);background:none;border:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts .opt{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;margin:0;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.opts .opt input{width:auto;margin:3px 0 0;padding:0;border:none;-webkit-appearance:auto;appearance:auto}
+.opts .opt small{display:block;color:var(--muted);font-size:11px;margin-top:2px;font-weight:400}
+.prev{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px}
+.prev-bar{display:flex;align-items:center;gap:8px;font-size:12px}.prev-bar .t{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase}.prev-bar .n{font-weight:700}.prev-bar .s{color:var(--muted);overflow-wrap:anywhere}
+.prev img{width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)}.prev .l{font-size:12px;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;margin:0 0 12px}.chk input{width:auto;margin:0;padding:0;border:none;-webkit-appearance:auto;appearance:auto}
+.link{background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:'DM Sans',sans-serif}
+.cod{font-family:monospace;font-size:11px;color:var(--muted)}
+.dis-img{width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:18px;padding:32px 16px">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)">KIROLORIK</div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-12px">Zona de anunciantes</div>
+  <div id="loginBox" style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px">
+    <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" autocomplete="username"></div>
+    <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
+    <label class="chk" style="margin:0"><input type="checkbox" id="loginRecordar" checked> Mantener sesión iniciada</label>
+    <div id="loginError" style="font-size:12px;color:#dc2626;min-height:16px"></div>
+    <button class="btn-main" id="loginBtn" onclick="login()">Entrar</button>
+    <button class="link" onclick="mostrarRecuperar()">¿Has olvidado la contraseña?</button>
+    <div style="font-size:12px;color:var(--muted);text-align:center">¿Aún no tienes acceso? Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a></div>
+  </div>
+  <div id="recBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px">
+    <div style="font-size:14px;font-weight:700">Recuperar contraseña</div>
+    <div class="field" style="margin:0"><label>Email</label><input type="email" id="recEmail"></div>
+    <div id="recMsg" style="font-size:12px;min-height:16px"></div>
+    <button class="btn-main" id="recBtn" onclick="enviarRecuperar()">Enviar enlace</button>
+    <button class="link" onclick="mostrarLogin()">← Volver</button>
+  </div>
+  <div id="newPassBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px">
+    <div style="font-size:14px;font-weight:700">Elige una contraseña nueva</div>
+    <div class="field" style="margin:0"><label>Contraseña nueva (mín. 8 caracteres)</label><input type="password" id="npPass1" autocomplete="new-password"></div>
+    <div class="field" style="margin:0"><label>Repítela</label><input type="password" id="npPass2" autocomplete="new-password"></div>
+    <div id="npMsg" style="font-size:12px;min-height:16px;color:#dc2626"></div>
+    <button class="btn-main" id="npBtn" onclick="guardarNuevaPass()">Guardar contraseña</button>
+  </div>
+</div>
+
+<div id="appScreen" style="display:none">
+<div class="admin-wrap">
+  <div class="admin-header">
+    <div>
+      <div class="admin-logo">Kirolorik</div>
+      <div class="admin-sub" id="subtitulo">Zona de anunciantes</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <button class="hdr-btn" onclick="window.location.href='/pages/faq.html'">Ayuda</button>
+      <button class="hdr-btn" onclick="salir()">Cerrar sesión</button>
+    </div>
+  </div>
+  <div id="selAnun" style="display:none;margin-bottom:12px"><select id="selAnunSelect" onchange="elegirAnunciante(this.value)" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text)"></select></div>
+  <div id="sinAnun" class="empty-slot" style="display:none">Tu cuenta aún no está vinculada a ningún anunciante. Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</div>
+
+  <div id="contenido" style="display:none">
+    <div class="tabs">
+      <div class="tab active" id="tabBtnBan" onclick="cambiarTab('ban')">📣 Mis banners</div>
+      <div class="tab" id="tabBtnPer" onclick="cambiarTab('per')">👤 Perfil</div>
+      <div class="tab" id="tabBtnFac" onclick="cambiarTab('fac')">🧾 Facturas</div>
+      <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseño</div>
+    </div>
+    <div id="tabBan">
+      <div class="nota">Crea tu banner y, cuando lo tengas, pulsa <b>«Solicitar visibilidad»</b>: elige el pueblo, el plan (mensual, trimestral o anual) y cómo quieres renovarlo. Kirolorik revisa tu banner y tu solicitud; al aprobarla se fijan las fechas según el plan. Los precios se te indican al aprobarla.</div>
+      <div class="bar"><button class="btn-main" data-act="nuevo-banner">＋ Nuevo banner</button></div>
+      <div id="bannersList"><div class="empty-slot">Cargando...</div></div>
+    </div>
+    <div id="tabPer" style="display:none"></div>
+    <div id="tabFac" style="display:none"></div>
+    <div id="tabDis" style="display:none"></div>
+  </div>
+</div>
+</div>
+
+<div id="modalHost"></div>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/js/sesion.js"></script>
+<script>
+const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+
+let authToken=null, authUser=null;
+let MIS=[], ANUN=null;                       // anunciantes de este usuario y el elegido
+let BAN=[], COL=[], MET=[], MUN=[], PLANES=[], HUECOS={}, FAC=[], DIS=[], SOLP=[];
+
+// ── SESIÓN (misma lógica que el resto de la web: se renueva sola) ──
+var _fetchOriginal=window.fetch.bind(window), refrescando=null;
+function jwtExp(t){ try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; } }
+function refrescarSesion(){
+  if(refrescando) return refrescando;
+  refrescando=KBS.lock('kb_refresh',function(){
+    var tk=KBS.get('kb_token');
+    if(tk&&tk!==authToken&&jwtExp(tk)-Date.now()>60000){ authToken=tk; return true; }
+    var rt=KBS.get('kb_refresh'); if(!rt) return false;
+    return _fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})})
+      .then(function(r){return r.ok?r.json():null}).then(function(d){
+        if(!d||!d.access_token) return false;
+        authToken=d.access_token; KBS.set('kb_token',authToken);
+        if(d.refresh_token) KBS.set('kb_refresh',d.refresh_token);
+        if(d.user){ authUser=d.user; KBS.set('kb_user',JSON.stringify(d.user)); }
+        return true;
+      });
+  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
+  return refrescando;
+}
+window.fetch=function(url,opts){
+  return _fetchOriginal(url,opts).then(function(res){
+    if(res.status!==401||!authToken||typeof url!=='string'||url.indexOf(SB_URL)!==0||url.indexOf('/auth/v1/')>=0) return res;
+    return refrescarSesion().then(function(ok){
+      if(!ok){ sesionCaducada(); return res; }
+      var o=Object.assign({},opts||{}); o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+authToken});
+      return _fetchOriginal(url,o);
+    });
+  });
+};
+setInterval(function(){ if(authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); },60000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden&&authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); });
+function sesionCaducada(){
+  KBS.clear('kb'); authToken=null; authUser=null;
+  document.getElementById('appScreen').style.display='none'; mostrarLogin();
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginError').textContent='La sesión ha caducado. Entra de nuevo.';
+}
+function salir(){ KBS.cerrar(SB_URL,SB_KEY,'kb',function(){ window.location.href='/pages/anunciantes.html'; }); }
+
+function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' error':''); setTimeout(function(){t.className='toast'},3500); }
+function esc(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+function hoyISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtF(iso){ if(!iso) return '—'; var p=String(iso).slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
+function enlaceHttps(u){ return /^https:\/\//i.test(String(u||''))?String(u):''; }
+
+// ── ACCESO ──
+function mostrarLogin(){ document.getElementById('loginBox').style.display='flex'; document.getElementById('recBox').style.display='none'; document.getElementById('newPassBox').style.display='none'; }
+function mostrarRecuperar(){ document.getElementById('loginBox').style.display='none'; document.getElementById('recBox').style.display='flex'; document.getElementById('recEmail').value=val('loginEmail'); document.getElementById('recMsg').textContent=''; }
+async function login(){
+  var email=val('loginEmail'), pass=document.getElementById('loginPass').value, err=document.getElementById('loginError'), btn=document.getElementById('loginBtn');
+  err.textContent=''; if(!email||!pass){ err.textContent='Escribe tu email y tu contraseña'; return; }
+  btn.disabled=true; btn.textContent='...';
+  try{
+    var res=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var d=await res.json(); if(!res.ok) throw new Error(d.error_description||'Email o contraseña incorrectos');
+    authToken=d.access_token; authUser=d.user;
+    KBS.setPersist(!!document.getElementById('loginRecordar').checked,'kb');
+    KBS.set('kb_token',authToken); KBS.set('kb_user',JSON.stringify(authUser)); if(d.refresh_token) KBS.set('kb_refresh',d.refresh_token);
+    entrar();
+  }catch(e){ err.textContent=e.message; btn.disabled=false; btn.textContent='Entrar'; }
+}
+async function enviarRecuperar(){
+  var email=val('recEmail'), msg=document.getElementById('recMsg'), btn=document.getElementById('recBtn');
+  if(!email){ msg.style.color='#dc2626'; msg.textContent='Escribe tu email'; return; }
+  btn.disabled=true;
+  try{
+    await fetch(SB_URL+'/auth/v1/recover',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,redirect_to:location.origin+'/pages/anunciantes.html'})});
+    msg.style.color='#16a34a'; msg.textContent='Si el email existe, recibirás un enlace para elegir una contraseña nueva.';
+  }catch(e){ msg.style.color='#dc2626'; msg.textContent='No se ha podido enviar. Inténtalo de nuevo.'; }
+  btn.disabled=false;
+}
+// Enlace de recuperación: llega con #access_token=…&type=recovery
+function hashRecuperacion(){
+  var h=location.hash.replace(/^#/,''); if(!h) return null;
+  var p={}; h.split('&').forEach(function(x){ var kv=x.split('='); p[kv[0]]=decodeURIComponent(kv[1]||''); });
+  return (p.type==='recovery'&&p.access_token)?p.access_token:null;
+}
+async function guardarNuevaPass(){
+  var a=document.getElementById('npPass1').value, b=document.getElementById('npPass2').value, msg=document.getElementById('npMsg'), btn=document.getElementById('npBtn');
+  msg.style.color='#dc2626';
+  if(a.length<8){ msg.textContent='La contraseña debe tener al menos 8 caracteres'; return; }
+  if(a!==b){ msg.textContent='Las contraseñas no coinciden'; return; }
+  btn.disabled=true;
+  try{
+    var res=await _fetchOriginal(SB_URL+'/auth/v1/user',{method:'PUT',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+window._tokenRecuperacion,'Content-Type':'application/json'},body:JSON.stringify({password:a})});
+    var d=await res.json(); if(!res.ok) throw new Error(d.msg||d.error_description||'No se ha podido guardar la contraseña');
+    history.replaceState(null,'',location.pathname); window._tokenRecuperacion=null;
+    mostrarLogin(); document.getElementById('loginError').style.color='#16a34a'; document.getElementById('loginError').textContent='Contraseña guardada. Ya puedes entrar.';
+  }catch(e){ msg.textContent=e.message; }
+  btn.disabled=false;
+}
+
+// ── DATOS ──
+async function getAll(path){
+  var out=[],from=0,paso=1000,sep=path.indexOf('?')>=0?'&':'?';
+  for(;;){
+    var res=await fetch(SB_URL+'/rest/v1/'+path+sep+'limit='+paso+'&offset='+from,{headers:H()});
+    var d=await res.json(); if(!res.ok||!Array.isArray(d)) throw new Error((d&&d.message)||'Error al cargar');
+    out=out.concat(d); if(d.length<paso) break; from+=paso;
+  }
+  return out;
+}
+async function rpc(nombre,args){
+  var res=await fetch(SB_URL+'/rest/v1/rpc/'+nombre,{method:'POST',headers:H(),body:JSON.stringify(args||{})});
+  var d=await res.json(); if(!res.ok) throw new Error((d&&d.message)||'Error'); return d;
+}
+async function entrar(){
+  document.getElementById('loginScreen').style.display='none'; document.getElementById('appScreen').style.display='block';
+  try{
+    var r=await getAll('anunciante_usuarios?select=anunciante_id,rol,activo,anunciantes(*)&activo=eq.true');
+    MIS=r.filter(function(x){return x.anunciantes}).map(function(x){return x.anunciantes});
+    if(!MIS.length){ document.getElementById('sinAnun').style.display='block'; document.getElementById('contenido').style.display='none'; return; }
+    var sel=document.getElementById('selAnunSelect');
+    sel.innerHTML=MIS.map(function(a){return '<option value="'+esc(a.id)+'">'+esc(a.nombre)+' ('+esc(a.codigo)+')</option>'}).join('');
+    document.getElementById('selAnun').style.display=MIS.length>1?'block':'none';
+    await elegirAnunciante(MIS[0].id);
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+async function elegirAnunciante(id){
+  ANUN=MIS.filter(function(a){return a.id===id})[0]; if(!ANUN) return;
+  document.getElementById('sinAnun').style.display='none'; document.getElementById('contenido').style.display='block';
+  document.getElementById('subtitulo').textContent=ANUN.nombre;
+  await recargar();
+}
+async function recargar(){
+  try{
+    var r=await Promise.all([
+      getAll('banners?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc'),
+      getAll('municipios?select=id,nombre,provincia&activo=eq.true&order=orden.asc'),
+      rpc('planes_solicitables'), rpc('huecos_ocupados',{p_anunciante:ANUN.id}),
+      getAll('facturas?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=fecha.desc'),
+      getAll('disenos_banner?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc'),
+      getAll('solicitudes_pueblo?select=*&anunciante_id=eq.'+encodeURIComponent(ANUN.id)+'&order=created_at.desc')
+    ]);
+    BAN=r[0]; MUN=r[1]; PLANES=r[2]; HUECOS={}; (r[3]||[]).forEach(function(h){HUECOS[h.municipio_id]=h}); FAC=r[4]; DIS=r[5]; SOLP=r[6];
+    var ids=BAN.map(function(b){return b.id});
+    COL=ids.length?await getAll('colocaciones?select=*&banner_id=in.('+ids.map(encodeURIComponent).join(',')+')&order=created_at.desc'):[];
+    var cids=COL.map(function(c){return c.id});
+    MET=cids.length?await getAll('banner_metricas_diarias?select=*&colocacion_id=in.('+cids.map(encodeURIComponent).join(',')+')'):[];
+    renderTodo();
+  }catch(e){ document.getElementById('bannersList').innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar: '+esc(e.message)+'</div>'; }
+}
+function renderTodo(){ renderBanners(); renderPerfil(); renderFacturas(); renderDisenos(); }
+function cambiarTab(t){
+  [['ban','tabBan','tabBtnBan'],['per','tabPer','tabBtnPer'],['fac','tabFac','tabBtnFac'],['dis','tabDis','tabBtnDis']].forEach(function(x){
+    document.getElementById(x[1]).style.display=(x[0]===t?'block':'none'); document.getElementById(x[2]).classList.toggle('active',x[0]===t);
+  });
+}
+
+// ── MIS BANNERS ──
+const PERIODOS={mes:'Mensual · 1 mes',trimestre:'Trimestral · 3 meses','año':'Anual · 12 meses'};
+function planDe(c){ var p=c.tarifa_id?PLANES.filter(function(x){return x.id===c.tarifa_id})[0]:null; return p?(PERIODOS[p.periodo]||p.plan):''; }
+function nombrePueblo(c){ var m=c.municipio_id?MUN.filter(function(x){return x.id===c.municipio_id})[0]:null; return c.municipio_id?(m?m.nombre:'Pueblo'):'Todos los pueblos'; }
+function estadoLinea(c){
+  var hoy=hoyISO();
+  if(c.estado==='revision') return ['Solicitud en revisión','b-pur'];
+  if(c.estado==='rechazada') return ['Rechazada','b-bad'];
+  if(c.estado==='cancelada') return ['Cancelada','b-muted'];
+  if(c.estado==='borrador') return ['Borrador','b-muted'];
+  if(c.estado==='pendiente_pago') return ['Aprobada · pendiente de pago','b-warn'];
+  if(c.estado==='pausada') return ['Pausada','b-warn'];
+  if(c.fecha_inicio&&c.fecha_inicio>hoy) return ['Programada','b-info'];
+  if(c.fecha_fin&&c.fecha_fin<hoy) return ['Finalizada','b-muted'];
+  return ['Activa','b-ok'];
+}
+function publicado(b){
+  var hoy=hoyISO();
+  return COL.some(function(c){return c.banner_id===b.id&&['pendiente_pago','confirmada','pausada'].indexOf(c.estado)>=0&&(!c.fecha_fin||c.fecha_fin>=hoy)});
+}
+function sumar(c){ var t={v:0,a:0,c:0}; MET.forEach(function(m){ if(m.colocacion_id===c.id){ t.v+=m.vistas||0; t.a+=m.aperturas||0; t.c+=m.clics||0; } }); return t; }
+function renderBanners(){
+  var cont=document.getElementById('bannersList');
+  if(!BAN.length){ cont.innerHTML='<div class="empty-slot">Aún no tienes banners. Crea el primero con «Nuevo banner».</div>'; return; }
+  cont.innerHTML=BAN.map(function(b){
+    var lineas=COL.filter(function(c){return c.banner_id===b.id}), pub=publicado(b), img=enlaceHttps(b.imagen_url);
+    var cabecera=pub?['Publicado','b-ok']:['Borrador','b-muted'];
+    var hijas=lineas.map(function(c){
+      var e=estadoLinea(c), t=sumar(c), ctr=t.v>0?(t.c*100/t.v).toFixed(1)+'%':'—';
+      var fechas=c.fecha_inicio?('📅 '+fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin')):'📅 Las fechas se fijan al aprobarla';
+      return '<div class="line"><div class="line-top"><div><div class="line-t">📍 '+esc(nombrePueblo(c))+'</div><div class="line-s">'+esc(planDe(c))+(c.modo_renovacion==='automatica'?' · Renovación automática':' · Prepago')+'</div></div><span class="badge '+e[1]+'">'+esc(e[0])+'</span></div>'
+        +'<div class="line-s">'+fechas+'</div>'
+        +(c.estado==='rechazada'&&c.motivo_rechazo?'<div class="line-s" style="color:#dc2626">Motivo: '+esc(c.motivo_rechazo)+'</div>':'')
+        +(['confirmada','pausada'].indexOf(c.estado)>=0?'<div class="mets"><span>👁 <b>'+t.v+'</b> vistas</span><span>📖 <b>'+t.a+'</b> aperturas</span><span>👆 <b>'+t.c+'</b> clics</span><span>CTR <b>'+ctr+'</b></span></div>':'')
+        +(c.estado==='revision'?'<div class="acts"><button class="danger" data-act="cancelar-sol" data-id="'+esc(c.id)+'">Cancelar solicitud</button></div>':'')+'</div>';
+    }).join('');
+    var acts='';
+    if(!pub) acts+='<button data-act="editar-banner" data-id="'+esc(b.id)+'">✏️ Editar contenido</button>';
+    acts+='<button data-act="solicitar" data-id="'+esc(b.id)+'">🚀 Solicitar visibilidad</button>';
+    if(!lineas.some(function(c){return c.estado!=='revision'})) acts+='<button class="danger" data-act="borrar-banner" data-id="'+esc(b.id)+'">Borrar</button>';
+    return '<div class="card"><div class="card-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'<div class="thumb"></div>')
+      +'<div class="main"><div class="title">'+esc(b.nombre)+'</div><div class="sub">'+esc(b.descripcion||'Sin descripción')+'</div></div><span class="badge '+cabecera[1]+'">'+cabecera[0]+'</span></div>'
+      +(pub?'<div class="line-s" style="margin-top:8px">Este banner está publicado o reservado: para cambiar su contenido, escríbenos.</div>':'')
+      +hijas+'<div class="acts">'+acts+'</div></div>';
+  }).join('');
+}
+
+// ── Contenido del banner ──
+let bnImagen='', bnQuitada=false, bnVista='';
+function modalBanner(b){
+  var n=b||{}; bnImagen=n.imagen_url||''; bnQuitada=false; bnVista='';
+  abrirModal(b?'Editar banner':'Nuevo banner',
+    '<div class="field"><label>Título * <span style="font-weight:400;text-transform:none;letter-spacing:0">(el nombre de tu negocio o tu oferta)</span></label><input type="text" id="bn_nombre" maxlength="80" value="'+esc(n.nombre||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Descripción corta * <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve en la barra, unos 60 caracteres)</span></label><input type="text" id="bn_desc" maxlength="120" value="'+esc(n.descripcion||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Texto largo <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve al abrir el banner)</span></label><textarea id="bn_texto" maxlength="600" oninput="previewBanner()">'+esc(n.texto||'')+'</textarea></div>'
+    +'<div class="field"><label>Enlace <span style="font-weight:400;text-transform:none;letter-spacing:0">(https://…, mailto: o tel:)</span></label><input type="text" id="bn_url" value="'+esc(n.url_destino||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0">(JPG, PNG, WebP o GIF · máx. 5 MB · mejor horizontal)</span></label><input type="file" id="bn_img" accept="image/*" onchange="elegirImagen(this)">'
+    +'<button type="button" class="btn-sec" id="bn_quitar" style="margin-top:6px;'+(bnImagen?'':'display:none')+'" data-act="quitar-img">✕ Quitar imagen</button>'
+    +'<div style="margin-top:6px"><button type="button" class="link" data-act="pedir-diseno-desde-banner">¿No tienes imagen? Pídenos que la diseñemos</button></div></div>'
+    +'<div class="prev" id="bn_prev"></div>'
+    +'<button class="btn-main" style="width:100%" id="bn_guardar" data-act="guardar-banner" data-id="'+esc(b?b.id:'')+'">Guardar banner</button>');
+  previewBanner();
+}
+function previewBanner(){
+  var el=document.getElementById('bn_prev'); if(!el) return;
+  var d=val('bn_desc'), src=bnQuitada?'':(bnVista||bnImagen||'');
+  el.innerHTML='<div class="prev-bar"><span class="t">Publicidad</span><span>📣</span><span style="min-width:0"><div class="n">'+esc(val('bn_nombre')||'Título del banner')+'</div><div class="s">'+esc(d.length>60?d.slice(0,60)+'...':d)+'</div></span></div>'
+    +(/^https?:\/\//i.test(src)||/^blob:/.test(src)?'<img src="'+esc(src)+'" alt="">':'')+(val('bn_texto')||d?'<div class="l">'+esc(val('bn_texto')||d)+'</div>':'');
+}
+function elegirImagen(inp){ var f=inp.files&&inp.files[0]; if(!f) return; bnVista=URL.createObjectURL(f); bnQuitada=false; document.getElementById('bn_quitar').style.display=''; previewBanner(); }
+function quitarImagen(){
+  var inp=document.getElementById('bn_img');
+  if(inp&&inp.files&&inp.files.length){ inp.value=''; bnVista=''; if(!bnImagen) document.getElementById('bn_quitar').style.display='none'; }
+  else{ bnQuitada=true; bnVista=''; document.getElementById('bn_quitar').style.display='none'; }
+  previewBanner();
+}
+async function subirImagen(file){
+  var T={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'}, ext=T[file.type];
+  if(!ext) throw new Error('Formato no permitido (usa JPG, PNG, WEBP o GIF)');
+  if(file.size>5*1024*1024) throw new Error('Imagen demasiado grande (máx. 5 MB)');
+  var nombre=ANUN.id+'/banner_'+Date.now()+'.'+ext;
+  var res=await fetch(SB_URL+'/storage/v1/object/banners/'+nombre,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authToken,'Content-Type':file.type},body:file});
+  if(!res.ok) throw new Error('Error al subir la imagen');
+  return SB_URL+'/storage/v1/object/public/banners/'+nombre;
+}
+async function guardarBanner(id){
+  var nombre=val('bn_nombre'), desc=val('bn_desc'), url=val('bn_url');
+  if(!nombre){toast('Escribe el título',true);return;}
+  if(!desc){toast('Escribe la descripción corta',true);return;}
+  if(url&&!/^(https?:\/\/|mailto:|tel:)/i.test(url)){toast('El enlace debe empezar por https://, mailto: o tel:',true);return;}
+  var btn=document.getElementById('bn_guardar'); btn.disabled=true;
+  try{
+    var datos={nombre:nombre,descripcion:desc,texto:val('bn_texto')||null,url_destino:url||null,activo:false};
+    var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
+    if(f) datos.imagen_url=await subirImagen(f); else if(bnQuitada) datos.imagen_url=null;
+    if(!id) datos.anunciante_id=ANUN.id;
+    var res=await fetch(SB_URL+'/rest/v1/banners'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify(datos)});
+    var d=await res.json(); if(!res.ok) throw new Error((d&&d.message)||'No se ha podido guardar');
+    if(id&&(!d||!d.length)) throw new Error('Este banner ya está publicado: escríbenos para cambiarlo');
+    cerrarModal(); toast('Banner guardado'); await recargar();
+    if(!id&&d&&d[0]) modalSolicitar(d[0].id,true);
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function borrarBanner(id){
+  if(!confirm('¿Borrar este banner?')) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:Object.assign(H(),{'Prefer':'return=representation'})});
+    var d=await res.json(); if(!res.ok||!d.length) throw new Error('No se puede borrar un banner con visibilidad contratada');
+    toast('Banner borrado'); await recargar();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── Solicitar visibilidad ──
+function modalSolicitar(bannerId,recien){
+  var b=BAN.filter(function(x){return x.id===bannerId})[0]; if(!b) return;
+  if(!PLANES.length){ abrirModal('Solicitar visibilidad','<div class="empty-slot">Ahora mismo no hay planes disponibles. Escríbenos a kirolorik.info@gmail.com.</div>'); return; }
+  var yaPedidos={}; COL.forEach(function(c){ if(c.banner_id===b.id&&['revision','pendiente_pago','confirmada','pausada'].indexOf(c.estado)>=0&&c.municipio_id) yaPedidos[c.municipio_id]=true; });
+  var pueblos=MUN.map(function(m){
+    var h=HUECOS[m.id], ya=yaPedidos[m.id];
+    var nota=ya?'Ya tienes este banner en este pueblo':(h?(h.indefinido?'Ocupado por otro anunciante de tu sector. Puedes solicitarlo y te avisamos si se libera.':'Ocupado por otro anunciante de tu sector hasta el '+fmtF(h.ocupado_hasta)+'. Puedes solicitarlo para después.'):'Libre');
+    return '<label class="opt"><input type="checkbox" class="sol_mun" value="'+esc(m.id)+'"'+(ya?' disabled':'')+'><span><b>'+esc(m.nombre)+'</b>'+(m.provincia?' <span style="color:var(--muted)">('+esc(m.provincia)+')</span>':'')+'<small style="'+(h&&!ya?'color:#b45309':'')+'">'+esc(nota)+'</small></span></label>';
+  }).join('');
+  var planes=PLANES.map(function(p,i){return '<label class="opt"><input type="radio" name="sol_plan" value="'+esc(p.id)+'"'+(i===0?' checked':'')+'><span><b>'+esc(PERIODOS[p.periodo]||p.plan)+'</b><small>Precio: te lo indicamos al aprobar la solicitud</small></span></label>'}).join('');
+  var pendientes=SOLP.filter(function(s){return s.estado==='pendiente'});
+  abrirModal('Solicitar visibilidad',
+    (recien?'<div class="nota">Banner guardado. ¿Quieres solicitar ya su visibilidad? Puedes hacerlo más tarde desde «Mis banners».</div>':'')
+    +'<div class="sheet-note" style="font-size:12px;color:var(--muted);margin-bottom:10px">Banner: <b>'+esc(b.nombre)+'</b></div>'
+    +'<div class="field"><label>Pueblos</label><div class="opts">'+pueblos+'</div>'
+    +'<button type="button" class="link" data-act="toggle-pueblo-nuevo">¿Tu pueblo no está? Solicitar uno nuevo</button>'
+    +'<div id="pn_box" style="display:none;margin-top:6px"><div class="row2"><div class="field"><label>Pueblo</label><input type="text" id="pn_nombre" maxlength="100"></div><div class="field"><label>Provincia</label><input type="text" id="pn_prov" maxlength="100"></div></div><button type="button" class="btn-sec" data-act="enviar-pueblo">Enviar solicitud de pueblo</button></div>'
+    +(pendientes.length?'<div class="line-s" style="margin-top:6px">Pueblos pedidos pendientes: '+pendientes.map(function(s){return esc(s.nombre)}).join(', ')+'</div>':'')+'</div>'
+    +'<div class="field"><label>Plan</label><div class="opts">'+planes+'</div></div>'
+    +'<div class="field"><label>Renovación</label><div class="opts">'
+    +'<label class="opt"><input type="radio" name="sol_ren" value="prepago" checked><span><b>Prepago por periodo</b><small>Al terminar te avisamos para renovar.</small></span></label>'
+    +'<label class="opt"><input type="radio" name="sol_ren" value="automatica"><span><b>Renovación automática</b><small>Se renueva cada periodo hasta que la canceles, sin permanencia. Estará disponible con el pago online.</small></span></label></div></div>'
+    +'<div class="nota">Kirolorik revisa tu banner y tu solicitud. Al aprobarla se fijan las fechas según el plan y te indicamos el precio y cómo pagar. Hasta que esté pagada no se publica.</div>'
+    +'<button class="btn-main" style="width:100%" id="sol_guardar" data-act="guardar-solicitud" data-id="'+esc(b.id)+'">Enviar solicitud</button>');
+}
+async function guardarSolicitud(bannerId){
+  var mids=Array.prototype.slice.call(document.querySelectorAll('.sol_mun:checked')).map(function(x){return x.value});
+  var plan=document.querySelector('input[name=sol_plan]:checked'), ren=document.querySelector('input[name=sol_ren]:checked');
+  if(!mids.length){toast('Elige al menos un pueblo',true);return;}
+  if(!plan){toast('Elige un plan',true);return;}
+  var b=BAN.filter(function(x){return x.id===bannerId})[0];
+  if(!b||!b.nombre||!b.descripcion){toast('Completa el título y la descripción del banner antes de solicitar',true);return;}
+  var btn=document.getElementById('sol_guardar'); btn.disabled=true;
+  try{
+    var filas=mids.map(function(m){return {banner_id:bannerId,municipio_id:m,estado:'revision',origen:'pago',modo_renovacion:ren?ren.value:'prepago',tarifa_id:plan.value,orden:0,solicitada_por:authUser.id}});
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(filas)});
+    if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('colocaciones_solicitud_uq')>=0?'Ya tienes una solicitud pendiente de este banner en alguno de esos pueblos':t); }
+    cerrarModal(); toast(mids.length>1?mids.length+' solicitudes enviadas':'Solicitud enviada'); await recargar();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function cancelarSolicitud(id){
+  if(!confirm('¿Cancelar esta solicitud?')) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:Object.assign(H(),{'Prefer':'return=representation'})});
+    var d=await res.json(); if(!res.ok||!d.length) throw new Error('Solo se pueden cancelar solicitudes en revisión');
+    toast('Solicitud cancelada'); await recargar();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+async function enviarPueblo(){
+  var nombre=val('pn_nombre'), prov=val('pn_prov');
+  if(nombre.length<2){toast('Escribe el nombre del pueblo',true);return;}
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/solicitudes_pueblo',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,nombre:nombre,provincia:prov||null,solicitada_por:authUser.id})});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Solicitud de pueblo enviada: te avisaremos'); document.getElementById('pn_nombre').value=''; document.getElementById('pn_prov').value='';
+    document.getElementById('pn_box').style.display='none'; SOLP.unshift({nombre:nombre,estado:'pendiente'});
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── PERFIL ──
+function renderPerfil(){
+  var a=ANUN, c=document.getElementById('tabPer');
+  c.innerHTML='<div class="card"><div class="title">'+esc(a.nombre)+'</div><div class="sub"><span class="cod">'+esc(a.codigo)+'</span></div></div>'
+    +'<div class="nota">Tu tipo de negocio y tu nombre comercial los gestiona Kirolorik (definen la exclusividad en cada pueblo). Si necesitas cambiarlos, escríbenos.</div>'
+    +'<div class="field"><label>Razón social</label><input type="text" id="pf_razon" value="'+esc(a.razon_social||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>CIF</label><input type="text" id="pf_cif" value="'+esc(a.cif||'')+'"></div><div class="field"><label>Teléfono</label><input type="tel" id="pf_tel" value="'+esc(a.telefono||'')+'"></div></div>'
+    +'<div class="field"><label>Dirección fiscal</label><input type="text" id="pf_dir" value="'+esc(a.direccion_fiscal||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>Ciudad / pueblo</label><input type="text" id="pf_mun" value="'+esc(a.municipio||'')+'"></div><div class="field"><label>Provincia</label><input type="text" id="pf_prov" value="'+esc(a.provincia||'')+'"></div></div>'
+    +'<div class="row2"><div class="field"><label>Persona de contacto</label><input type="text" id="pf_contacto" value="'+esc(a.contacto_nombre||'')+'"></div><div class="field"><label>Email de contacto</label><input type="email" id="pf_email" value="'+esc(a.email||'')+'"></div></div>'
+    +'<button class="btn-main" style="width:100%" id="pf_guardar" data-act="guardar-perfil">Guardar datos</button>'
+    +'<div class="sec" style="margin:24px 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Contraseña</div>'
+    +'<div class="nota">Cuenta: '+esc(authUser?authUser.email:'')+'</div>'
+    +'<div class="row2"><div class="field"><label>Contraseña nueva</label><input type="password" id="pw1" autocomplete="new-password"></div><div class="field"><label>Repítela</label><input type="password" id="pw2" autocomplete="new-password"></div></div>'
+    +'<button class="btn-sec" id="pw_guardar" data-act="cambiar-pass">Cambiar contraseña</button>';
+}
+async function guardarPerfil(){
+  var btn=document.getElementById('pf_guardar'); btn.disabled=true;
+  try{
+    await rpc('mi_anunciante_actualizar',{p_anunciante:ANUN.id,p_razon_social:val('pf_razon'),p_cif:val('pf_cif'),p_direccion_fiscal:val('pf_dir'),p_provincia:val('pf_prov'),p_municipio:val('pf_mun'),p_contacto_nombre:val('pf_contacto'),p_email:val('pf_email'),p_telefono:val('pf_tel')});
+    toast('Datos guardados');
+    var r=await getAll('anunciantes?select=*&id=eq.'+encodeURIComponent(ANUN.id)); if(r[0]){ ANUN=r[0]; MIS=MIS.map(function(x){return x.id===ANUN.id?ANUN:x}); }
+  }catch(e){ toast('Error: '+e.message,true); }
+  btn.disabled=false;
+}
+async function cambiarPass(){
+  var a=document.getElementById('pw1').value, b=document.getElementById('pw2').value;
+  if(a.length<8){toast('La contraseña debe tener al menos 8 caracteres',true);return;}
+  if(a!==b){toast('Las contraseñas no coinciden',true);return;}
+  try{
+    var res=await fetch(SB_URL+'/auth/v1/user',{method:'PUT',headers:H(),body:JSON.stringify({password:a})});
+    var d=await res.json(); if(!res.ok) throw new Error(d.msg||d.error_description||'No se ha podido cambiar');
+    document.getElementById('pw1').value=''; document.getElementById('pw2').value=''; toast('Contraseña cambiada');
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── FACTURAS ──
+function eur(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function renderFacturas(){
+  var c=document.getElementById('tabFac');
+  c.innerHTML='<div class="nota">Aquí verás las facturas de tus contrataciones. Si necesitas una que no aparece, escríbenos.</div>'
+    +(FAC.length?FAC.map(function(f){
+      var doc=enlaceHttps(f.url_documento), badge=f.estado==='pagada'?'b-ok':(f.estado==='anulada'?'b-bad':'b-info');
+      return '<div class="card"><div class="card-top"><div class="main"><div class="title">'+esc(f.numero||'Factura')+'</div><div class="sub">'+fmtF(f.fecha)+(f.concepto?' · '+esc(f.concepto):'')+'</div></div><span class="badge '+badge+'">'+esc(f.estado==='pagada'?'Pagada':(f.estado==='anulada'?'Anulada':'Emitida'))+'</span></div>'
+        +'<div class="mets"><span>Base <b>'+eur(f.base_imponible)+'</b></span><span>IVA <b>'+eur(f.iva_importe)+'</b></span><span>Total <b>'+eur(f.importe_total)+'</b></span></div>'
+        +(doc?'<div class="acts"><a href="'+esc(doc)+'" target="_blank" rel="noopener noreferrer"><button type="button">📄 Ver documento</button></a></div>':'')+'</div>';
+    }).join(''):'<div class="empty-slot">Aún no tienes facturas.</div>');
+}
+
+// ── DISEÑO ──
+const ESTADOS_DIS={solicitado:['Solicitado','b-pur'],en_curso:['En curso','b-info'],entregado:['Entregado','b-warn'],aprobado:['Aprobado','b-ok'],cancelado:['Cancelado','b-bad']};
+function renderDisenos(){
+  var c=document.getElementById('tabDis');
+  c.innerHTML='<div class="nota">¿No tienes imagen para tu banner? Cuéntanos qué quieres anunciar y lo diseñamos nosotros. El precio del diseño se te indica al recibir la solicitud.</div>'
+    +'<div class="bar"><button class="btn-main" data-act="nuevo-diseno">＋ Pedir un diseño</button></div>'
+    +(DIS.length?DIS.map(function(d){
+      var e=ESTADOS_DIS[d.estado]||[d.estado,'b-muted'], img=enlaceHttps(d.entrega_url);
+      return '<div class="card"><div class="card-top"><div class="main"><div class="title">Solicitud del '+fmtF(d.created_at)+'</div><div class="sub" style="white-space:pre-line">'+esc(String(d.briefing||'').slice(0,240))+'</div></div><span class="badge '+e[1]+'">'+esc(e[0])+'</span></div>'
+        +(d.precio!=null?'<div class="line-s">Precio: <b>'+eur(d.precio)+'</b></div>':'')
+        +(img?'<img class="dis-img" src="'+esc(img)+'" alt="Diseño entregado"><div class="acts"><a href="'+esc(img)+'" target="_blank" rel="noopener noreferrer"><button type="button">Ver a tamaño completo</button></a></div>':'')+'</div>';
+    }).join(''):'<div class="empty-slot">Aún no has pedido ningún diseño.</div>');
+}
+function modalDiseno(brief){
+  abrirModal('Pedir un diseño de banner',
+    '<div class="field"><label>Qué quieres anunciar *</label><textarea id="ds_brief" maxlength="1500" placeholder="Tu oferta o mensaje, a quién va dirigido, tono…">'+esc(brief||'')+'</textarea></div>'
+    +'<div class="field"><label>Referencias <span style="font-weight:400;text-transform:none;letter-spacing:0">(enlace a tu logotipo, colores, ejemplos que te gusten)</span></label><textarea id="ds_ref" maxlength="1500"></textarea></div>'
+    +'<div class="nota">Lo atenderá Kirolorik. Te responderemos con el precio del diseño y el plazo. Cuando esté listo lo verás aquí y podrás usarlo en tu banner.</div>'
+    +'<button class="btn-main" style="width:100%" id="ds_guardar" data-act="guardar-diseno">Enviar solicitud</button>');
+}
+async function guardarDiseno(){
+  var brief=val('ds_brief'); if(!brief){toast('Cuéntanos qué quieres anunciar',true);return;}
+  var btn=document.getElementById('ds_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/disenos_banner',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({anunciante_id:ANUN.id,briefing:brief,referencias:val('ds_ref')||null,solicitado_por:authUser.id})});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Solicitud enviada'); await recargar(); cambiarTab('dis');
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── MODALES Y ACCIONES ──
+function abrirModal(titulo,cuerpo){
+  document.getElementById('modalHost').innerHTML='<div class="sheet-bg" id="sheetBg"><div class="sheet"><div class="sheet-h"><div class="sheet-t">'+esc(titulo)+'</div><button class="sheet-x" data-act="cerrar">✕</button></div>'+cuerpo+'</div></div>';
+  document.getElementById('sheetBg').addEventListener('click',function(ev){ if(ev.target.id==='sheetBg') cerrarModal(); });
+}
+function cerrarModal(){ document.getElementById('modalHost').innerHTML=''; }
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest?ev.target.closest('[data-act]'):null; if(!b) return;
+  var act=b.getAttribute('data-act'), id=b.getAttribute('data-id');
+  if(act==='cerrar') cerrarModal();
+  else if(act==='nuevo-banner') modalBanner(null);
+  else if(act==='editar-banner') modalBanner(BAN.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-banner') guardarBanner(id);
+  else if(act==='quitar-img') quitarImagen();
+  else if(act==='borrar-banner') borrarBanner(id);
+  else if(act==='solicitar') modalSolicitar(id,false);
+  else if(act==='guardar-solicitud') guardarSolicitud(id);
+  else if(act==='cancelar-sol') cancelarSolicitud(id);
+  else if(act==='toggle-pueblo-nuevo'){ var bx=document.getElementById('pn_box'); bx.style.display=bx.style.display==='none'?'block':'none'; }
+  else if(act==='enviar-pueblo') enviarPueblo();
+  else if(act==='guardar-perfil') guardarPerfil();
+  else if(act==='cambiar-pass') cambiarPass();
+  else if(act==='nuevo-diseno') modalDiseno('');
+  else if(act==='pedir-diseno-desde-banner'){ var n=val('bn_nombre'); cerrarModal(); modalDiseno(n?'Banner para: '+n:''); }
+  else if(act==='guardar-diseno') guardarDiseno();
+});
+
+// ── INIT ──
+(function(){
+  var tokRec=hashRecuperacion();
+  if(tokRec){
+    window._tokenRecuperacion=tokRec;
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('loginBox').style.display='none'; document.getElementById('newPassBox').style.display='flex';
+    return;
+  }
+  var t=KBS.get('kb_token'), u=KBS.get('kb_user');
+  if(t&&u){
+    authToken=t; try{ authUser=JSON.parse(u); }catch(e){ authUser=null; }
+    if(authUser){
+      if(jwtExp(t)-Date.now()<60000) refrescarSesion().then(function(ok){ if(ok) entrar(); else sesionCaducada(); });
+      else entrar();
+      return;
+    }
+  }
+  document.getElementById('loginScreen').style.display='flex';
+})();
+</script>
+
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">anunciantes v1.00</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
+</body>
+</html>

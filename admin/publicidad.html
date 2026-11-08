@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/publicidad.html
-Versión: v1.02
-Fecha: 2026-11-10
+Versión: v1.03
+Fecha: 2026-11-11
 Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
 (por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
 (pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
@@ -13,6 +13,9 @@ Facturas (número, fecha, importe y enlace al documento; se rellena a mano y má
 v1.02: cada fila (banner + pueblo) se edita en un único formulario: contenido, pueblo (se puede cambiar), fechas y estado; si el
 contenido se comparte con otras filas se elige si el cambio vale para todas o solo para esta (se crea una copia). «Otro pueblo / fechas»
 crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el propio formulario. Se quita el campo Orden.
+v1.03: pestaña Solicitudes (solicitudes de visibilidad de los anunciantes: aprobar con fechas calculadas según el plan, o rechazar con
+motivo; solicitudes de pueblo nuevo) y botón «Acceso» en cada anunciante (crear usuario, vincular uno existente, ver y quitar accesos),
+que usa la función admin-users v1.1.
 -->
 
 <!DOCTYPE html>
@@ -99,6 +102,9 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
 .prev .l{font-size:12px;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cod{font-family:monospace;font-size:11px;color:var(--muted)}
+.cuenta{display:inline-block;min-width:18px;text-align:center;background:#dc2626;color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:5px}
+.cred{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.35);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 12px;overflow-wrap:anywhere}
+.cred code{font-size:14px;font-weight:700}
 .ayuda{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:13px}
 .ayuda summary{cursor:pointer;font-weight:700}
 .ayuda ol{margin:8px 0 0 18px;padding:0;line-height:1.5}
@@ -154,6 +160,7 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
     <div class="tab" id="tabBtnMet" onclick="cambiarTab('met')">📈 Métricas</div>
     <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseños</div>
     <div class="tab" id="tabBtnFac" onclick="cambiarTab('fac')">🧾 Facturas</div>
+    <div class="tab" id="tabBtnSol" onclick="cambiarTab('sol')">📥 Solicitudes<span class="cuenta" id="cuentaSol" style="display:none"></span></div>
   </div>
 
   <div id="tabBanners">
@@ -216,6 +223,11 @@ crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el pro
     <div class="nota">Las solicitudes de diseño las atiende primero Kirolorik. Más adelante se podrán derivar a diseñadores colaboradores (registra aquí a los que quieran aparecer) y los anunciantes podrán pedirlas desde su zona.</div>
     <div class="filters"><select id="fd_estado" class="full" onchange="renderDisenos()"><option value="">Todos los estados</option><option value="solicitado">Solicitado</option><option value="en_curso">En curso</option><option value="entregado">Entregado</option><option value="aprobado">Aprobado</option><option value="cancelado">Cancelado</option></select></div>
     <div id="disList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabSol" style="display:none">
+    <div class="nota">Aquí llegan las solicitudes de visibilidad que hacen los anunciantes desde su zona. Al <b>aprobar</b> se fijan las fechas según el plan (puedes ajustarlas); la solicitud queda <b>pendiente de pago</b> reservando el hueco y, cuando esté pagada, pasa a <b>confirmada</b> y sale en la portada. También verás los pueblos nuevos que piden.</div>
+    <div id="solList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
   <div id="tabFac" style="display:none">
@@ -341,7 +353,8 @@ function mostrarDenegado(){
 }
 
 // ── DATOS ──
-let ANUN=[], BAN=[], COL=[], MUN=[], TIPOS=[], MET=[], TARIFAS=[], DIS=[], FAC=[], DISENADORES=[];
+let ANUN=[], BAN=[], COL=[], MUN=[], TIPOS=[], MET=[], TARIFAS=[], DIS=[], FAC=[], DISENADORES=[], SOLP=[];
+let faseC=true;   // false si aún no está aplicada la migración 2026-11-11 (zona de anunciantes)
 let faseB=true;   // false si aún no está aplicada la migración 2026-11-09 (diseños, diseñadores y facturas)
 let ANUN_BY={}, BAN_BY={}, COL_BY={}, MUN_BY={}, TIPO_BY={}, MET_BY={};
 let periodoDias=30;
@@ -378,6 +391,7 @@ async function cargarTodo(){
       var rb=await Promise.all([getAll('disenos_banner?select=*&order=created_at.desc'),getAll('facturas?select=*&order=fecha.desc,created_at.desc'),getAll('disenadores?select=*&order=nombre.asc')]);
       DIS=rb[0]; FAC=rb[1]; DISENADORES=rb[2]; faseB=true;
     }catch(e){ DIS=[]; FAC=[]; DISENADORES=[]; faseB=false; }
+    try{ SOLP=await getAll('solicitudes_pueblo?select=*&order=created_at.desc'); faseC=true; }catch(e){ SOLP=[]; faseC=false; }
     ANUN_BY=indexar(ANUN,'id'); BAN_BY=indexar(BAN,'id'); COL_BY=indexar(COL,'id'); MUN_BY=indexar(MUN,'id'); TIPO_BY=indexar(TIPOS,'id');
     MET_BY={}; MET.forEach(function(m){ (MET_BY[m.colocacion_id]=MET_BY[m.colocacion_id]||[]).push(m); });
     rellenarFiltros();
@@ -386,11 +400,11 @@ async function cargarTodo(){
     document.getElementById('bannersList').innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar: '+esc(e.message)+'</div>';
   }
 }
-function renderTodo(){ renderBanners(); renderAnun(); renderMetricas(); renderDisenos(); renderFacturas(); }
+function renderTodo(){ renderBanners(); renderAnun(); renderMetricas(); renderDisenos(); renderFacturas(); renderSolicitudes(); }
 
 function cambiarTab(t){
   tabActual=t;
-  [['banners','tabBanners','tabBtnBanners'],['anun','tabAnun','tabBtnAnun'],['met','tabMet','tabBtnMet'],['dis','tabDis','tabBtnDis'],['fac','tabFac','tabBtnFac']].forEach(function(x){
+  [['banners','tabBanners','tabBtnBanners'],['anun','tabAnun','tabBtnAnun'],['met','tabMet','tabBtnMet'],['dis','tabDis','tabBtnDis'],['fac','tabFac','tabBtnFac'],['sol','tabSol','tabBtnSol']].forEach(function(x){
     document.getElementById(x[1]).style.display=(x[0]===t?'block':'none');
     document.getElementById(x[2]).classList.toggle('active',x[0]===t);
   });
@@ -472,14 +486,15 @@ function renderBanners(){
     var b=f.ban, c=f.col, a=ANUN_BY[b.anunciante_id], est=c?estadoVisible(c):'sin';
     var tn=a&&a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio].nombre:'';
     var t=c?sumar(MET_BY[c.id]):{v:0,a:0,c:0};
-    var lineaFechas=c?('📍 '+esc(nombrePueblo(c))+' · 📅 '+fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin')):'Este banner aún no tiene pueblos ni fechas';
-    var tags=c?('<span class="tag">'+esc(ORIGENES[c.origen]||c.origen)+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span>'+(b.activo?'':'<span class="tag">Banner oculto</span>')):(b.activo?'':'<span class="tag">Banner oculto</span>');
+    var lineaFechas=c?('📍 '+esc(nombrePueblo(c))+' · 📅 '+(c.fecha_inicio?fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin'):'las fechas se fijan al aprobar')):'Este banner aún no tiene pueblos ni fechas';
+    var tags=c?((c.tarifa_id?'<span class="tag">'+esc(planNombre(c.tarifa_id))+'</span>':'')+'<span class="tag">'+esc(ORIGENES[c.origen]||c.origen)+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span>'+(b.activo?'':'<span class="tag">Banner oculto</span>')):(b.activo?'':'<span class="tag">Banner oculto</span>');
     var acts='';
     if(c){
       acts+='<button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Editar</button>';
       if(c.estado==='confirmada') acts+='<button data-act="pausar" data-id="'+esc(c.id)+'">⏸ Pausar</button>';
       if(c.estado==='pausada') acts+='<button data-act="reanudar" data-id="'+esc(c.id)+'">▶ Reanudar</button>';
-      if(c.estado==='revision'||c.estado==='borrador'||c.estado==='pendiente_pago') acts+='<button data-act="confirmar" data-id="'+esc(c.id)+'">✅ Confirmar</button>';
+      if(c.estado==='revision'&&!c.fecha_inicio) acts+='<button data-act="aprobar" data-id="'+esc(c.id)+'">✅ Aprobar…</button>';
+      else if(c.estado==='revision'||c.estado==='borrador'||c.estado==='pendiente_pago') acts+='<button data-act="confirmar" data-id="'+esc(c.id)+'">✅ Confirmar</button>';
       acts+='<button data-act="metricas-col" data-id="'+esc(c.id)+'">📈 Métricas</button>';
       acts+='<button data-act="dup-col" data-id="'+esc(c.id)+'">⧉ Otro pueblo / fechas</button>';
       if(c.estado!=='cancelada') acts+='<button class="danger" data-act="cancelar" data-id="'+esc(c.id)+'">Cancelar</button>';
@@ -521,7 +536,7 @@ function renderAnun(){
       +'<div class="pc-line">'+esc(tn||'Sin tipo de negocio')+(ubic?' · 📍 '+esc(ubic):'')+'</div>'
       +(a.email||a.telefono?'<div class="pc-line">'+esc([a.contacto_nombre,a.email,a.telefono].filter(Boolean).join(' · '))+'</div>':'')
       +'<div class="pc-metrics"><span>Banners <b>'+bans.length+'</b></span><span>En vigor <b>'+vigor+'</b></span><span>👁 <b>'+t.v+'</b></span><span>👆 <b>'+t.c+'</b></span><span>CTR <b>'+ctr(t)+'</b></span></div>'
-      +'<div class="pc-act"><button data-act="edit-anun" data-id="'+esc(a.id)+'">✏️ Editar</button><button data-act="nuevo-banner-de" data-id="'+esc(a.id)+'">＋ Banner</button></div></div>';
+      +'<div class="pc-act"><button data-act="edit-anun" data-id="'+esc(a.id)+'">✏️ Editar</button><button data-act="nuevo-banner-de" data-id="'+esc(a.id)+'">＋ Banner</button><button data-act="accesos" data-id="'+esc(a.id)+'">🔑 Acceso</button></div></div>';
   }).join('');
 }
 
@@ -723,7 +738,7 @@ function conflictos(bannerId,municipioIds,ini,fin,excluirId){
     if(!mid) return;
     COL.forEach(function(c){
       if(c.id===excluirId||c.municipio_id!==mid||!c.exclusivo||c.tipo_negocio!==a.tipo_negocio) return;
-      if(['pendiente_pago','confirmada','pausada'].indexOf(c.estado)<0) return;
+      if(['pendiente_pago','confirmada','pausada'].indexOf(c.estado)<0||!c.fecha_inicio) return;
       var cfin=c.fecha_fin||'9999-12-31';
       if(c.fecha_inicio<=nfin&&ini<=cfin) out.push({mid:mid,col:c});
     });
@@ -1109,6 +1124,165 @@ async function guardarFactura(id){
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
 }
 
+// ── SOLICITUDES DE LOS ANUNCIANTES ──
+const MESES_PLAN={mes:1,trimestre:3,'año':12};
+function planInfo(id){ return TARIFAS.filter(function(t){return t.id===id})[0]||null; }
+function planNombre(id){ var p=planInfo(id); return p?p.plan:''; }
+function sumarMeses(iso,n){
+  var p=String(iso).split('-'), y=+p[0], m=+p[1]-1, d=+p[2];
+  var t=new Date(y,m+n,1), ult=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();
+  var f=new Date(t.getFullYear(),t.getMonth(),Math.min(d,ult)); f.setDate(f.getDate()-1);   // el último día incluido
+  return f.getFullYear()+'-'+String(f.getMonth()+1).padStart(2,'0')+'-'+String(f.getDate()).padStart(2,'0');
+}
+function pendientesSol(){ return COL.filter(function(c){return c.estado==='revision'&&!c.fecha_inicio}); }
+function renderSolicitudes(){
+  var cont=document.getElementById('solList'); if(!cont) return;
+  var sc=pendientesSol(), sp=SOLP.filter(function(x){return x.estado==='pendiente'});
+  var cuenta=document.getElementById('cuentaSol'), n=sc.length+sp.length;
+  if(cuenta){ cuenta.textContent=n; cuenta.style.display=n?'':'none'; }
+  if(!faseC){ cont.innerHTML='<div class="empty-slot">Esta sección necesita aplicar la migración <b>2026-11-11_zona_anunciantes.sql</b> en Supabase.</div>'; return; }
+  var html='<div class="sec-title" style="margin-top:0">Solicitudes de visibilidad ('+sc.length+')</div>';
+  html+=sc.length?sc.map(function(c){
+    var b=BAN_BY[c.banner_id], a=b?ANUN_BY[b.anunciante_id]:null, img=b?enlaceHttps(b.imagen_url):'';
+    var p=planInfo(c.tarifa_id), cs=b&&c.municipio_id?conflictos(b.id,[c.municipio_id],hoyISO(),null,c.id):[];
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(b?b.nombre:'(banner borrado)')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(c.solicitada_at||c.created_at)+'</div></div><span class="badge st-revision">En revisión</span></div>'
+      +'<div class="pc-line">📍 '+esc(nombrePueblo(c))+' · <span class="tag">'+esc(p?(PERIODOS_ADMIN[p.periodo]||p.plan):'Sin plan')+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span></div>'
+      +(cs.length?'<div class="warn" style="margin-top:8px">⚠️ Hueco ocupado hoy en ese pueblo por otro anunciante del mismo tipo: podrás aprobarla para después.</div>':'')
+      +'<div class="pc-act"><button data-act="aprobar" data-id="'+esc(c.id)+'">✅ Aprobar…</button><button class="danger" data-act="rechazar" data-id="'+esc(c.id)+'">✖ Rechazar</button><button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Ver y editar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay solicitudes pendientes.</div>';
+  html+='<div class="sec-title">Pueblos nuevos que piden ('+sp.length+')</div>';
+  html+=sp.length?sp.map(function(x){
+    var a=ANUN_BY[x.anunciante_id];
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(x.nombre)+(x.provincia?' ('+esc(x.provincia)+')':'')+'</div><div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(x.created_at)+'</div></div></div>'
+      +'<div class="pc-act"><button data-act="pueblo-ok" data-id="'+esc(x.id)+'">➕ Añadir pueblo</button><button class="danger" data-act="pueblo-no" data-id="'+esc(x.id)+'">✖ Rechazar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay pueblos pendientes.</div>';
+  cont.innerHTML=html;
+}
+const PERIODOS_ADMIN={mes:'Mensual · 1 mes',trimestre:'Trimestral · 3 meses','año':'Anual · 12 meses'};
+
+function modalAprobar(id){
+  var c=COL_BY[id], b=c?BAN_BY[c.banner_id]:null; if(!c||!b) return;
+  var a=ANUN_BY[b.anunciante_id], p=planInfo(c.tarifa_id), n=p?MESES_PLAN[p.periodo]:0, ini=hoyISO();
+  var img=enlaceHttps(b.imagen_url);
+  abrirModal('Aprobar solicitud',
+    '<div class="prev"><div class="prev-bar"><span class="t">Publicidad</span><span>📣</span><span style="min-width:0"><div class="n">'+esc(b.nombre)+'</div><div class="s">'+esc(b.descripcion||'')+'</div></span></div>'
+      +(img?'<img src="'+esc(img)+'" alt="">':'<div class="pc-sub" style="margin-top:6px">Sin imagen</div>')+(b.texto?'<div class="l">'+esc(b.texto)+'</div>':'')
+      +'<div class="pc-sub" style="margin-top:6px">Enlace: '+esc(b.url_destino||'(contacto con Kirolorik)')+'</div></div>'
+    +'<div class="sheet-note"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · 📍 '+esc(nombrePueblo(c))+' · '+esc(p?(PERIODOS_ADMIN[p.periodo]||p.plan):'sin plan')+' · '+esc(RENOVACION[c.modo_renovacion]||'')+'</div>'
+    +'<div class="row2"><div class="field"><label>Empieza el *</label><input type="date" id="ap_ini" value="'+esc(ini)+'" oninput="recalcularFin()"></div>'
+    +'<div class="field"><label>Termina el</label><input type="date" id="ap_fin" value="'+esc(n?sumarMeses(ini,n):'')+'" oninput="avisoAprobar()"></div></div>'
+    +'<div class="sheet-note">La fecha de fin se calcula según el plan ('+(n?n+(n===1?' mes':' meses'):'sin plan')+'); puedes cambiarla.</div>'
+    +'<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="ap_pagada"> Ya está pagada: confirmar directamente (si no, queda «pendiente de pago» y reserva el hueco)</label>'
+    +'<div id="ap_aviso"></div>'
+    +'<button class="btn-main" style="width:100%" id="ap_guardar" data-act="guardar-aprobar" data-id="'+esc(c.id)+'" data-n="'+(n||0)+'">Aprobar solicitud</button>');
+  avisoAprobar();
+}
+function recalcularFin(){
+  var b=document.getElementById('ap_guardar'), n=parseInt(b.getAttribute('data-n'),10)||0, ini=val('ap_ini');
+  if(n&&ini) document.getElementById('ap_fin').value=sumarMeses(ini,n);
+  avisoAprobar();
+}
+function avisoAprobar(){
+  var b=document.getElementById('ap_guardar'); if(!b) return;
+  var c=COL_BY[b.getAttribute('data-id')], bn=BAN_BY[c.banner_id];
+  var cs=conflictos(bn.id,[c.municipio_id],val('ap_ini'),val('ap_fin'),c.id);
+  document.getElementById('ap_aviso').innerHTML=cs.length?'<div class="warn">⚠️ Hueco ocupado en esas fechas:<ul>'+cs.map(function(x){var b2=BAN_BY[x.col.banner_id],a2=b2?ANUN_BY[b2.anunciante_id]:null;return '<li>'+esc(a2?a2.nombre:'')+' ('+fmtF(x.col.fecha_inicio)+' → '+(x.col.fecha_fin?fmtF(x.col.fecha_fin):'sin fin')+')</li>'}).join('')+'</ul>Cambia las fechas o rechaza la solicitud.</div>':'';
+}
+async function guardarAprobar(id){
+  var c=COL_BY[id], ini=val('ap_ini'), fin=val('ap_fin');
+  if(!ini){toast('Indica la fecha de inicio',true);return;}
+  if(fin&&fin<ini){toast('La fecha de fin no puede ser anterior a la de inicio',true);return;}
+  if(conflictos(c.banner_id,[c.municipio_id],ini,fin,id).length){toast('Hay un hueco ocupado en esas fechas',true);return;}
+  var btn=document.getElementById('ap_guardar'); btn.disabled=true;
+  try{
+    var estado=document.getElementById('ap_pagada').checked?'confirmada':'pendiente_pago';
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado,fecha_inicio:ini,fecha_fin:fin||null})});
+    if(!res.ok) throw new Error(errorColocacion(await res.text()));
+    // el banner pasa a ser visible (solo sale en portada con una colocación confirmada en vigor)
+    var rb=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(c.banner_id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({activo:true})});
+    if(!rb.ok) throw new Error(await rb.text());
+    cerrarModal(); toast(estado==='confirmada'?'Aprobada y confirmada':'Aprobada: pendiente de pago'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+function modalRechazar(id){
+  abrirModal('Rechazar solicitud','<div class="field"><label>Motivo (lo verá el anunciante)</label><textarea id="rc_motivo" placeholder="Por ejemplo: la imagen no cumple…"></textarea></div><button class="btn-main" style="width:100%" id="rc_guardar" data-act="guardar-rechazo" data-id="'+esc(id)+'">Rechazar solicitud</button>');
+}
+async function guardarRechazo(id){
+  var m=val('rc_motivo'); if(!m){toast('Indica el motivo',true);return;}
+  var btn=document.getElementById('rc_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:'rechazada',motivo_rechazo:m})});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Solicitud rechazada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function resolverPueblo(id,aceptar){
+  var x=SOLP.filter(function(y){return y.id===id})[0]; if(!x) return;
+  try{
+    if(aceptar){
+      if(MUN.some(function(m){return norm(m.nombre)===norm(x.nombre)})){ /* ya existe: solo se marca */ }
+      else{
+        var r=await fetch(SB_URL+'/rest/v1/municipios',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({nombre:x.nombre,provincia:x.provincia||null,activo:true,orden:MUN.length+1})});
+        if(!r.ok) throw new Error(await r.text());
+      }
+    }
+    var res=await fetch(SB_URL+'/rest/v1/solicitudes_pueblo?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:aceptar?'anadido':'rechazado'})});
+    if(!res.ok) throw new Error(await res.text());
+    toast(aceptar?'Pueblo añadido':'Solicitud rechazada'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── ACCESOS DE ANUNCIANTES (función admin-users v1.1) ──
+async function llamarAdmin(body){
+  var res=await fetch(SB_URL+'/functions/v1/admin-users',{method:'POST',headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var d={}; try{ d=await res.json(); }catch(e){}
+  if(!res.ok){
+    if(d.error==='Acción no reconocida') throw new Error('La función admin-users aún no está actualizada a la v1.1 (docs/edge-functions/admin-users.ts)');
+    throw new Error(d.error||'Error');
+  }
+  return d;
+}
+async function modalAccesos(id,credencial){
+  var a=ANUN_BY[id]; if(!a) return;
+  var lista='<div class="empty-slot">Cargando...</div>';
+  abrirModal('Acceso · '+a.nombre,'<div id="ac_lista">'+lista+'</div><div id="ac_cred">'+(credencial||'')+'</div>'
+    +'<div class="sec-title">Crear un acceso nuevo</div>'
+    +'<div class="field"><label>Email *</label><input type="email" id="ac_email"></div>'
+    +'<div class="field"><label>Contraseña inicial <span style="font-weight:400;text-transform:none;letter-spacing:0">(mín. 8; vacío = se genera una)</span></label><input type="text" id="ac_pass" autocomplete="off"></div>'
+    +'<button class="btn-main" style="width:100%" id="ac_crear" data-act="crear-acceso" data-id="'+esc(id)+'">Crear acceso</button>'
+    +'<div class="sec-title">…o vincular un usuario que ya existe</div>'
+    +'<div class="field"><label>Email del usuario</label><input type="email" id="ac_email2"></div>'
+    +'<button class="btn-sec" id="ac_vincular" data-act="vincular-acceso" data-id="'+esc(id)+'">Vincular a este anunciante</button>'
+    +'<div class="sheet-note" style="margin-top:12px">El anunciante entra en <b>/pages/anunciantes.html</b> con su email y esa contraseña, y puede cambiarla desde su perfil o con «¿Has olvidado la contraseña?».</div>');
+  try{
+    var d=await llamarAdmin({action:'accesos',anunciante_id:id}), el=document.getElementById('ac_lista'); if(!el) return;
+    el.innerHTML=d.accesos.length?d.accesos.map(function(x){
+      return '<div class="rank-row"><div><div class="rank-name">'+esc(x.email||x.user_id)+'</div><div class="rank-meta">'+esc(x.rol)+(x.ultimo_acceso?' · último acceso '+fmtF(x.ultimo_acceso):' · aún no ha entrado')+'</div></div><button class="btn-sec" data-act="quitar-acceso" data-id="'+esc(id)+'" data-user="'+esc(x.user_id)+'">Quitar</button></div>';
+    }).join(''):'<div class="empty-slot">Este anunciante aún no tiene accesos.</div>';
+  }catch(e){ var el2=document.getElementById('ac_lista'); if(el2) el2.innerHTML='<div class="warn">'+esc(e.message)+'</div>'; }
+}
+async function crearAcceso(id){
+  var email=val('ac_email'), pass=val('ac_pass');
+  if(!email){toast('Escribe el email',true);return;}
+  var btn=document.getElementById('ac_crear'); btn.disabled=true;
+  try{
+    var d=await llamarAdmin({action:'create_user',email:email,password:pass||null,anunciante_id:id});
+    var cred='<div class="cred">✅ Acceso creado.<br>Usuario: <code>'+esc(d.email)+'</code><br>Contraseña: <code>'+esc(d.password||pass)+'</code>'+(d.password?'<br><b>Cópiala ahora: no se vuelve a mostrar.</b>':'')+'<br>Dirección: <code>'+esc(location.origin)+'/pages/anunciantes.html</code></div>';
+    toast('Acceso creado'); await modalAccesos(id,cred);
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function vincularAcceso(id){
+  var email=val('ac_email2'); if(!email){toast('Escribe el email del usuario',true);return;}
+  try{ await llamarAdmin({action:'link_user',email:email,anunciante_id:id}); toast('Usuario vinculado'); await modalAccesos(id); }
+  catch(e){ toast('Error: '+e.message,true); }
+}
+async function quitarAcceso(id,userId){
+  if(!confirm('¿Quitar este acceso? El usuario no se borra, solo deja de ver este anunciante.')) return;
+  try{ await llamarAdmin({action:'unlink_user',target_user_id:userId,anunciante_id:id}); toast('Acceso quitado'); await modalAccesos(id); }
+  catch(e){ toast('Error: '+e.message,true); }
+}
+
 // ── ACCIONES (un único listener; los datos viajan en data-*) ──
 document.addEventListener('click',function(ev){
   var per=ev.target.closest?ev.target.closest('#periodoBtns button'):null;
@@ -1149,6 +1323,16 @@ document.addEventListener('click',function(ev){
   else if(act==='edit-fac') modalFactura(FAC.filter(function(x){return x.id===id})[0]);
   else if(act==='guardar-fac') guardarFactura(id);
   else if(act==='calc-iva') calcularIVA();
+  else if(act==='aprobar') modalAprobar(id);
+  else if(act==='guardar-aprobar') guardarAprobar(id);
+  else if(act==='rechazar') modalRechazar(id);
+  else if(act==='guardar-rechazo') guardarRechazo(id);
+  else if(act==='pueblo-ok') resolverPueblo(id,true);
+  else if(act==='pueblo-no') resolverPueblo(id,false);
+  else if(act==='accesos') modalAccesos(id);
+  else if(act==='crear-acceso') crearAcceso(id);
+  else if(act==='vincular-acceso') vincularAcceso(id);
+  else if(act==='quitar-acceso') quitarAcceso(id,b.getAttribute('data-user'));
 });
 
 // ── INIT ──
@@ -1169,7 +1353,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.02</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.03</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
