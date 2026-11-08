@@ -1,4 +1,4 @@
-<!-- Kirolorik · clubes.html · v3.02 · 2026-11-14 · «Gestionar mis clubes» es una fila aparte que abre la lista de clubes (equipos, edición y añadir) en su propia pantalla, con flecha de vuelta y contador de clubes; (v3.01 · 2026-11-14 · secciones reordenadas (Mi club con mis clubes y Gestionar eventos; Datos personales; Sesión con última conexión y Cerrar sesión; Zona de riesgo); (v3.00 · 2026-11-14 · zona de clubes (antes perfil.html): entrada propia con inicio de sesión y recuperación de contraseña, sesión independiente (kb_club), acceso solo para gestores de clubes (mis_roles), enlace al panel de eventos y botón de cerrar sesión; «Añadir club» solo para administración; (perfil.html v2.19 · 2026-11-14 · nombres de tablas normalizados; v2.18 · 2026-11-07 · sesión persistente) -->
+<!-- Kirolorik · clubes.html · v4.00 · 2026-11-15 · se apoya en zona.js y zona.css (cabecera, acceso, Datos personales con nombre, teléfono, idioma, email, contraseña y avisos, Sesión con última conexión y ayuda, Zona de riesgo) para ser igual que la zona de anunciantes; (v3.02 · 2026-11-14 · Gestionar mis clubes en su propia pantalla) -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#1a6bff">
 <title>Kirolorik · Zona de clubes</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/zona.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,33 +19,10 @@
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);margin:0}
 a{color:var(--accent)}
 
-.wrap{max-width:500px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-bottom:40px}
 
-/* Header */
-.hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-.back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none}
-.hdr-title{font-size:14px;font-weight:700;color:var(--text)}
 
-/* Hero */
-.hero{display:flex;flex-direction:column;align-items:center;padding:24px 16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
-.hero-alias{font-size:16px;font-weight:700;color:var(--text)}
-.hero-email{font-size:12px;color:var(--muted);margin-top:2px}
 
-/* Secciones */
-.section{padding:16px 16px 0}
-.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
 
-/* Card */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
-.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
-.row:last-child{border-bottom:none}
-.row.click{cursor:pointer;transition:background 0.15s}
-.row.click:hover,.row.click:active{background:var(--surface2)}
-.rico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
-.rlabel{font-size:13px;font-weight:600;color:var(--text);flex:1}
-.rval{font-size:12px;color:var(--muted)}
-.rarrow{font-size:16px;color:var(--muted)}
 
 /* Equipos */
 .club-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
@@ -66,12 +44,6 @@ a{color:var(--accent)}
 .btn-add-ico{font-size:20px;width:40px;text-align:center}
 .btn-add-txt{font-size:13px;font-weight:600}
 
-/* Danger */
-.danger-card{background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);border-radius:var(--r);padding:14px}
-.danger-title{font-size:13px;font-weight:700;color:#dc2626;margin-bottom:4px}
-.danger-txt{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
-.btn-danger{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:var(--r2);padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
-.btn-danger:hover{background:#dc2626;color:#fff}
 
 /* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
@@ -95,177 +67,45 @@ a{color:var(--accent)}
 .toast.ok{background:#16a34a;color:#fff}
 .toast.err{background:#dc2626;color:#fff}
 
-/* Idioma radio */
-.lang-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
-.lang-opt.sel{border-color:var(--accent);background:var(--accent-bg)}
-.lang-ico{font-size:20px;width:28px;text-align:center}
-.lang-name{font-size:13px;font-weight:600;flex:1}
-.lang-check{font-size:16px}
 
-/* Sin login */
-.no-login{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px 16px;text-align:center;gap:12px}
-.no-login-ico{font-size:48px}
-.no-login-title{font-size:18px;font-weight:700;color:var(--text)}
-.no-login-txt{font-size:13px;color:var(--muted);line-height:1.6}
-.btn-volver{background:var(--accent);color:#fff;border:none;border-radius:var(--r2);padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
 </style>
 </head>
 <body>
-<div class="wrap" id="wrap">
+<div id="z-acceso"></div>
+<div id="z-app" class="z-wrap" style="display:none">
+  <div id="z-hdr"></div>
 
-  <div class="hdr">
-    <a class="back" id="btnBack" href="/" onclick="return atras()">←</a>
-    <span class="hdr-title" id="hdrTitle">Zona de clubes</span>
+  <!-- Pantalla principal -->
+  <div data-vista="principal">
+    <div id="z-hero"></div>
+
+    <div class="z-sec">
+      <div class="z-sec-title">Mi club</div>
+      <div class="z-card">
+        <div class="z-row click" data-z="vista:clubes">
+          <div class="z-rico">🏟️</div><div class="z-rlabel">Gestionar mis clubes</div>
+          <div class="z-rval" id="vNumClubes"></div><div class="z-rarrow">›</div>
+        </div>
+        <div class="z-row click" data-z="ir:/pages/eventos.html">
+          <div class="z-rico">📋</div><div class="z-rlabel">Gestionar eventos</div><div class="z-rarrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="z-datos"></div>
+    <div id="z-sesion"></div>
+    <div id="z-riesgo"></div>
   </div>
 
-  <!-- Sin sesión: acceso de clubes -->
-  <div class="no-login" id="noLogin" style="display:none">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)">KIROLORIK</div>
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-8px">Zona de clubes</div>
-    <div id="loginBox" style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px;text-align:left">
-      <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" autocomplete="username"></div>
-      <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="loginRecordar" checked style="width:auto;margin:0"> Mantener sesión iniciada</label>
-      <div id="loginError" class="field-err"></div>
-      <button class="btn-primary" id="loginBtn" onclick="login()">Entrar</button>
-      <button class="link" onclick="mostrarRecuperar()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">¿Has olvidado la contraseña?</button>
-      <div style="font-size:12px;color:var(--muted);text-align:center">¿Aún no tienes acceso? Escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a></div>
-      <div style="font-size:12px;color:var(--muted);text-align:center"><a href="/">← Volver al inicio</a></div>
-    </div>
-    <div id="recBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px;text-align:left">
-      <div style="font-size:14px;font-weight:700">Recuperar contraseña</div>
-      <div class="field" style="margin:0"><label>Email</label><input type="email" id="recEmail"></div>
-      <div id="recMsg" style="font-size:12px;min-height:16px"></div>
-      <button class="btn-primary" id="recBtn" onclick="enviarRecuperar()">Enviar enlace</button>
-      <button onclick="mostrarLogin()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">← Volver</button>
-    </div>
-    <div id="newPassBox" style="display:none;width:100%;max-width:320px;flex-direction:column;gap:12px;margin-top:8px;text-align:left">
-      <div style="font-size:14px;font-weight:700">Elige una contraseña nueva</div>
-      <div class="field" style="margin:0"><label>Contraseña nueva (mín. 8 caracteres)</label><input type="password" id="npPass1" autocomplete="new-password"></div>
-      <div class="field" style="margin:0"><label>Repítela</label><input type="password" id="npPass2" autocomplete="new-password"></div>
-      <div id="npMsg" style="font-size:12px;min-height:16px;color:#dc2626"></div>
-      <button class="btn-primary" id="npBtn" onclick="guardarNuevaPass()">Guardar contraseña</button>
-    </div>
-  </div>
-
-  <!-- Cuenta sin permiso de club -->
-  <div class="no-login" id="sinPermiso" style="display:none">
-    <div class="no-login-ico">🔒</div>
-    <div class="no-login-title">Esta cuenta no es de un club</div>
-    <div class="no-login-txt">Esta zona es solo para gestores de clubes. Si eres anunciante, entra en <a href="/pages/anunciantes.html">la zona de anunciantes</a>. Si gestionas un club y no puedes entrar, escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.</div>
-    <button class="btn-volver" onclick="cerrarSesion()">Cerrar sesión</button>
-  </div>
-
-  <!-- Con sesión -->
-  <div id="perfilContent" style="display:none">
-
-    <div class="hero vp">
-      <div class="avatar" id="avEl">?</div>
-      <div class="hero-alias" id="aliasEl">—</div>
-      <div class="hero-email" id="emailEl">—</div>
-    </div>
-
-    <div class="section vp">
-      <div class="sec-title">Mi club</div>
-      <div class="card">
-        <div class="row click" onclick="vista('clubes')">
-          <div class="rico">🏟️</div><div class="rlabel">Gestionar mis clubes</div>
-          <div class="rval" id="vNumClubes"></div><div class="rarrow">›</div>
-        </div>
-        <div class="row click" onclick="window.location.href='/pages/eventos.html'">
-          <div class="rico">📋</div><div class="rlabel">Gestionar eventos</div><div class="rarrow">›</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section vp">
-      <div class="sec-title">Datos personales</div>
-      <div class="card">
-        <div class="row click" onclick="openModal('mAlias')">
-          <div class="rico">✏️</div><div class="rlabel">Alias</div>
-          <div class="rval" id="vAlias">—</div><div class="rarrow">›</div>
-        </div>
-        <div class="row click" onclick="openModal('mIdioma')">
-          <div class="rico">🌐</div><div class="rlabel">Idioma</div>
-          <div class="rval" id="vIdioma">CAS</div><div class="rarrow">›</div>
-        </div>
-        <div class="row">
-          <div class="rico">📧</div><div class="rlabel">Email</div>
-          <div class="rval" id="vEmail">—</div>
-        </div>
-        <div class="row click" onclick="openModal('mPass')">
-          <div class="rico">🔑</div><div class="rlabel">Contraseña</div>
-          <div class="rval">Cambiar</div><div class="rarrow">›</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section vp">
-      <div class="sec-title">Sesión</div>
-      <div class="card">
-        <div class="row">
-          <div class="rico">🕓</div><div class="rlabel">Última conexión</div>
-          <div class="rval" id="vUltima">—</div>
-        </div>
-        <div class="row click" onclick="cerrarSesion()">
-          <div class="rico">🚿</div><div class="rlabel">Cerrar sesión</div><div class="rarrow">›</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section vp" style="margin-top:8px">
-      <div class="sec-title">Zona de riesgo</div>
-      <div class="danger-card">
-        <div class="danger-title">Eliminar perfil</div>
-        <div class="danger-txt">Al solicitar la eliminación, tu perfil se desactivará durante 30 días. Pasado ese plazo, todos tus datos se borrarán permanentemente.</div>
-        <button class="btn-danger" onclick="openModal('mBaja')">Solicitar eliminación de cuenta</button>
-      </div>
-    </div>
-
-
-    <div class="section vc" style="display:none">
-      <div class="sec-title">Mis clubes</div>
+  <!-- Mis clubes -->
+  <div data-vista="clubes" data-titulo="Mis clubes" style="display:none">
+    <div class="z-sec">
       <div id="clubesList"><div style="font-size:12px;color:var(--muted);padding:4px 0 8px">Cargando...</div></div>
       <button class="btn-add" id="btnAddClub" style="display:none" onclick="openModalClub()">
         <div class="btn-add-ico">➕</div>
         <div class="btn-add-txt">Añadir club</div>
       </button>
     </div>
-
-  </div>
-</div>
-
-<!-- MODAL ALIAS -->
-<div class="modal-bg" id="mAlias">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Cambiar alias</div>
-    <div class="field"><label>Alias visible en la app</label><input type="text" id="inputAlias" placeholder="Tu alias..."></div>
-    <button class="btn-primary" onclick="guardarAlias()">Guardar</button>
-    <button class="btn-cancel" onclick="closeModal('mAlias')">Cancelar</button>
-  </div>
-</div>
-
-<!-- MODAL IDIOMA -->
-<div class="modal-bg" id="mIdioma">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Idioma</div>
-    <div id="langOpts" style="margin-bottom:16px"></div>
-    <button class="btn-cancel" onclick="closeModal('mIdioma')">Cancelar</button>
-  </div>
-</div>
-
-<!-- MODAL CONTRASEÑA -->
-<div class="modal-bg" id="mPass">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Cambiar contraseña</div>
-    <div class="field"><label>Nueva contraseña</label><input type="password" id="pass1" placeholder="Mínimo 8 caracteres"></div>
-    <div class="field"><label>Repetir contraseña</label><input type="password" id="pass2" placeholder="Repite la contraseña"></div>
-    <div class="field-err" id="passErr"></div>
-    <button class="btn-primary" onclick="guardarPass()">Cambiar contraseña</button>
-    <button class="btn-cancel" onclick="closeModal('mPass')">Cancelar</button>
   </div>
 </div>
 
@@ -372,85 +212,22 @@ a{color:var(--accent)}
   </div>
 </div>
 
-<!-- MODAL BAJA -->
-<div class="modal-bg" id="mBaja">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" style="color:#dc2626">¿Eliminar tu cuenta?</div>
-    <p style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">Tu perfil se desactivará durante <strong>30 días</strong>. Pasado ese plazo, todos tus datos se eliminarán permanentemente.</p>
-    <div class="field"><label>Escribe tu email para confirmar</label><input type="email" id="bajaMail" placeholder="Tu email de acceso"></div>
-    <div class="field-err" id="bajaErr"></div>
-    <button class="btn-danger" style="width:100%;padding:12px;font-size:13px" onclick="confirmarBaja()">Sí, eliminar mi cuenta</button>
-    <button class="btn-cancel" onclick="closeModal('mBaja')">Cancelar</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script src="/assets/js/sesion.js"></script>
+<script src="/assets/js/zona.js"></script>
 <script>
 const SB  = 'https://glscnwctcvrosmbrljns.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
-const COLORS = ['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 const DEPEMOJI = {futbol:'⚽',basket:'🏀',balonmano:'🤾',waterpolo:'🏊',boxeo:'🥊',tenis:'🎾',atletismo:'🏃',ciclismo:'🚴',voley:'🏐',natacion:'🏊',padel:'🎾',ajedrez:'♟️',rugby:'🏉',hockey:'🏒',billar:'🎱',trec:'🐎',triatlon:'🏁','gimnasia ritmica':'🤸',pelota:'🥎',trail:'⛰️',otros:'🏅'};
 
-let tok = null, user = null, perfil = null, idiomaActual = 'cas';
+
+let user = null;
 let clubesPerfil = {};   // clubes del usuario, para componer el nombre de sus equipos
 
-// ── SESIÓN ──
-// El token de acceso caduca a la hora y entonces todo fallaba con "JWT expired". Se renueva solo con el refresh token y la
-// petición fallida se repite una vez; si no se puede renovar, se vuelve al inicio de sesión con un aviso.
-var _fetchOriginal=window.fetch.bind(window);
-var refrescando=null;
-function jwtExp(t){
-  try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
-}
-function refrescarSesion(){
-  if(refrescando) return refrescando;
-  refrescando=KBS.lock('kb_club_refresh',function(){
-    // otra pestaña pudo renovar ya la sesión: se usa su token
-    var tk=KBS.get('kb_club_token');
-    if(tk&&tk!==tok&&jwtExp(tk)-Date.now()>60000){ tok=tk; return true; }
-    var rt=KBS.get('kb_club_refresh');
-    if(!rt) return false;
-    return _fetchOriginal(SB+'/auth/v1/token?grant_type=refresh_token',{
-      method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
-    }).then(function(r){return r.ok?r.json():null}).then(function(d){
-      if(!d||!d.access_token) return false;
-      tok=d.access_token;
-      KBS.set('kb_club_token',tok);
-      if(d.refresh_token) KBS.set('kb_club_refresh',d.refresh_token);
-      return true;
-    });
-  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
-  return refrescando;
-}
-window.fetch=function(url,opts){
-  return _fetchOriginal(url,opts).then(function(res){
-    if(res.status!==401||!tok||typeof url!=='string'||url.indexOf(SB)!==0||url.indexOf('/auth/v1/')>=0) return res;
-    return refrescarSesion().then(function(ok){
-      if(!ok){ sesionCaducada(); return res; }
-      var o=Object.assign({},opts||{});
-      o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+tok});
-      return _fetchOriginal(url,o);
-    });
-  });
-};
-function renovarSiHaceFalta(){ if(tok&&jwtExp(tok)-Date.now()<5*60000) refrescarSesion(); }
-setInterval(renovarSiHaceFalta,60000);
-document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
-function sesionCaducada(){
-  KBS.clear('kb_club');
-  tok=null; user=null;
-  document.getElementById('noLogin').style.display='flex';
-  document.getElementById('perfilContent').style.display='none';
-  document.getElementById('sinPermiso').style.display='none';
-  mostrarLogin(); document.getElementById('loginError').textContent='La sesión ha caducado. Entra de nuevo.';
-}
-
-function H(){ return {'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json'}; }
-function color(e){ return COLORS[(e||'').charCodeAt(0) % COLORS.length]; }
-function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+// La sesión, el acceso y los datos personales los gestiona zona.js
+function H(){ return KBZ.H(); }
+function esc(s){ return KBZ.esc(s); }
 function safeUrl(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:''}
 
 function toast(msg, tipo=''){
@@ -460,118 +237,13 @@ function toast(msg, tipo=''){
   setTimeout(() => t.className = 'toast', 3000);
 }
 
-function openModal(id){
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-}
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 // Cerrar modales al pulsar fondo
 document.querySelectorAll('.modal-bg').forEach(m => {
   m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
 });
-
-// ── CARGAR PERFIL ──
-async function cargarPerfil(){
-  const email = user.email || '';
-  const ini   = email.charAt(0).toUpperCase();
-  const col   = color(email);
-
-  const av = document.getElementById('avEl');
-  av.textContent = ini;
-  av.style.background = col;
-
-  document.getElementById('emailEl').textContent = email;
-  document.getElementById('vEmail').textContent  = email;
-
-  try {
-    const res  = await fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}&select=*`, { headers: H() });
-    const data = await res.json();
-
-    if(data && data.length > 0){
-      perfil = data[0];
-      idiomaActual = perfil.idioma || 'cas';
-    } else {
-      // Crear perfil vacío
-      await fetch(`${SB}/rest/v1/usuarios_perfil`, {
-        method:'POST',
-        headers: {...H(), 'Prefer':'return=minimal'},
-        body: JSON.stringify({id: user.id, idioma:'cas'})
-      });
-      perfil = {id: user.id, idioma:'cas', alias: null};
-    }
-
-    const alias = perfil.alias || email.split('@')[0];
-    document.getElementById('aliasEl').textContent = alias;
-    document.getElementById('vAlias').textContent  = alias;
-    document.getElementById('vIdioma').textContent = (perfil.idioma || 'cas').toUpperCase();
-
-  } catch(e) {
-    toast('Error cargando perfil', 'err');
-    console.error(e);
-  }
-
-  cargarClubes();
-}
-
-// ── ALIAS ──
-function guardarAlias(){
-  const alias = document.getElementById('inputAlias').value.trim();
-  if(!alias){ toast('El alias no puede estar vacío','err'); return; }
-  fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
-    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({alias})
-  }).then(r => {
-    if(!r.ok) throw new Error();
-    document.getElementById('aliasEl').textContent = alias;
-    document.getElementById('vAlias').textContent  = alias;
-    closeModal('mAlias');
-    toast('Alias actualizado','ok');
-  }).catch(() => toast('Error al guardar','err'));
-}
-
-// ── IDIOMA ──
-function renderLangOpts(){
-  const langs = [{id:'cas',label:'Castellano',ico:'🇪🇸'},{id:'eus',label:'Euskera',ico:'🏔️'}];
-  document.getElementById('langOpts').innerHTML = langs.map(l => `
-    <div class="lang-opt ${idiomaActual===l.id?'sel':''}" onclick="selIdioma('${l.id}')">
-      <span class="lang-ico">${l.ico}</span>
-      <span class="lang-name">${l.label}</span>
-      <span class="lang-check">${idiomaActual===l.id?'✅':''}</span>
-    </div>`).join('');
-}
-
-function selIdioma(lang){
-  idiomaActual = lang;
-  fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
-    method:'PATCH', headers:{...H(),'Prefer':'return=minimal'}, body:JSON.stringify({idioma:lang})
-  }).then(r => {
-    if(!r.ok) throw new Error();
-    document.getElementById('vIdioma').textContent = lang.toUpperCase();
-    sessionStorage.setItem('kb_lang', lang);
-    closeModal('mIdioma');
-    toast('Idioma guardado','ok');
-  }).catch(() => toast('Error','err'));
-}
-
-// ── CONTRASEÑA ──
-function guardarPass(){
-  const p1 = document.getElementById('pass1').value;
-  const p2 = document.getElementById('pass2').value;
-  const err = document.getElementById('passErr');
-  err.textContent = '';
-  if(p1.length < 8){ err.textContent = 'Mínimo 8 caracteres'; return; }
-  if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch(`${SB}/auth/v1/user`, {
-    method:'PUT', headers:H(), body:JSON.stringify({password:p1})
-  }).then(r => {
-    if(!r.ok) throw new Error();
-    closeModal('mPass');
-    document.getElementById('pass1').value = '';
-    document.getElementById('pass2').value = '';
-    toast('Contraseña actualizada','ok');
-  }).catch(() => { err.textContent = 'Error al cambiar la contraseña'; });
-}
 
 // ── EQUIPOS ──
 async function cargarClubes(){
@@ -759,7 +431,7 @@ async function subirEscudo(file){
   const name = `escudo_${user.id}_${Date.now()}.${ext}`;
   const res  = await fetch(`${SB}/storage/v1/object/escudos/${name}`, {
     method:'POST',
-    headers:{'apikey':KEY,'Authorization':'Bearer '+tok,'Content-Type':file.type},
+    headers:{'apikey':KEY,'Authorization':'Bearer '+KBZ.token(),'Content-Type':file.type},
     body:file
   });
   if(!res.ok) throw new Error('Error al subir escudo');
@@ -846,145 +518,21 @@ async function borrarEquipo(id){
   } catch(e){ toast('Error','err'); }
 }
 
-// ── BAJA ──
-async function confirmarBaja(){
-  const mail = document.getElementById('bajaMail').value.trim();
-  const err  = document.getElementById('bajaErr');
-  err.textContent = '';
-  if(mail !== user.email){ err.textContent = 'El email no coincide'; return; }
-  try {
-    await fetch(`${SB}/rest/v1/usuarios_perfil?id=eq.${user.id}`, {
-      method:'PATCH', headers:{...H(),'Prefer':'return=minimal'},
-      body: JSON.stringify({activo:false, baja_solicitada_at: new Date().toISOString()})
-    });
-    closeModal('mBaja');
-    toast('Cuenta desactivada. Tienes 30 días para recuperarla.','ok');
-    setTimeout(() => {
-      KBS.cerrar(SB, KEY, 'kb_club', function(){ window.location.href = '/pages/clubes.html'; });
-    }, 3000);
-  } catch(e){ err.textContent = 'Error al procesar la solicitud'; }
-}
-
-// ── VISTAS: principal / mis clubes (se recuerda en #clubes para que «atrás» del navegador funcione) ──
-function vista(v,sinHistorial){
-  var clubes=(v==='clubes');
-  document.querySelectorAll('#perfilContent .vp').forEach(function(e){ e.style.display=clubes?'none':''; });
-  document.querySelectorAll('#perfilContent .vc').forEach(function(e){ e.style.display=clubes?'':'none'; });
-  document.getElementById('hdrTitle').textContent=clubes?'Mis clubes':'Zona de clubes';
-  document.getElementById('btnBack').setAttribute('href',clubes?'#':'/');
-  if(!sinHistorial){ try{ if(clubes) history.pushState(null,'','#clubes'); else if(location.hash==='#clubes') history.back(); }catch(e){} }
-  window.scrollTo(0,0);
-}
-function atras(){ if(document.querySelector('#perfilContent .vc')&&document.querySelector('#perfilContent .vc').style.display!=='none'){ vista('principal'); return false; } return true; }
-window.addEventListener('popstate',function(){ if(document.getElementById('perfilContent').style.display!=='none') vista(location.hash==='#clubes'?'clubes':'principal',true); });
-
-// ── ACCESO ──
-function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
-function mostrarLogin(){ document.getElementById('loginBox').style.display='flex'; document.getElementById('recBox').style.display='none'; document.getElementById('newPassBox').style.display='none'; }
-function mostrarRecuperar(){ document.getElementById('loginBox').style.display='none'; document.getElementById('recBox').style.display='flex'; document.getElementById('recEmail').value=val('loginEmail'); document.getElementById('recMsg').textContent=''; }
-function cerrarSesion(){ KBS.cerrar(SB, KEY, 'kb_club', function(){ window.location.href='/pages/clubes.html'; }); }
-async function login(){
-  var email=val('loginEmail'), pass=document.getElementById('loginPass').value, err=document.getElementById('loginError'), btn=document.getElementById('loginBtn');
-  err.textContent=''; if(!email||!pass){ err.textContent='Escribe tu email y tu contraseña'; return; }
-  btn.disabled=true; btn.textContent='...';
-  try{
-    var res=await fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
-    var d=await res.json(); if(!res.ok) throw new Error(d.error_description||'Email o contraseña incorrectos');
-    tok=d.access_token; user=d.user;
-    KBS.setPersist(!!document.getElementById('loginRecordar').checked,'kb_club');
-    KBS.set('kb_club_token',tok); KBS.set('kb_club_user',JSON.stringify(user)); if(d.refresh_token) KBS.set('kb_club_refresh',d.refresh_token);
-    entrarClub();
-  }catch(e){ err.textContent=e.message; btn.disabled=false; btn.textContent='Entrar'; }
-}
-async function enviarRecuperar(){
-  var email=val('recEmail'), msg=document.getElementById('recMsg'), btn=document.getElementById('recBtn');
-  if(!email){ msg.style.color='#dc2626'; msg.textContent='Escribe tu email'; return; }
-  btn.disabled=true;
-  try{
-    await fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,redirect_to:location.origin+'/pages/clubes.html'})});
-    msg.style.color='#16a34a'; msg.textContent='Si el email existe, recibirás un enlace para elegir una contraseña nueva.';
-  }catch(e){ msg.style.color='#dc2626'; msg.textContent='No se ha podido enviar. Inténtalo de nuevo.'; }
-  btn.disabled=false;
-}
-// Enlace de recuperación: llega con #access_token=…&type=recovery
-function hashRecuperacion(){
-  var h=location.hash.replace(/^#/,''); if(!h) return null;
-  var p={}; h.split('&').forEach(function(x){ var kv=x.split('='); p[kv[0]]=decodeURIComponent(kv[1]||''); });
-  return (p.type==='recovery'&&p.access_token)?p.access_token:null;
-}
-async function guardarNuevaPass(){
-  var a=document.getElementById('npPass1').value, b=document.getElementById('npPass2').value, msg=document.getElementById('npMsg'), btn=document.getElementById('npBtn');
-  msg.style.color='#dc2626';
-  if(a.length<8){ msg.textContent='La contraseña debe tener al menos 8 caracteres'; return; }
-  if(a!==b){ msg.textContent='Las contraseñas no coinciden'; return; }
-  btn.disabled=true;
-  try{
-    var res=await _fetchOriginal(SB+'/auth/v1/user',{method:'PUT',headers:{'apikey':KEY,'Authorization':'Bearer '+window._tokenRecuperacion,'Content-Type':'application/json'},body:JSON.stringify({password:a})});
-    var d=await res.json(); if(!res.ok) throw new Error(d.msg||d.error_description||'No se ha podido guardar la contraseña');
-    history.replaceState(null,'',location.pathname); window._tokenRecuperacion=null;
-    mostrarLogin(); document.getElementById('loginError').style.color='#16a34a'; document.getElementById('loginError').textContent='Contraseña guardada. Ya puedes entrar.';
-  }catch(e){ msg.textContent=e.message; }
-  btn.disabled=false;
-}
-// Comprueba en la base de datos que la cuenta es de un club antes de enseñar nada
-async function entrarClub(){
-  document.getElementById('noLogin').style.display='none';
-  var ro=await KBS.roles(SB,KEY,tok);
-  if(!ro||!ro.club){
-    document.getElementById('perfilContent').style.display='none';
-    document.getElementById('sinPermiso').style.display='flex';
-    return;
+// ── ZONA ──
+KBZ.iniciar({
+  zona:'club', grupo:'kb_club', inicio:'/pages/clubes.html', titulo:'Zona de clubes', sb:SB, key:KEY,
+  permiso:function(ro){ return !!ro.club; },
+  sinPermisoTitulo:'Esta cuenta no es de un club',
+  sinPermiso:'Esta zona es solo para gestores de clubes. Si eres anunciante, entra en <a href="/pages/anunciantes.html">la zona de anunciantes</a>. Si gestionas un club y no puedes entrar, escríbenos a <a href="mailto:kirolorik.info@gmail.com">kirolorik.info@gmail.com</a>.',
+  textoBaja:'Al solicitar la eliminación, tu perfil se desactivará durante 30 días y perderás el acceso a tus clubes. Pasado ese plazo, todos tus datos se borrarán permanentemente.',
+  alEntrar:function(ctx){
+    user = ctx.user;
+    document.getElementById('btnAddClub').style.display = ctx.roles.admin ? '' : 'none';
+    cargarClubes();
   }
-  document.getElementById('sinPermiso').style.display='none';
-  document.getElementById('perfilContent').style.display='block';
-  document.getElementById('btnAddClub').style.display=ro.admin?'':'none';
-  cargarPerfil();
-  ultimaConexion();
-  vista(location.hash==='#clubes'?'clubes':'principal',true);
-}
-
-// Última conexión: fecha del último inicio de sesión de la cuenta (la devuelve el servidor)
-async function ultimaConexion(){
-  var el=document.getElementById('vUltima'); if(!el) return;
-  try{
-    var res=await fetch(SB+'/auth/v1/user',{headers:{'apikey':KEY,'Authorization':'Bearer '+tok}});
-    var d=await res.json(); var t=d&&d.last_sign_in_at;
-    if(!res.ok||!t){ el.textContent='—'; return; }
-    var f=new Date(t), p=function(n){return String(n).padStart(2,'0')};
-    el.textContent=p(f.getDate())+'/'+p(f.getMonth()+1)+'/'+f.getFullYear()+' '+p(f.getHours())+':'+p(f.getMinutes());
-  }catch(e){ el.textContent='—'; }
-}
-
-// ── INIT ──
-(function(){
-  var tokRec=hashRecuperacion();
-  if(tokRec){
-    window._tokenRecuperacion=tokRec;
-    document.getElementById('noLogin').style.display='flex';
-    document.getElementById('loginBox').style.display='none'; document.getElementById('newPassBox').style.display='flex';
-    return;
-  }
-  tok=KBS.get('kb_club_token');
-  var savedUser=KBS.get('kb_club_user');
-  if(tok&&savedUser){
-    try{ user=JSON.parse(savedUser); }catch(e){ user=null; }
-    if(user){
-      // Si el token guardado ya caducó (o está a punto), se renueva antes de cargar nada
-      if(jwtExp(tok)-Date.now()<60000) refrescarSesion().then(function(ok){ if(ok) entrarClub(); else sesionCaducada(); });
-      else entrarClub();
-      return;
-    }
-  }
-  document.getElementById('noLogin').style.display='flex';
-})();
-
-// Abrir idioma con opciones renderizadas
-document.querySelector('[onclick="openModal(\'mIdioma\')"]').addEventListener('click', renderLangOpts);
-document.getElementById('inputAlias').addEventListener('keydown', e => {
-  if(e.key === 'Enter') guardarAlias();
 });
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v3.02</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">clubes v4.00</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

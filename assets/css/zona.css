@@ -1,0 +1,78 @@
+/* Kirolorik · zona.css · v1.00 · 2026-11-15
+   Estilos comunes de las zonas privadas (clubes y anunciantes): cabecera con flecha, ficha de la persona, secciones con filas,
+   modales, tarjeta de zona de riesgo y pantalla de acceso. Todo con prefijo z- para no chocar con los estilos de cada página.
+   Lo usa assets/js/zona.js. */
+:root{
+  --bg:#f4f6f8;--surface:#fff;--surface2:#eef0f3;--border:#dde1e7;--text:#1a1d23;--text2:#4a5060;--muted:#8a90a0;
+  --accent:#1a6bff;--accent-bg:rgba(26,107,255,0.08);--z-r:14px;--z-r2:9px;--z-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+.z-wrap{max-width:500px;margin:0 auto;min-height:100dvh;padding-bottom:40px}
+
+/* Cabecera */
+.z-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.z-back{font-size:22px;cursor:pointer;color:var(--muted);line-height:1;text-decoration:none;background:none;border:none;padding:0;font-family:inherit}
+.z-hdr-title{font-size:14px;font-weight:700;color:var(--text)}
+
+/* Ficha de la persona */
+.z-hero{display:flex;flex-direction:column;align-items:center;padding:24px 16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.z-avatar{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
+.z-hero-name{font-size:16px;font-weight:700;color:var(--text);text-align:center}
+.z-hero-email{font-size:12px;color:var(--muted);margin-top:2px}
+.z-hero-extra{font-size:12px;color:var(--text2);margin-top:6px;font-weight:600;text-align:center}
+.z-hero-extra:empty{display:none}
+
+/* Secciones y filas */
+.z-sec{padding:16px 16px 0}
+.z-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+.z-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--z-r);margin-bottom:12px;overflow:hidden;box-shadow:var(--z-shadow)}
+.z-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.z-row:last-child{border-bottom:none}
+.z-row.click{cursor:pointer;transition:background .15s}
+.z-row.click:hover,.z-row.click:active{background:var(--surface2)}
+.z-rico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.z-rlabel{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.z-rval{font-size:12px;color:var(--muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+.z-rarrow{font-size:16px;color:var(--muted)}
+
+/* Zona de riesgo */
+.z-danger{background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.2);border-radius:var(--z-r);padding:14px}
+.z-danger-title{font-size:13px;font-weight:700;color:#dc2626;margin-bottom:4px}
+.z-danger-txt{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.z-btn-danger{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:var(--z-r2);padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.z-btn-danger:hover{background:#dc2626;color:#fff}
+
+/* Campos, botones y modales */
+.z-field{margin-bottom:12px}
+.z-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+.z-field input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--z-r2);padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;-webkit-appearance:none}
+.z-field input:focus{border-color:var(--accent)}
+.z-err{font-size:11px;color:#dc2626;min-height:14px;margin-bottom:8px}
+.z-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--z-r2);padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.z-btn:disabled{opacity:.6;cursor:default}
+.z-btn-cancel{width:100%;background:none;border:none;color:var(--muted);font-size:13px;padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px}
+.z-link{background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 0}
+.z-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.z-modal-bg.open{display:flex}
+.z-modal{background:var(--bg);width:100%;max-width:500px;max-height:90dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.z-modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px}
+.z-modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);margin-bottom:16px}
+.z-lang-opt{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--z-r);margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.z-lang-opt.sel{border-color:var(--accent);background:var(--accent-bg)}
+.z-lang-ico{font-size:20px;width:28px;text-align:center}
+.z-lang-name{font-size:13px;font-weight:600;flex:1}
+.z-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);border-radius:var(--z-r2);padding:10px 20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:400}
+.z-toast.show{opacity:1}
+.z-toast.ok{background:#16a34a;color:#fff}
+.z-toast.err{background:#dc2626;color:#fff}
+
+/* Acceso (inicio de sesión, recuperar contraseña, sin permiso) */
+.z-acceso{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;gap:14px;padding:32px 16px;text-align:center}
+.z-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)}
+.z-logo-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-8px}
+.z-caja{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px;text-align:left}
+.z-nota{font-size:12px;color:var(--muted);text-align:center;line-height:1.5}
+.z-nota a{color:var(--accent)}
+.z-ico{font-size:48px}
+.z-acc-title{font-size:18px;font-weight:700;color:var(--text)}
+.z-acc-txt{font-size:13px;color:var(--muted);line-height:1.6;max-width:340px}
+.z-acc-txt a{color:var(--accent)}
