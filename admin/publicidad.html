@@ -1,12 +1,15 @@
 <!--
 Proyecto: Kirolorik
 Archivo: admin/publicidad.html
-Versión: v1.00
-Fecha: 2026-11-08
+Versión: v1.01
+Fecha: 2026-11-09
 Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
 (por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
 (pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
 impone la base de datos; aquí se avisa antes de guardar. Usa las tablas de la migración 2026-11-08_publi_fase1.
+v1.01: pestañas Diseños (solicitudes de diseño de banner: primero las atiende Kirolorik, más adelante diseñadores colaboradores) y
+Facturas (número, fecha, importe y enlace al documento; se rellena a mano y más adelante desde Stripe), con la migración
+2026-11-09_publi_faq_facturas_disenos; y una ayuda «¿Cómo publico un banner?».
 -->
 
 <!DOCTYPE html>
@@ -93,6 +96,17 @@ impone la base de datos; aquí se avisa antes de guardar. Usa las tablas de la m
 .prev .l{font-size:12px;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cod{font-family:monospace;font-size:11px;color:var(--muted)}
+.ayuda{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:13px}
+.ayuda summary{cursor:pointer;font-weight:700}
+.ayuda ol{margin:8px 0 0 18px;padding:0;line-height:1.5}
+.ayuda p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.nota{font-size:12px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;line-height:1.5}
+.st-solicitado{background:rgba(147,51,234,.12);color:#7e22ce}
+.st-en_curso{background:rgba(37,99,235,.12);color:#2563eb}
+.st-entregado{background:rgba(234,88,12,.12);color:#c2410c}
+.st-aprobado,.st-pagada,.st-emitida{background:rgba(22,163,74,.12);color:#16a34a}
+.st-anulada{background:rgba(220,38,38,.12);color:#dc2626}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -135,9 +149,21 @@ impone la base de datos; aquí se avisa antes de guardar. Usa las tablas de la m
     <div class="tab active" id="tabBtnBanners" onclick="cambiarTab('banners')">📣 Banners</div>
     <div class="tab" id="tabBtnAnun" onclick="cambiarTab('anun')">🏢 Anunciantes</div>
     <div class="tab" id="tabBtnMet" onclick="cambiarTab('met')">📈 Métricas</div>
+    <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseños</div>
+    <div class="tab" id="tabBtnFac" onclick="cambiarTab('fac')">🧾 Facturas</div>
   </div>
 
   <div id="tabBanners">
+    <details class="ayuda">
+      <summary>¿Cómo publico un banner?</summary>
+      <ol>
+        <li><b>Anunciante:</b> en la pestaña Anunciantes, «Nuevo anunciante» con sus datos y, sobre todo, el <b>tipo de negocio</b> (define la exclusividad en cada pueblo).</li>
+        <li><b>Banner:</b> «Nuevo banner» con título, descripción corta (~60 caracteres), texto largo, imagen y enlace. Si no tiene imagen, puedes pedir un diseño en la pestaña Diseños.</li>
+        <li><b>Pueblos y fechas:</b> al guardar el banner se eligen uno o varios pueblos (o «Todos los pueblos»), las fechas, el origen (pago, cortesía o acuerdo) y el estado. Con <b>Confirmada</b> sale en la portada en esas fechas; si el hueco está ocupado, te avisa.</li>
+        <li><b>Seguimiento:</b> en esta lista ves vistas, aperturas, clics y CTR de cada fila; en Métricas, el resumen por periodo y el CSV para el anunciante.</li>
+      </ol>
+      <p>Estados: <b>Activa</b> (se ve hoy), <b>Programada</b> (empieza más adelante), <b>Finalizada</b>, <b>Pausada</b> (reserva el hueco pero no se ve), <b>Pendiente de pago</b> y <b>En revisión</b> (reservan el hueco o esperan tu visto bueno) y <b>Cancelada</b> (libera el hueco; las métricas se conservan).</p>
+    </details>
     <div class="bar">
       <button class="btn-main" data-act="nuevo-banner">＋ Nuevo banner</button>
     </div>
@@ -176,6 +202,26 @@ impone la base de datos; aquí se avisa antes de guardar. Usa las tablas de la m
       <button data-per="7">7 días</button><button data-per="30" class="on">30 días</button><button data-per="0">Todo</button>
     </div>
     <div id="metContent"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabDis" style="display:none">
+    <div class="bar">
+      <button class="btn-main" data-act="nuevo-dis">＋ Solicitud de diseño</button>
+      <button class="btn-sec" data-act="disenadores">👥 Diseñadores</button>
+    </div>
+    <div class="nota">Las solicitudes de diseño las atiende primero Kirolorik. Más adelante se podrán derivar a diseñadores colaboradores (registra aquí a los que quieran aparecer) y los anunciantes podrán pedirlas desde su zona.</div>
+    <div class="filters"><select id="fd_estado" class="full" onchange="renderDisenos()"><option value="">Todos los estados</option><option value="solicitado">Solicitado</option><option value="en_curso">En curso</option><option value="entregado">Entregado</option><option value="aprobado">Aprobado</option><option value="cancelado">Cancelado</option></select></div>
+    <div id="disList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabFac" style="display:none">
+    <div class="bar">
+      <button class="btn-main" data-act="nueva-fac">＋ Factura</button>
+    </div>
+    <div class="nota">Las facturas se emiten con el programa de facturación de tu gestor (en Gipuzkoa y Bizkaia, compatible con TicketBAI). Aquí se registra su número, importe y el enlace al documento. Más adelante, los pagos por Stripe rellenarán esta lista automáticamente y cada anunciante verá las suyas.</div>
+    <div class="filters"><select id="ff_anun" onchange="renderFacturas()"><option value="">Todos los anunciantes</option></select><select id="ff_estado" onchange="renderFacturas()"><option value="">Todos los estados</option><option value="emitida">Emitida</option><option value="pagada">Pagada</option><option value="anulada">Anulada</option></select></div>
+    <div class="count" id="ff_count"></div>
+    <div id="facList"><div class="empty-slot">Cargando...</div></div>
   </div>
 
 </div>
@@ -291,7 +337,8 @@ function mostrarDenegado(){
 }
 
 // ── DATOS ──
-let ANUN=[], BAN=[], COL=[], MUN=[], TIPOS=[], MET=[], TARIFAS=[];
+let ANUN=[], BAN=[], COL=[], MUN=[], TIPOS=[], MET=[], TARIFAS=[], DIS=[], FAC=[], DISENADORES=[];
+let faseB=true;   // false si aún no está aplicada la migración 2026-11-09 (diseños, diseñadores y facturas)
 let ANUN_BY={}, BAN_BY={}, COL_BY={}, MUN_BY={}, TIPO_BY={}, MET_BY={};
 let periodoDias=30;
 let tabActual='banners';
@@ -323,6 +370,10 @@ async function cargarTodo(){
       getAll('tarifas?select=id,plan,precio,periodo&order=precio.asc')
     ]);
     ANUN=r[0]; BAN=r[1]; COL=r[2]; MUN=r[3]; TIPOS=r[4]; MET=r[5]; TARIFAS=r[6];
+    try{
+      var rb=await Promise.all([getAll('disenos_banner?select=*&order=created_at.desc'),getAll('facturas?select=*&order=fecha.desc,created_at.desc'),getAll('disenadores?select=*&order=nombre.asc')]);
+      DIS=rb[0]; FAC=rb[1]; DISENADORES=rb[2]; faseB=true;
+    }catch(e){ DIS=[]; FAC=[]; DISENADORES=[]; faseB=false; }
     ANUN_BY=indexar(ANUN,'id'); BAN_BY=indexar(BAN,'id'); COL_BY=indexar(COL,'id'); MUN_BY=indexar(MUN,'id'); TIPO_BY=indexar(TIPOS,'id');
     MET_BY={}; MET.forEach(function(m){ (MET_BY[m.colocacion_id]=MET_BY[m.colocacion_id]||[]).push(m); });
     rellenarFiltros();
@@ -331,11 +382,11 @@ async function cargarTodo(){
     document.getElementById('bannersList').innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar: '+esc(e.message)+'</div>';
   }
 }
-function renderTodo(){ renderBanners(); renderAnun(); renderMetricas(); }
+function renderTodo(){ renderBanners(); renderAnun(); renderMetricas(); renderDisenos(); renderFacturas(); }
 
 function cambiarTab(t){
   tabActual=t;
-  [['banners','tabBanners','tabBtnBanners'],['anun','tabAnun','tabBtnAnun'],['met','tabMet','tabBtnMet']].forEach(function(x){
+  [['banners','tabBanners','tabBtnBanners'],['anun','tabAnun','tabBtnAnun'],['met','tabMet','tabBtnMet'],['dis','tabDis','tabBtnDis'],['fac','tabFac','tabBtnFac']].forEach(function(x){
     document.getElementById(x[1]).style.display=(x[0]===t?'block':'none');
     document.getElementById(x[2]).classList.toggle('active',x[0]===t);
   });
@@ -586,9 +637,10 @@ async function guardarAnunciante(id){
 // ── Banner (creatividad) ──
 let bnImagen=null;      // URL guardada
 let bnQuitada=false;
-function modalBanner(b,anuncianteId){
+function modalBanner(b,anuncianteId,imgPrecargada){
   var n=b||{};
-  bnImagen=n.imagen_url||''; bnQuitada=false; window._bnVistaPrevia='';
+  window._disenoActual=null;
+  bnImagen=n.imagen_url||imgPrecargada||''; bnQuitada=false; window._bnVistaPrevia='';
   var opts='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){var s=(b?b.anunciante_id:anuncianteId)===a.id;return '<option value="'+esc(a.id)+'"'+(s?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
   abrirModal(b?'Editar banner':'Nuevo banner',
     '<div class="field"><label>Anunciante *</label><select id="bn_anun">'+opts+'</select></div>'
@@ -642,10 +694,15 @@ async function guardarBanner(id){
     var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
     if(f) datos.imagen_url=await subirImagenBanner(f);
     else if(bnQuitada) datos.imagen_url=null;
+    else if(!id&&bnImagen) datos.imagen_url=bnImagen;   // imagen entregada en una solicitud de diseño
     var res=await fetch(SB_URL+'/rest/v1/banners'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify(datos)});
     var d=await res.json();
     if(!res.ok) throw new Error((d&&d.message)||'Error al guardar');
     var nuevoId=id||(d&&d[0]?d[0].id:null);
+    if(!id&&nuevoId&&window._disenoActual){
+      try{ await fetch(SB_URL+'/rest/v1/disenos_banner?id=eq.'+encodeURIComponent(window._disenoActual),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({banner_id:nuevoId})}); }catch(e){}
+      window._disenoActual=null;
+    }
     toast('Banner guardado'); await cargarTodo();
     if(!id&&nuevoId) modalColocacion(null,nuevoId); else cerrarModal();
   }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
@@ -767,6 +824,179 @@ function modalMetricasCol(id){
     +'<div class="sec-title">Por día</div>'+(filas.length?filas.map(function(m){return filaRank(fmtF(m.fecha)+(m.municipio?' · '+m.municipio:''),'',{v:m.vistas,a:m.aperturas,c:m.clics})}).join(''):'<div class="empty-slot">Aún sin datos</div>'));
 }
 
+// ── DISEÑOS DE BANNER ──
+const ESTADOS_DIS={solicitado:'Solicitado',en_curso:'En curso',entregado:'Entregado',aprobado:'Aprobado',cancelado:'Cancelado'};
+function enlaceHttps(u){ return /^https:\/\//i.test(String(u||''))?String(u):''; }
+function avisoFaseB(){ return '<div class="empty-slot">Esta sección necesita aplicar la migración <b>2026-11-09_publi_faq_facturas_disenos.sql</b> en Supabase.</div>'; }
+function nombreDisenador(d){ var x=d.disenador_id?DISENADORES.filter(function(y){return y.id===d.disenador_id})[0]:null; return x?x.nombre:''; }
+
+function renderDisenos(){
+  var cont=document.getElementById('disList'); if(!cont) return;
+  if(!faseB){cont.innerHTML=avisoFaseB();return;}
+  var fe=document.getElementById('fd_estado').value;
+  var lista=DIS.filter(function(d){return !fe||d.estado===fe});
+  if(!DIS.length){cont.innerHTML='<div class="empty-slot">Aún no hay solicitudes de diseño.</div>';return;}
+  if(!lista.length){cont.innerHTML='<div class="empty-slot">Ninguna solicitud con ese estado</div>';return;}
+  cont.innerHTML=lista.map(function(d){
+    var a=ANUN_BY[d.anunciante_id], b=d.banner_id?BAN_BY[d.banner_id]:null, img=enlaceHttps(d.entrega_url), dis=nombreDisenador(d);
+    var acts='<button data-act="edit-dis" data-id="'+esc(d.id)+'">✏️ Editar</button>';
+    if(d.estado==='solicitado') acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="en_curso">▶ Empezar</button>';
+    if(d.estado==='en_curso'&&img) acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="entregado">📦 Marcar entregado</button>';
+    if(d.estado==='entregado') acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="aprobado">✅ Aprobado</button>';
+    if(img&&!d.banner_id&&d.estado!=='cancelado') acts+='<button data-act="banner-de-dis" data-id="'+esc(d.id)+'">🖼 Crear banner con la entrega</button>';
+    if(d.estado!=='cancelado'&&d.estado!=='aprobado') acts+='<button class="danger" data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="cancelado">Cancelar</button>';
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(a?a.nombre:'(anunciante borrado)')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> · '+fmtF(d.created_at)+(d.precio!=null?' · '+esc(d.precio)+' €':'')+'</div></div>'
+      +'<span class="badge st-'+esc(d.estado)+'">'+esc(ESTADOS_DIS[d.estado]||d.estado)+'</span></div>'
+      +'<div class="pc-line" style="white-space:pre-line">'+esc(String(d.briefing||'').slice(0,240))+'</div>'
+      +'<div class="pc-line"><span class="tag">'+(d.origen==='disenador'?'Diseñador: '+esc(dis||'sin asignar'):'Kirolorik')+'</span>'+(b?'<span class="tag">Banner: '+esc(b.nombre)+'</span>':'')+'</div>'
+      +'<div class="pc-act">'+acts+'</div></div>';
+  }).join('');
+}
+function modalDiseno(d){
+  var n=d||{};
+  var opAn='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'"'+(a.id===n.anunciante_id?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  var activos=DISENADORES.filter(function(x){return x.activo||x.id===n.disenador_id});
+  var opDis='<option value="">— Sin asignar —</option>'+activos.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===n.disenador_id?' selected':'')+'>'+esc(x.nombre)+'</option>'}).join('');
+  var estados=Object.keys(ESTADOS_DIS).map(function(e){return '<option value="'+e+'"'+((n.estado||'solicitado')===e?' selected':'')+'>'+esc(ESTADOS_DIS[e])+'</option>'}).join('');
+  abrirModal(d?'Editar solicitud de diseño':'Nueva solicitud de diseño',
+    '<div class="field"><label>Anunciante *</label><select id="ds_anun">'+opAn+'</select></div>'
+    +'<div class="field"><label>Qué quiere anunciar *</label><textarea id="ds_briefing" placeholder="Oferta, mensaje, tono, a quién va dirigido…">'+esc(n.briefing||'')+'</textarea></div>'
+    +'<div class="field"><label>Referencias <span style="font-weight:400;text-transform:none;letter-spacing:0">(logotipo, colores, enlaces, ejemplos)</span></label><textarea id="ds_ref">'+esc(n.referencias||'')+'</textarea></div>'
+    +'<div class="row2"><div class="field"><label>Lo hace</label><select id="ds_origen"><option value="kirolorik"'+(n.origen!=='disenador'?' selected':'')+'>Kirolorik</option><option value="disenador"'+(n.origen==='disenador'?' selected':'')+(activos.length?'':' disabled')+'>Diseñador colaborador'+(activos.length?'':' (aún no hay)')+'</option></select></div>'
+    +'<div class="field"><label>Diseñador</label><select id="ds_disenador">'+opDis+'</select></div></div>'
+    +'<div class="row2"><div class="field"><label>Estado</label><select id="ds_estado">'+estados+'</select></div>'
+    +'<div class="field"><label>Precio (€)</label><input type="number" step="0.01" min="0" id="ds_precio" value="'+esc(n.precio!=null?n.precio:'')+'"></div></div>'
+    +'<div class="field"><label>Entrega (imagen final)</label><input type="file" id="ds_img" accept="image/*"><div class="sheet-note" style="margin:4px 0 0">'+(enlaceHttps(n.entrega_url)?'Entrega actual: <a href="'+esc(enlaceHttps(n.entrega_url))+'" target="_blank" rel="noopener noreferrer">ver imagen</a>. Si subes otra, la sustituye.':'Sube aquí la imagen cuando esté lista.')+'</div></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="ds_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<button class="btn-main" style="width:100%" id="ds_guardar" data-act="guardar-dis" data-id="'+esc(d?d.id:'')+'">Guardar solicitud</button>');
+}
+async function guardarDiseno(id){
+  var anun=val('ds_anun'), brief=val('ds_briefing');
+  if(!anun){toast('Elige el anunciante',true);return;}
+  if(!brief){toast('Cuenta qué quiere anunciar',true);return;}
+  var origen=val('ds_origen'), dis=val('ds_disenador');
+  if(origen==='disenador'&&!dis&&val('ds_estado')!=='solicitado'){toast('Asigna un diseñador o deja el estado en «Solicitado»',true);return;}
+  var btn=document.getElementById('ds_guardar'); btn.disabled=true;
+  try{
+    var datos={anunciante_id:anun,briefing:brief,referencias:val('ds_ref')||null,origen:origen,disenador_id:origen==='disenador'?(dis||null):null,estado:val('ds_estado'),precio:val('ds_precio')!==''?parseFloat(val('ds_precio')):null,notas:val('ds_notas')||null};
+    var f=document.getElementById('ds_img'); f=f&&f.files&&f.files[0];
+    if(f) datos.entrega_url=await subirImagenBanner(f);
+    var res=await fetch(SB_URL+'/rest/v1/disenos_banner'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Solicitud guardada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function estadoDiseno(id,estado){
+  if(estado==='cancelado'&&!confirm('¿Cancelar esta solicitud de diseño?')) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/disenos_banner?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado})});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Estado actualizado'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+// Crear el banner a partir de la imagen entregada
+function bannerDeDiseno(id){
+  var d=DIS.filter(function(x){return x.id===id})[0]; if(!d) return;
+  modalBanner(null,d.anunciante_id,enlaceHttps(d.entrega_url));
+  window._disenoActual=id;
+}
+
+// Diseñadores colaboradores (por ahora los das de alta tú; más adelante podrán apuntarse ellos)
+function modalDisenadores(){
+  var lista=DISENADORES.length?DISENADORES.map(function(x){
+    return '<div class="rank-row"><div><div class="rank-name">'+esc(x.nombre)+(x.activo?'':' (inactivo)')+'</div><div class="rank-meta">'+esc([x.email,x.municipio].filter(Boolean).join(' · '))+'</div></div><button class="btn-sec" data-act="edit-disenador" data-id="'+esc(x.id)+'">Editar</button></div>';
+  }).join(''):'<div class="empty-slot">Aún no hay diseñadores.</div>';
+  abrirModal('Diseñadores colaboradores',lista+'<div style="margin-top:12px"><button class="btn-main" data-act="nuevo-disenador">＋ Añadir diseñador</button></div>');
+}
+function modalDisenador(x){
+  var n=x||{};
+  abrirModal(x?'Editar diseñador':'Nuevo diseñador',
+    '<div class="field"><label>Nombre *</label><input type="text" id="dn_nombre" value="'+esc(n.nombre||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>Email</label><input type="email" id="dn_email" value="'+esc(n.email||'')+'"></div><div class="field"><label>Pueblo</label><input type="text" id="dn_mun" value="'+esc(n.municipio||'')+'"></div></div>'
+    +'<div class="field"><label>Web</label><input type="text" id="dn_web" value="'+esc(n.web||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Portfolio (enlace)</label><input type="text" id="dn_port" value="'+esc(n.portfolio_url||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Descripción</label><textarea id="dn_desc">'+esc(n.descripcion||'')+'</textarea></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="dn_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<label class="chk" style="margin-bottom:14px"><input type="checkbox" id="dn_activo"'+(n.activo?' checked':'')+'> Aceptado (se le pueden asignar trabajos)</label>'
+    +'<button class="btn-main" style="width:100%" id="dn_guardar" data-act="guardar-disenador" data-id="'+esc(x?x.id:'')+'">Guardar diseñador</button>');
+}
+async function guardarDisenador(id){
+  var nombre=val('dn_nombre'); if(!nombre){toast('El nombre es obligatorio',true);return;}
+  var web=val('dn_web'), port=val('dn_port');
+  if((web&&!/^https?:\/\//i.test(web))||(port&&!/^https?:\/\//i.test(port))){toast('Los enlaces deben empezar por https://',true);return;}
+  var btn=document.getElementById('dn_guardar'); btn.disabled=true;
+  try{
+    var datos={nombre:nombre,email:val('dn_email')||null,municipio:val('dn_mun')||null,web:web||null,portfolio_url:port||null,descripcion:val('dn_desc')||null,notas:val('dn_notas')||null,activo:document.getElementById('dn_activo').checked};
+    var res=await fetch(SB_URL+'/rest/v1/disenadores'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Diseñador guardado'); await cargarTodo(); modalDisenadores();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── FACTURAS ──
+const ESTADOS_FAC={emitida:'Emitida',pagada:'Pagada',anulada:'Anulada'};
+function eur(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function renderFacturas(){
+  var cont=document.getElementById('facList'); if(!cont) return;
+  var sa=document.getElementById('ff_anun'), prev=sa.value;
+  sa.innerHTML='<option value="">Todos los anunciantes</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'">'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  sa.value=prev;
+  if(!faseB){cont.innerHTML=avisoFaseB();document.getElementById('ff_count').textContent='';return;}
+  var fa=sa.value, fe=document.getElementById('ff_estado').value;
+  var lista=FAC.filter(function(x){return (!fa||x.anunciante_id===fa)&&(!fe||x.estado===fe)});
+  var total=0; lista.forEach(function(x){ if(x.estado!=='anulada') total+=Number(x.importe_total)||0; });
+  document.getElementById('ff_count').textContent=lista.length+' factura'+(lista.length===1?'':'s')+(lista.length?' · total sin anuladas: '+eur(total):'');
+  if(!FAC.length){cont.innerHTML='<div class="empty-slot">Aún no hay facturas registradas.</div>';return;}
+  if(!lista.length){cont.innerHTML='<div class="empty-slot">Ninguna factura con ese filtro</div>';return;}
+  cont.innerHTML=lista.map(function(x){
+    var a=ANUN_BY[x.anunciante_id], doc=enlaceHttps(x.url_documento);
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(x.numero||'Sin número')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(x.fecha)+'</div></div>'
+      +'<span class="badge st-'+esc(x.estado)+'">'+esc(ESTADOS_FAC[x.estado]||x.estado)+'</span></div>'
+      +(x.concepto?'<div class="pc-line">'+esc(x.concepto)+'</div>':'')
+      +'<div class="pc-metrics"><span>Base <b>'+eur(x.base_imponible)+'</b></span><span>IVA <b>'+eur(x.iva_importe)+'</b></span><span>Total <b>'+eur(x.importe_total)+'</b></span></div>'
+      +'<div class="pc-line"><span class="tag">'+(x.origen==='stripe'?'Stripe':'Manual')+'</span>'+(doc?'<a href="'+esc(doc)+'" target="_blank" rel="noopener noreferrer">📄 Ver documento</a>':'<span class="tag">Sin documento</span>')+'</div>'
+      +'<div class="pc-act"><button data-act="edit-fac" data-id="'+esc(x.id)+'">✏️ Editar</button></div></div>';
+  }).join('');
+}
+function modalFactura(x){
+  var n=x||{};
+  var op='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'"'+(a.id===n.anunciante_id?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre+(a.cif?' ('+a.cif+')':''))+'</option>'}).join('');
+  abrirModal(x?'Editar factura':'Nueva factura',
+    '<div class="field"><label>Anunciante *</label><select id="fc_anun">'+op+'</select></div>'
+    +'<div class="row2"><div class="field"><label>Número</label><input type="text" id="fc_num" value="'+esc(n.numero||'')+'" placeholder="El de tu programa de facturación"></div>'
+    +'<div class="field"><label>Fecha *</label><input type="date" id="fc_fecha" value="'+esc(n.fecha||hoyISO())+'"></div></div>'
+    +'<div class="field"><label>Concepto</label><input type="text" id="fc_concepto" value="'+esc(n.concepto||'')+'" placeholder="Banner mensual · Eibar · noviembre"></div>'
+    +'<div class="row2"><div class="field"><label>Base imponible (€)</label><input type="number" step="0.01" min="0" id="fc_base" value="'+esc(n.base_imponible!=null?n.base_imponible:'')+'"></div>'
+    +'<div class="field"><label>IVA (€)</label><input type="number" step="0.01" min="0" id="fc_iva" value="'+esc(n.iva_importe!=null?n.iva_importe:'')+'"></div></div>'
+    +'<div class="row2"><div class="field"><label>Total (€) *</label><input type="number" step="0.01" min="0" id="fc_total" value="'+esc(n.importe_total!=null?n.importe_total:'')+'"></div>'
+    +'<div class="field"><label>Estado</label><select id="fc_estado">'+Object.keys(ESTADOS_FAC).map(function(e){return '<option value="'+e+'"'+((n.estado||'emitida')===e?' selected':'')+'>'+esc(ESTADOS_FAC[e])+'</option>'}).join('')+'</select></div></div>'
+    +'<button type="button" class="btn-sec" style="margin:-4px 0 12px" data-act="calc-iva">Calcular IVA 21 % desde la base</button>'
+    +'<div class="field"><label>Enlace al documento <span style="font-weight:400;text-transform:none;letter-spacing:0">(https://, PDF o carpeta privada)</span></label><input type="text" id="fc_url" value="'+esc(n.url_documento||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="fc_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<button class="btn-main" style="width:100%" id="fc_guardar" data-act="guardar-fac" data-id="'+esc(x?x.id:'')+'">Guardar factura</button>');
+}
+function calcularIVA(){
+  var b=parseFloat(val('fc_base')); if(isNaN(b)){toast('Escribe primero la base imponible',true);return;}
+  var iva=Math.round(b*21)/100;
+  document.getElementById('fc_iva').value=iva.toFixed(2); document.getElementById('fc_total').value=(Math.round((b+iva)*100)/100).toFixed(2);
+}
+async function guardarFactura(id){
+  var anun=val('fc_anun'), total=val('fc_total'), url=val('fc_url');
+  if(!anun){toast('Elige el anunciante',true);return;}
+  if(total===''||isNaN(parseFloat(total))||parseFloat(total)<0){toast('Indica el total (0 o más)',true);return;}
+  if(url&&!/^https:\/\//i.test(url)){toast('El enlace debe empezar por https://',true);return;}
+  var num=function(i){return val(i)!==''?parseFloat(val(i)):null};
+  var btn=document.getElementById('fc_guardar'); btn.disabled=true;
+  try{
+    var datos={anunciante_id:anun,numero:val('fc_num')||null,fecha:val('fc_fecha')||hoyISO(),concepto:val('fc_concepto')||null,base_imponible:num('fc_base'),iva_importe:num('fc_iva'),importe_total:parseFloat(total),estado:val('fc_estado'),url_documento:url||null,notas:val('fc_notas')||null};
+    var res=await fetch(SB_URL+'/rest/v1/facturas'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('facturas_numero_uq')>=0?'Ya existe una factura con ese número':t); }
+    cerrarModal(); toast('Factura guardada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
 // ── ACCIONES (un único listener; los datos viajan en data-*) ──
 document.addEventListener('click',function(ev){
   var per=ev.target.closest?ev.target.closest('#periodoBtns button'):null;
@@ -790,6 +1020,19 @@ document.addEventListener('click',function(ev){
   else if(act==='cancelar') cambiarEstadoCol(id,'cancelada','¿Cancelar esta colocación? Dejará de mostrarse y liberará el hueco (las métricas se conservan).');
   else if(act==='metricas-col') modalMetricasCol(id);
   else if(act==='csv') descargarCSV();
+  else if(act==='nuevo-dis') modalDiseno(null);
+  else if(act==='edit-dis') modalDiseno(DIS.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-dis') guardarDiseno(id);
+  else if(act==='dis-estado') estadoDiseno(id,b.getAttribute('data-estado'));
+  else if(act==='banner-de-dis') bannerDeDiseno(id);
+  else if(act==='disenadores') modalDisenadores();
+  else if(act==='nuevo-disenador') modalDisenador(null);
+  else if(act==='edit-disenador') modalDisenador(DISENADORES.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-disenador') guardarDisenador(id);
+  else if(act==='nueva-fac') modalFactura(null);
+  else if(act==='edit-fac') modalFactura(FAC.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-fac') guardarFactura(id);
+  else if(act==='calc-iva') calcularIVA();
 });
 
 // ── INIT ──
@@ -810,7 +1053,7 @@ if(savedToken&&savedUser){
 }
 </script>
 
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.00</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.01</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
