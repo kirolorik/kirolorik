@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.45
-Fecha: 2026-11-08
+Versión: v6.49
+Fecha: 2026-11-14
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -25,6 +25,10 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.49: la portada ya no tiene opción de usuario (sin botón ni panel de inicio de sesión); el pie enlaza a «Para clubes» (/pages/clubes.html) y «Para anunciantes» (/pages/anunciantes.html); se borra cualquier sesión antigua guardada en el dispositivo.
+v6.48: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
+v6.47: con «Todos los municipios» (sin pueblo elegido) solo salen los banners de «todos los pueblos»: ni los de pueblos concretos ni los de los visitantes (así se respeta la exclusividad). Se recargan al cambiar de modo.
+v6.46: los clics de banner solo se cuentan con registrar_evento_banner (se quita la escritura temporal en banner_clicks).
 v6.45: no se cuentan las visitas, vistas de evento, vistas, aperturas ni clics de banner de quien tiene sesión iniciada ni de los dispositivos donde alguien inició sesión alguna vez (admin, gestores de clubes, anunciantes).
 v6.44: si el pueblo no tiene anunciantes propios, se muestran los de los pueblos de los equipos visitantes de los partidos que se ven (p. ej. partido en Donosti contra un equipo de Eibar → anunciantes de Eibar). Los de «todos los pueblos» salen siempre.
 v6.43: publicidad. Los banners salen de la vista banners_publicos: solo los que están en vigor hoy (fechas) en el pueblo elegido o en todos; se cuentan vistas, aperturas del panel y clics con registrar_evento_banner.
@@ -71,26 +75,8 @@ v6.41: el aviso de sin conexión explica que puede ser un bloqueo del operador y
 .mun-item.sel{border-color:var(--accent);background:var(--accent-bg)}
 .mun-name{font-size:14px;font-weight:600;color:var(--text);flex:1}
 .mun-prov{font-size:11px;color:var(--muted)}
-.prof-drawer{position:fixed;top:0;right:-290px;width:290px;height:100dvh;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right 0.3s ease;display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,0.12)}
-.prof-drawer.open{right:0}
-.prof-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
-.prof-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;margin-bottom:10px}
-.prof-avatar.guest{background:var(--surface2);color:var(--muted);font-size:22px}
-.prof-hola{font-size:15px;font-weight:700;color:var(--text)}
-.prof-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.prof-body{flex:1;overflow-y:auto;padding:10px 0}
-.prof-item{display:flex;align-items:center;gap:12px;padding:13px 20px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif}
-.prof-item:hover{background:var(--surface2)}
-.prof-item.danger{color:#dc2626}
-.prof-item.accent{color:var(--accent)}
-.prof-sep{height:1px;background:var(--border);margin:6px 0}
-.prof-login{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
-.prof-login .field{margin:0}
 .btn-kick{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%}
 .btn-kick:disabled{opacity:0.5}
-.login-err{font-size:11px;color:#dc2626;min-height:14px}
-.login-link{font-size:11px;color:var(--accent);cursor:pointer;text-align:center;text-decoration:underline}
-.login-contact{font-size:10px;color:var(--muted);text-align:center;line-height:1.5}
 .det-drawer{position:fixed;top:0;left:-100%;width:100%;max-width:430px;height:100dvh;background:var(--bg);z-index:201;transition:left 0.3s ease;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,0.15)}
 .det-drawer.open{left:0}
 .det-top{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -120,9 +106,6 @@ v6.41: el aviso de sin conexión explica que puede ser un bloqueo del operador y
 .lightbox.open{opacity:1;pointer-events:all}
 .lightbox img{max-width:100%;max-height:90dvh;object-fit:contain;border-radius:var(--radius)}
 .lb-close{position:absolute;top:16px;right:16px;font-size:24px;color:#fff;cursor:pointer}
-.prof-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;border:2px solid var(--border);background:var(--surface2)}
-.prof-btn:hover{border-color:var(--accent)}
-.prof-btn-in{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
 .logo-wrap{display:flex;align-items:center;gap:8px}
 .logo-img{height:26px;width:auto;flex-shrink:0}
 .ad-wrap{border-top:1px solid var(--border);background:var(--surface);overflow:hidden}
@@ -168,7 +151,6 @@ body{background:var(--surface)}
 .loc-dot{display:none}
 .location-pill::after{content:"";width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px)}
 .lang-select{background:none;border:none;padding:0;height:auto;font-size:12px;color:var(--muted)}
-.prof-btn{width:30px;height:30px;border:none;background:var(--surface2)}
 .sport-select-wrap{padding:2px 18px 10px;border-bottom:none;background:var(--surface);align-items:center;gap:8px}
 .sport-select-wrap select{flex:0 1 auto;max-width:46%;border:none;background-color:transparent;padding:6px 18px 6px 0;font-size:13px;font-weight:500;color:var(--muted);background-position:right 2px center;text-overflow:ellipsis}
 .filt-sep{color:var(--border);flex:none}
@@ -253,7 +235,6 @@ body{background:var(--surface)}
     <div class="top-actions">
       <div class="location-pill" onclick="openMun()"><div class="loc-dot"></div><span id="locText">Eibar</span></div>
       <select class="lang-select" id="langSel" onchange="changeLang(this.value)"><option value="cas">CAS</option><option value="eus">EUS</option></select>
-      <div class="prof-btn" id="profBtn" onclick="openProf()"><div class="prof-btn-in" id="profBtnIn">👤</div></div>
     </div>
   </div>
   <div class="sport-select-wrap">
@@ -290,11 +271,12 @@ body{background:var(--surface)}
     <a href="/pages/legal.html#rgpd" data-i18n="footer.rgpd">RGPD</a>
     <a href="/pages/legal.html#terminos" data-i18n="footer.terminos">Términos</a>
     <a href="/pages/legal.html#publicidad" data-i18n="footer.publicidad">Publicidad</a>
+    <a href="/pages/clubes.html">Para clubes</a>
+    <a href="/pages/anunciantes.html">Para anunciantes</a>
   </div>
 </div>
 <div class="overlay" id="ov" onclick="closeAll()"></div>
 <div class="mun-drawer" id="munDraw"><div class="mun-header"><div class="mun-back" onclick="closeMun()">←</div><div class="mun-title" data-i18n="nav.sel_municipio">Seleccionar municipio</div></div><div class="mun-list" id="munList"></div></div>
-<div class="prof-drawer" id="profDraw"><div class="prof-header" id="profHead"></div><div class="prof-body" id="profBody"></div></div>
 <div class="det-drawer" id="detDraw"><div class="det-top"><div class="det-back" onclick="closeDet()">←</div><div class="det-title" id="detTitle">Detalle</div></div><div class="det-scroll" id="detScroll"></div></div>
 <div class="lightbox" id="lb" onclick="closeLb()"><div class="lb-close">✕</div><img id="lbImg" src="" alt=""></div>
 
@@ -306,7 +288,6 @@ var SB='https://glscnwctcvrosmbrljns.supabase.co';
 var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
 var H={'apikey':SK,'Authorization':'Bearer '+SK};
 
-var authUser=null,authToken=null;
 var hoyISO=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 var fechaSel=hoyISO,deporteSel='todos',clubSel='todos';
 // Clubes y a qué club pertenece cada equipo (consultas planas, sin relaciones, para que el filtro no dependa de la API de relaciones)
@@ -316,7 +297,7 @@ function cargarClubes(){
   if(clubesP)return clubesP;
   clubesP=Promise.all([
     fetch(SB+'/rest/v1/clubes?select=id,nombre,nombre_corto&activo=eq.true',{headers:H}).then(function(r){return r.json()}),
-    fetch(SB+'/rest/v1/mis_equipos?select=id,club_id&activo=eq.true&club_id=not.is.null',{headers:H}).then(function(r){return r.json()})
+    fetch(SB+'/rest/v1/equipos?select=id,club_id&activo=eq.true&club_id=not.is.null',{headers:H}).then(function(r){return r.json()})
   ]).then(function(res){
     var cl=Array.isArray(res[0])?res[0]:[],eq=Array.isArray(res[1])?res[1]:[];
     for(var i=0;i<cl.length;i++)clubesData.byId[cl[i].id]=cl[i];
@@ -332,11 +313,9 @@ function eventoDeClub(e,clubId){
 var lang='cas';
 var muni='Eibar';
 var adList=[],adIdx=0,adOpen=(localStorage.getItem('kb_ad_seen')!=='1');
-var modoRec=false;
 var evCache=[];
 
 // DIAS y MESES centralizados en i18n.js — usar t('dias') y t('meses')
-var COLORS=['#1a6bff','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777'];
 var SP={futbol:{c:'var(--c-futbol)',e:'⚽'},basket:{c:'var(--c-basket)',e:'🏀'},balonmano:{c:'var(--c-balonmano)',e:'🤾'},waterpolo:{c:'var(--c-waterpolo)',e:'🏊'},boxeo:{c:'var(--c-boxeo)',e:'🥊'},tenis:{c:'var(--c-tenis)',e:'🎾'},atletismo:{c:'var(--c-atletismo)',e:'🏃'},ciclismo:{c:'var(--c-ciclismo)',e:'🚴'},voley:{c:'#8B5CF6',e:'🏐'},natacion:{c:'#06B6D4',e:'🏊'},padel:{c:'#10B981',e:'🎾'},ajedrez:{c:'#6B7280',e:'♟️'},rugby:{c:'#92400E',e:'🏉'},hockey:{c:'#DC2626',e:'🏒'},'artes marciales':{c:'#B45309',e:'🥋'},bjj:{c:'#7C3AED',e:'🥋'},grappling:{c:'#6D28D9',e:'🥋'},billar:{c:'#166534',e:'🎱'},trec:{c:'#7C2D12',e:'🐎'},triatlon:{c:'#0EA5E9',e:'🏁'},'gimnasia ritmica':{c:'#C026D3',e:'🤸'},pelota:{c:'#B91C1C',e:'🥎'},trail:{c:'#15803D',e:'⛰️'}};
 
 function gs(d){return SP[(d||'').toLowerCase()]||{c:'var(--c-otros)',e:'🏅'}}
@@ -407,6 +386,7 @@ function filterClubSel(sel){
       if(chips[i].getAttribute('data-fecha')===fechaSel)chips[i].classList.add('today');
     }
   }
+  adVisitantes=[];adVisitantesKey='';loadAds();
   loadGrid();
 }
 
@@ -439,7 +419,6 @@ function changeLang(l){
   populateSpSelect();
   populateClubSelect();
   loadGrid();
-  renderProf();
 }
 
 // GRID
@@ -484,7 +463,7 @@ function loadGrid(){
   var g=document.getElementById('grid');
   g.innerHTML='<div class="empty-slot">'+t('grid.cargando')+'</div>';
   var _gridFechaSel=fechaSel;
-  var url=SB+'/rest/v1/eventos?select=*,mis_equipos(escudo_url,nombre,clubes(escudo_url))&activo=eq.true&order=fecha.asc,hora.asc';
+  var url=SB+'/rest/v1/eventos?select=*,equipos(escudo_url,nombre,clubes(escudo_url))&activo=eq.true&order=fecha.asc,hora.asc';
   url+='&fecha=gte.'+(fechaSel||td());
   if(deporteSel!=='todos')url+='&deporte=eq.'+encodeURIComponent(deporteSel);
   url+='&test=eq.false';
@@ -615,15 +594,15 @@ var DET_IC={
 var detSeq=0;
 function openDet(idx){
   var mySeq=++detSeq;
-  closeProf();closeMun();document.getElementById('ov').classList.add('open')
+  closeMun();document.getElementById('ov').classList.add('open')
   var e=evCache[idx];if(!e)return;
-  try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/evento_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
+  try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/analitica_eventos',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({evento_id:e.id})}).catch(function(){});}catch(err){}
   var d=gs(e.deporte),dl=esc(e.deporte||'Otro');
   var detTitulo=e.nombre_evento||(e.equipo_local&&e.equipo_visitante?e.equipo_local+' vs '+e.equipo_visitante:e.equipo_local||e.equipo_visitante||dl);
   document.getElementById('detTitle').textContent=detTitulo;
   var gen=e.genero&&e.genero!=='Sin especificar'?' · '+esc(e.genero):'';
   var vs;
-  var escudo=escudoEq(e.mis_equipos);
+  var escudo=escudoEq(e.equipos);
   if(e.nombre_evento)vs='<div class="det-single">'+d.e+' '+esc(e.nombre_evento)+'</div>';
   else{var escLocal=escudo?'<img class="det-escudo" src="'+esc(escudo)+'" alt="" onerror="this.outerHTML=\'<div style=&quot;font-size:28px&quot;>'+d.e+'</div>\'">':'<div style="font-size:28px">'+d.e+'</div>';vs='<div class="det-vs"><div class="det-team">'+escLocal+'<div class="det-team-name">'+esc(e.equipo_local||'—')+'</div></div><div class="det-vs-sep">VS</div><div class="det-team"><div id="detVisEsc" style="font-size:28px">'+d.e+'</div><div class="det-team-name">'+esc(e.equipo_visitante||'—')+'</div></div></div>';}
   var mq=encodeURIComponent((e.instalacion||'')+(e.municipio?', '+e.municipio:''));
@@ -651,16 +630,13 @@ function openDet(idx){
   var upd=e.updated_at?'<div class="d-upd">'+t('det.ultima_act')+' '+fd(e.updated_at.split('T')[0])+'</div>':'';
   document.getElementById('detScroll').innerHTML=poster+'<div class="d-head">'+kicker+vs+'</div><div class="d-lines">'+cal+pin+ent+orgLine+'</div>'+info+partsHtml+upd;
   if(e.equipo_visitante_id&&!e.nombre_evento){
-    fetch(SB+'/rest/v1/mis_equipos?id=eq.'+encodeURIComponent(e.equipo_visitante_id)+'&select=escudo_url,clubes(escudo_url)',{headers:H}).then(function(r){return r.json()}).then(function(rows){
+    fetch(SB+'/rest/v1/equipos?id=eq.'+encodeURIComponent(e.equipo_visitante_id)+'&select=escudo_url,clubes(escudo_url)',{headers:H}).then(function(r){return r.json()}).then(function(rows){
       var u=rows&&rows[0]?escudoEq(rows[0]):'';
       var box=document.getElementById('detVisEsc');
       if(u&&box&&mySeq===detSeq)box.innerHTML='<img class="det-escudo" src="'+esc(u)+'" alt="">';
     }).catch(function(){});
   }
   document.getElementById('detDraw').classList.add('open');
-  document.getElementById('profDraw').classList.remove('open');
-  document.getElementById('profBtn').classList.remove('open');
-  closeProf();
 }
 function closeDet(){
   document.getElementById('detDraw').classList.remove('open');
@@ -670,7 +646,7 @@ function openLb(u){u=safeUrl(u);if(!u)return;document.getElementById('lbImg').sr
 function closeLb(){document.getElementById('lb').classList.remove('open')}
 
 // MUNICIPIO
-function openMun(){closeProf();closeDet();document.getElementById('munDraw').classList.add('open');document.getElementById('ov').classList.add('open');loadMunis()}
+function openMun(){closeDet();document.getElementById('munDraw').classList.add('open');document.getElementById('ov').classList.add('open');loadMunis()}
 function closeMun(){document.getElementById('munDraw').classList.remove('open');document.getElementById('ov').classList.remove('open')}
 function loadMunis(){
   var list=document.getElementById('munList');list.innerHTML='<div class="empty-slot">Cargando...</div>';
@@ -712,37 +688,6 @@ function populateClubSelect(){
 function selMun(name){muni=name;if(fechaSel)setFechaSel(hoyISO);try{localStorage.setItem('kb_municipio',name)}catch(e){}document.getElementById('locText').textContent=name||t('nav.municipios');closeMun();populateSpSelect();populateClubSelect();deporteSel='todos';clubSel='todos';document.getElementById('sportSel').value='todos';document.getElementById('clubSel').value='todos';adVisitantes=[];adVisitantesKey='';loadGrid();loadAds()}
 
 // PERFIL
-function openProf(){closeMun();closeDet();renderProf();document.getElementById('profDraw').classList.add('open');document.getElementById('ov').classList.add('open')}
-function closeProf(){document.getElementById('profDraw').classList.remove('open');document.getElementById('ov').classList.remove('open')}
-function renderProf(){
-  var h=document.getElementById('profHead'),b=document.getElementById('profBody');
-  if(authUser){
-    var em=authUser.email||'',ini=em.charAt(0).toUpperCase(),col=COLORS[em.charCodeAt(0)%COLORS.length];
-    document.getElementById('profBtnIn').innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:'+col+';border-radius:50%">'+ini+'</div>';
-    h.innerHTML='<div class="prof-avatar" style="background:'+col+';color:#fff">'+ini+'</div><div class="prof-hola">¡Hola, '+esc(em.split('@')[0])+'</div><div class="prof-sub">'+esc(em)+'</div>';
-    var isAdm=(em==='kirolorik.app@gmail.com');b.innerHTML='<button class="prof-item" onclick="goTo(\'/pages/perfil.html\')">👤 Mi perfil</button><div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/eventos.html\')">📋 Gestionar eventos</button>'+(isAdm?'<div class="prof-sep"></div><button class="prof-item accent" onclick="goTo(\'/admin/panel.html\')">🛠️ Panel de control</button>':'')+'<div class="prof-sep"></div><button class="prof-item danger" onclick="doLogout()">🚿 A la ducha</button>';
-  }else{
-    document.getElementById('profBtnIn').innerHTML='👤';
-    h.innerHTML='<div class="prof-avatar guest">👤</div><div class="prof-hola">Invitado</div>';
-    if(modoRec){
-      b.innerHTML='<div class="prof-login"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Recuperar contraseña</div><div class="field"><label>Email</label><input type="email" id="recMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="login-err" id="recErr"></div><button class="btn-kick" onclick="sendRec()">Enviar enlace ⚽</button><div class="login-link" onclick="modoRec=false;renderProf()">← Volver</div></div>';
-    }else{
-      b.innerHTML='<div class="prof-login"><div class="field"><label>Email</label><input type="email" id="loginMail" placeholder="correo@ejemplo.com" data-i18n-attr="placeholder" data-i18n="prof.placeholder_email"></div><div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="" onkeydown="if(event.key===\'Enter\')doLogin()"></div><label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:2px 0 6px;cursor:pointer"><input type="checkbox" id="loginRecordar" checked style="width:auto;margin:0"><span data-i18n="prof.recordar">Mantener sesión iniciada</span></label><div class="login-err" id="loginErr"></div><button class="btn-kick" id="loginBtn" onclick="doLogin()">Entra</button><div class="login-link" onclick="modoRec=true;renderProf()">¿Olvidaste tu contraseña?</div><div class="prof-sep" style="margin:4px 0"></div><div class="login-contact">¿Quieres registrar tu club? kirolorik.info@gmail.com</div></div>';
-    }
-  }
-}
-
-// AUTH
-function doLogin(){
-  var em=document.getElementById('loginMail'),pw=document.getElementById('loginPass'),er=document.getElementById('loginErr'),bt=document.getElementById('loginBtn');
-  if(!em||!pw)return;if(!em.value.trim()||!pw.value){if(er)er.textContent=t('prof.error_campos');return}
-  if(bt){bt.disabled=true;bt.textContent='...'}
-  fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim(),password:pw.value})}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error_description||'Error');authToken=d.access_token;authUser=d.user;try{var rc=document.getElementById('loginRecordar');KBS.setPersist(!rc||rc.checked,'kb');KBS.set('kb_token',authToken);KBS.set('kb_user',JSON.stringify(authUser));if(d.refresh_token)KBS.set('kb_refresh',d.refresh_token)}catch(e){}modoRec=false;renderProf()})}).catch(function(e){if(er)er.textContent=e.message;if(bt){bt.disabled=false;bt.textContent=t('prof.entrar')}});
-}
-function sendRec(){var em=document.getElementById('recMail'),er=document.getElementById('recErr');if(!em||!em.value.trim()){if(er)er.textContent='Introduce tu email';return}fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'apikey':SK,'Content-Type':'application/json'},body:JSON.stringify({email:em.value.trim()})}).then(function(){if(er){er.style.color='#16a34a';er.textContent=t('prof.check_correo')}}).catch(function(e){if(er)er.textContent=e.message})}
-function doLogout(){KBS.cerrar(SB,SK,'kb');authUser=null;authToken=null;renderProf();closeProf()}
-function goTo(url){closeProf();window.location.href=url}
-
 // BANNERS
 // Colocaciones en vigor hoy en el pueblo elegido (o en todos los pueblos): vista banners_publicos
 var adSilencio=false,adMarcados={},adVisitantes=[],adVisitantesKey='',munEquipo={};
@@ -760,6 +705,7 @@ function loadAds(){
 // Anunciantes del pueblo; si no hay ninguno, los de los pueblos de los visitantes. Los de «todos los pueblos» salen siempre.
 function elegirAnuncios(data){
   var todos=data.filter(function(b){return !b.municipio});
+  if(!muni)return todos;   // sin pueblo elegido: solo los de «todos los pueblos»
   var locales=data.filter(function(b){return b.municipio&&muni&&String(b.municipio).toLowerCase()===muni.toLowerCase()});
   var visit=data.filter(function(b){return b.municipio&&(!muni||String(b.municipio).toLowerCase()!==muni.toLowerCase())});
   return todos.concat(locales.length?locales:visit);
@@ -767,7 +713,7 @@ function elegirAnuncios(data){
 // Pueblo de los equipos visitantes de los partidos que se ven (solo se conoce si el visitante es uno de los equipos de Kirolorik)
 function ajustarAnuncios(evs){
   var ids={};
-  (evs||[]).forEach(function(e){if(e.equipo_visitante_id)ids[e.equipo_visitante_id]=true});
+  if(muni)(evs||[]).forEach(function(e){if(e.equipo_visitante_id)ids[e.equipo_visitante_id]=true});
   var faltan=Object.keys(ids).filter(function(id){return !(id in munEquipo)});
   function fin(){
     var set={};
@@ -777,7 +723,7 @@ function ajustarAnuncios(evs){
     adVisitantes=lista;adVisitantesKey=k;loadAds();
   }
   if(!faltan.length){fin();return}
-  fetch(SB+'/rest/v1/mis_equipos?select=id,municipio&id=in.('+faltan.map(encodeURIComponent).join(',')+')',{headers:H}).then(function(r){return r.json()}).then(function(d){
+  fetch(SB+'/rest/v1/equipos?select=id,municipio&id=in.('+faltan.map(encodeURIComponent).join(',')+')',{headers:H}).then(function(r){return r.json()}).then(function(d){
     faltan.forEach(function(id){munEquipo[id]=''});
     (Array.isArray(d)?d:[]).forEach(function(t){munEquipo[t.id]=t.municipio||''});
     fin();
@@ -812,20 +758,19 @@ function renderAdPanel(){var b=adList[adIdx];var p=document.getElementById('adPa
 function toggleAd(){adOpen=!adOpen;if(!adOpen)try{localStorage.setItem('kb_ad_seen','1')}catch(e){};var p=document.getElementById('adPanel');if(adOpen){renderAdPanel();p.classList.add('open')}else p.classList.remove('open')}
 function navAd(dir){if(!adList.length)return;adIdx=(adIdx+dir+adList.length)%adList.length;renderAdBar();renderAdDots()}
 function goAd(i){adIdx=i;renderAdBar();renderAdDots()}
-// Clic en el botón del banner abierto (no bloquea la apertura del enlace). Además de las métricas diarias, se sigue escribiendo
-// banner_clicks mientras el panel de admin lea esa tabla.
+// Clic en el botón del banner abierto (no bloquea la apertura del enlace)
 function registrarClicBanner(){
   var b=adList[adIdx];if(!b)return;
   metricaBanner('clic',b);
-  if(b.banner_id&&!KBS.sinEstadisticas()){try{fetch(SB+'/rest/v1/banner_clicks',{method:'POST',keepalive:true,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({banner_id:b.banner_id})}).catch(function(){});}catch(err){}}
 }
 
-function closeAll(){closeDet();closeProf();closeMun()}
+function closeAll(){closeDet();closeMun()}
 
 // INIT
 try{var sl=localStorage.getItem('kb_lang');if(sl)lang=sl}catch(e){}
 try{var sm=localStorage.getItem('kb_municipio');if(sm)muni=sm}catch(e){}
-try{var st=KBS.get('kb_token'),su=KBS.get('kb_user');if(st&&su){authToken=st;authUser=JSON.parse(su)}}catch(e){}
+// La portada ya no tiene inicio de sesión: se limpia cualquier sesión antigua guardada en este dispositivo
+try{KBS.clear('kb')}catch(e){}
 document.getElementById('langSel').value=lang;
 document.getElementById('locText').textContent=muni||t('nav.municipios');
 applyLang();
@@ -834,7 +779,6 @@ populateSpSelect();
 populateClubSelect();
 loadGrid();
 loadAds();
-renderProf();
 // SPLASH
 function closeSplash(){
   var ov=document.getElementById('splashOv');
@@ -853,9 +797,9 @@ window.addEventListener('load',function(){
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}catch(e){}
 
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
-try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/page_views',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
+try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/analitica_visitas',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.45</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.49</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

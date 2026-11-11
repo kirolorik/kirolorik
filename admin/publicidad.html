@@ -1,0 +1,1401 @@
+<!--
+Proyecto: Kirolorik
+Archivo: admin/publicidad.html
+Versión: v1.06
+Fecha: 2026-11-15
+Descripción: Gestión de publicidad (admin). Pestañas: Banners (una fila por banner y pueblo, con métricas), Anunciantes y Métricas
+(por banner, anunciante y pueblo, con periodo y descarga CSV). Crea y edita anunciantes, banners (imagen, texto, enlace) y colocaciones
+(pueblos, fechas, origen pago/cortesía/acuerdo, renovación prepago/automática). La exclusividad por tipo de negocio y pueblo la
+impone la base de datos; aquí se avisa antes de guardar. Usa las tablas de la migración 2026-11-08_publi_fase1.
+v1.01: pestañas Diseños (solicitudes de diseño de banner: primero las atiende Kirolorik, más adelante diseñadores colaboradores) y
+Facturas (número, fecha, importe y enlace al documento; se rellena a mano y más adelante desde Stripe), con la migración
+2026-11-09_publi_faq_facturas_disenos; y una ayuda «¿Cómo publico un banner?».
+v1.02: cada fila (banner + pueblo) se edita en un único formulario: contenido, pueblo (se puede cambiar), fechas y estado; si el
+contenido se comparte con otras filas se elige si el cambio vale para todas o solo para esta (se crea una copia). «Otro pueblo / fechas»
+crea filas nuevas a partir de una. Se puede añadir un pueblo nuevo desde el propio formulario. Se quita el campo Orden.
+v1.03: pestaña Solicitudes (solicitudes de visibilidad de los anunciantes: aprobar con fechas calculadas según el plan, o rechazar con
+motivo; solicitudes de pueblo nuevo) y botón «Acceso» en cada anunciante (crear usuario, vincular uno existente, ver y quitar accesos),
+que usa la función admin-users v1.1.
+v1.06: aviso «Baja solicitada» en los anunciantes que se han dado de baja (sin accesos y con banners confirmados pausados).
+v1.05: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores). El botón «Panel» va a /admin/admin.html.
+v1.04: la revisión del contenido del banner es un paso independiente de la solicitud de visibilidad: en Solicitudes aparecen «Banners por
+revisar» (aprobar o rechazar con motivo) y no se puede aprobar la visibilidad de un banner cuyo contenido no esté aprobado (migración
+2026-11-12).
+-->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bff">
+<meta name="robots" content="noindex, nofollow">
+<title>Kirolorik · Publicidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;flex-shrink:0;overflow-x:auto}
+.tab{white-space:nowrap;padding:10px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.hdr-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
+.btn-main{background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-sec{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-sec:disabled,.btn-main:disabled{opacity:.5}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.filters .full{grid-column:1/-1}
+.filters input,.filters select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;min-width:0}
+.count{font-size:12px;color:var(--muted);margin:2px 0 10px}
+
+.pc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pc-main{min-width:0;flex:1}
+.pc-title{font-size:14px;font-weight:700;color:var(--text);overflow-wrap:anywhere}
+.pc-sub{font-size:11px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.pc-line{font-size:12px;color:var(--text2,var(--text));margin-top:6px;overflow-wrap:anywhere}
+.pc-metrics{font-size:12px;color:var(--muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+.pc-metrics b{color:var(--text)}
+.pc-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pc-act button{font-size:11px;font-weight:600;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif}
+.pc-act button.danger:hover{border-color:#dc2626;color:#dc2626}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.st-activa{background:rgba(22,163,74,.12);color:#16a34a}
+.st-programada{background:rgba(37,99,235,.12);color:#2563eb}
+.st-finalizada{background:rgba(100,116,139,.15);color:#64748b}
+.st-pausada{background:rgba(234,179,8,.15);color:#b45309}
+.st-pendiente_pago{background:rgba(234,88,12,.12);color:#c2410c}
+.st-revision{background:rgba(147,51,234,.12);color:#7e22ce}
+.st-borrador{background:rgba(100,116,139,.15);color:#64748b}
+.st-rechazada,.st-cancelada{background:rgba(220,38,38,.12);color:#dc2626}
+.st-sin{background:rgba(100,116,139,.15);color:#64748b}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--muted);margin:0 4px 0 0}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accent);line-height:1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:22px 0 10px}
+.rank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
+.rank-row>div:first-child{min-width:0;flex:1}
+.rank-name{font-size:12px;font-weight:600;color:var(--text);overflow-wrap:anywhere}
+.rank-meta{font-size:10px;color:var(--muted)}
+.rank-value{font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;text-align:right}
+.periodo{display:flex;gap:6px;margin-bottom:14px}
+.periodo button{border:0;background:var(--surface2,var(--surface));color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.periodo button.on{background:var(--accent);color:#fff}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 16px 40px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet-t{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+.sheet-x{font-size:22px;cursor:pointer;color:var(--muted);background:none;border:none}
+.sheet .field{margin-bottom:12px}
+.sheet textarea{min-height:70px}
+.sheet-note{font-size:11px;color:var(--muted);margin:-6px 0 12px}
+.towns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.towns label,.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;margin:0}
+.towns input,.chk input{width:auto;margin:0;padding:0;border:none;-webkit-appearance:checkbox;appearance:auto}
+.warn{font-size:12px;line-height:1.4;color:#b45309;background:rgba(234,179,8,.12);border-radius:8px;padding:8px 10px;margin:0 0 12px}
+.warn ul{margin:4px 0 0 16px;padding:0}
+.prev{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px}
+.prev-bar{display:flex;align-items:center;gap:8px;font-size:12px}
+.prev-bar .t{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.prev-bar .n{font-weight:700}
+.prev-bar .s{color:var(--muted);overflow-wrap:anywhere}
+.prev img{width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid var(--border)}
+.prev .l{font-size:12px;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cod{font-family:monospace;font-size:11px;color:var(--muted)}
+.cuenta{display:inline-block;min-width:18px;text-align:center;background:#dc2626;color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:5px}
+.cred{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.35);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 12px;overflow-wrap:anywhere}
+.cred code{font-size:14px;font-weight:700}
+.ayuda{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:13px}
+.ayuda summary{cursor:pointer;font-weight:700}
+.ayuda ol{margin:8px 0 0 18px;padding:0;line-height:1.5}
+.ayuda p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.nota{font-size:12px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;line-height:1.5}
+.st-solicitado{background:rgba(147,51,234,.12);color:#7e22ce}
+.st-en_curso{background:rgba(37,99,235,.12);color:#2563eb}
+.st-entregado{background:rgba(234,88,12,.12);color:#c2410c}
+.st-aprobado,.st-pagada,.st-emitida{background:rgba(22,163,74,.12);color:#16a34a}
+.st-anulada{background:rgba(220,38,38,.12);color:#dc2626}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;padding:32px 16px">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent)">KIROLORIK</div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:-12px">Publicidad</div>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;margin-top:8px">
+    <div class="field" style="margin:0"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@kirolorik.app"></div>
+    <div class="field" style="margin:0"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer"><input type="checkbox" id="loginRecordar" checked style="width:auto;margin:0"> Mantener sesión iniciada</label>
+    <div id="loginError" style="font-size:12px;color:#dc2626;min-height:16px"></div>
+    <button style="background:var(--accent);color:var(--accent-txt);border:none;border-radius:var(--radius-sm);padding:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif" id="loginBtn" onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<div id="deniedScreen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:14px;padding:32px 16px;text-align:center">
+  <div style="font-size:36px">🔒</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text)">Acceso restringido</div>
+  <div style="font-size:13px;color:var(--muted)">Esta sección es solo para administradores.</div>
+  <button onclick="window.location.href='/'" style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Volver al inicio</button>
+</div>
+
+<div id="adminScreen" style="display:none">
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <div>
+      <div class="admin-logo">Kirolorik</div>
+      <div class="admin-sub">Publicidad</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+      <button class="hdr-btn" onclick="window.location.href='/admin/admin.html'">Panel</button>
+      <button class="hdr-btn" onclick="window.location.href='/pages/eventos.html?z=admin'">Eventos</button>
+      <button class="hdr-btn" onclick="KBS.cerrar(SB_URL,SB_KEY,'kb_admin',function(){window.location.href='/'})">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabBtnBanners" onclick="cambiarTab('banners')">📣 Banners</div>
+    <div class="tab" id="tabBtnAnun" onclick="cambiarTab('anun')">🏢 Anunciantes</div>
+    <div class="tab" id="tabBtnMet" onclick="cambiarTab('met')">📈 Métricas</div>
+    <div class="tab" id="tabBtnDis" onclick="cambiarTab('dis')">🎨 Diseños</div>
+    <div class="tab" id="tabBtnFac" onclick="cambiarTab('fac')">🧾 Facturas</div>
+    <div class="tab" id="tabBtnSol" onclick="cambiarTab('sol')">📥 Solicitudes<span class="cuenta" id="cuentaSol" style="display:none"></span></div>
+  </div>
+
+  <div id="tabBanners">
+    <details class="ayuda">
+      <summary>¿Cómo publico un banner?</summary>
+      <ol>
+        <li><b>Anunciante:</b> en la pestaña Anunciantes, «Nuevo anunciante» con sus datos y, sobre todo, el <b>tipo de negocio</b> (define la exclusividad en cada pueblo).</li>
+        <li><b>Banner:</b> «Nuevo banner» con título, descripción corta (~60 caracteres), texto largo, imagen y enlace. Si no tiene imagen, puedes pedir un diseño en la pestaña Diseños.</li>
+        <li><b>Pueblos y fechas:</b> al guardar el banner se eligen uno o varios pueblos (o «Todos los pueblos»), las fechas, el origen (pago, cortesía o acuerdo) y el estado. Con <b>Confirmada</b> sale en la portada en esas fechas; si el hueco está ocupado, te avisa. Si el pueblo no está en la lista, puedes añadirlo ahí mismo.</li>
+        <li><b>Cada fila es un banner en un pueblo y unas fechas.</b> «✏️ Editar» abre todo junto: contenido, pueblo, fechas y estado. Para el mismo banner en otro pueblo u otras fechas (otro contrato), usa «⧉ Otro pueblo / fechas».</li>
+        <li><b>Seguimiento:</b> en esta lista ves vistas, aperturas, clics y CTR de cada fila; en Métricas, el resumen por periodo y el CSV para el anunciante.</li>
+      </ol>
+      <p>Estados: <b>Activa</b> (se ve hoy), <b>Programada</b> (empieza más adelante), <b>Finalizada</b>, <b>Pausada</b> (reserva el hueco pero no se ve), <b>Pendiente de pago</b> y <b>En revisión</b> (reservan el hueco o esperan tu visto bueno) y <b>Cancelada</b> (libera el hueco; las métricas se conservan).</p>
+    </details>
+    <div class="bar">
+      <button class="btn-main" data-act="nuevo-banner">＋ Nuevo banner</button>
+    </div>
+    <div class="filters">
+      <input type="search" id="fb_q" class="full" placeholder="Buscar banner o anunciante…" oninput="renderBanners()" autocomplete="off">
+      <select id="fb_anun" onchange="renderBanners()"><option value="">Todos los anunciantes</option></select>
+      <select id="fb_mun" onchange="renderBanners()"><option value="">Todos los pueblos</option></select>
+      <select id="fb_estado" class="full" onchange="renderBanners()">
+        <option value="">Todos los estados</option>
+        <option value="activa">En vigor (activa)</option>
+        <option value="programada">Programada</option>
+        <option value="finalizada">Finalizada</option>
+        <option value="pausada">Pausada</option>
+        <option value="pendiente_pago">Pendiente de pago</option>
+        <option value="revision">En revisión</option>
+        <option value="borrador">Borrador</option>
+        <option value="rechazada">Rechazada</option>
+        <option value="cancelada">Cancelada</option>
+        <option value="sin">Sin colocación</option>
+      </select>
+    </div>
+    <div class="count" id="fb_count"></div>
+    <div id="bannersList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabAnun" style="display:none">
+    <div class="bar">
+      <button class="btn-main" data-act="nuevo-anun">＋ Nuevo anunciante</button>
+    </div>
+    <div class="filters"><input type="search" id="fa_q" class="full" placeholder="Buscar por nombre, código o CIF…" oninput="renderAnun()" autocomplete="off"></div>
+    <div id="anunList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabMet" style="display:none">
+    <div class="periodo" id="periodoBtns">
+      <button data-per="7">7 días</button><button data-per="30" class="on">30 días</button><button data-per="0">Todo</button>
+    </div>
+    <div id="metContent"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabDis" style="display:none">
+    <div class="bar">
+      <button class="btn-main" data-act="nuevo-dis">＋ Solicitud de diseño</button>
+      <button class="btn-sec" data-act="disenadores">👥 Diseñadores</button>
+    </div>
+    <div class="nota">Las solicitudes de diseño las atiende primero Kirolorik. Más adelante se podrán derivar a diseñadores colaboradores (registra aquí a los que quieran aparecer) y los anunciantes podrán pedirlas desde su zona.</div>
+    <div class="filters"><select id="fd_estado" class="full" onchange="renderDisenos()"><option value="">Todos los estados</option><option value="solicitado">Solicitado</option><option value="en_curso">En curso</option><option value="entregado">Entregado</option><option value="aprobado">Aprobado</option><option value="cancelado">Cancelado</option></select></div>
+    <div id="disList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabSol" style="display:none">
+    <div class="nota">Dos cosas distintas llegan de la zona de anunciantes. <b>1. Banners por revisar:</b> el anunciante envía el contenido a revisión; lo apruebas o lo rechazas con motivo. <b>2. Solicitudes de visibilidad:</b> solo se pueden pedir con un banner aprobado; al <b>aprobar</b> se fijan las fechas según el plan (puedes ajustarlas) y queda <b>pendiente de pago</b> reservando el hueco; cuando esté pagada pasa a <b>confirmada</b> y sale en la portada. También verás los pueblos nuevos que piden.</div>
+    <div id="solList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+  <div id="tabFac" style="display:none">
+    <div class="bar">
+      <button class="btn-main" data-act="nueva-fac">＋ Factura</button>
+    </div>
+    <div class="nota">Las facturas se emiten con el programa de facturación de tu gestor (en Gipuzkoa y Bizkaia, compatible con TicketBAI). Aquí se registra su número, importe y el enlace al documento. Más adelante, los pagos por Stripe rellenarán esta lista automáticamente y cada anunciante verá las suyas.</div>
+    <div class="filters"><select id="ff_anun" onchange="renderFacturas()"><option value="">Todos los anunciantes</option></select><select id="ff_estado" onchange="renderFacturas()"><option value="">Todos los estados</option><option value="emitida">Emitida</option><option value="pagada">Pagada</option><option value="anulada">Anulada</option></select></div>
+    <div class="count" id="ff_count"></div>
+    <div id="facList"><div class="empty-slot">Cargando...</div></div>
+  </div>
+
+</div>
+</div>
+
+<div id="modalHost"></div>
+<div class="toast" id="toast"></div>
+
+<script src="/assets/js/sesion.js"></script>
+<script>
+const SB_URL = 'https://glscnwctcvrosmbrljns.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsc2Nud2N0Y3Zyb3NtYnJsam5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTcyNjksImV4cCI6MjA5MjYzMzI2OX0.coUfdaThWGrwV8w-MixbWYfgidoi_q_60Y-3KinfeFw';
+const ADMIN_EMAIL = 'kirolorik.app@gmail.com';
+
+let authToken = null;
+let authUser = null;
+
+// ── SESIÓN (misma que el panel: el token se renueva solo y, si la sesión ya no existe, vuelve al login) ──
+var _fetchOriginal=window.fetch.bind(window);
+var refrescando=null;
+function jwtExp(t){
+  try{ return JSON.parse(atob(String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000; }catch(e){ return 0; }
+}
+function refrescarSesion(){
+  if(refrescando) return refrescando;
+  refrescando=KBS.lock('kb_admin_refresh',function(){
+    var tk=KBS.get('kb_admin_token');
+    if(tk&&tk!==authToken&&jwtExp(tk)-Date.now()>60000){ authToken=tk; return true; }
+    var rt=KBS.get('kb_admin_refresh');
+    if(!rt) return false;
+    return _fetchOriginal(SB_URL+'/auth/v1/token?grant_type=refresh_token',{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})
+    }).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(!d||!d.access_token) return false;
+      authToken=d.access_token;
+      KBS.set('kb_admin_token',authToken);
+      if(d.refresh_token) KBS.set('kb_admin_refresh',d.refresh_token);
+      return true;
+    });
+  }).catch(function(){return false}).then(function(ok){refrescando=null;return ok;});
+  return refrescando;
+}
+window.fetch=function(url,opts){
+  return _fetchOriginal(url,opts).then(function(res){
+    if(res.status!==401||!authToken||typeof url!=='string'||url.indexOf(SB_URL)!==0||url.indexOf('/auth/v1/')>=0) return res;
+    return refrescarSesion().then(function(ok){
+      if(!ok){ sesionCaducada(); return res; }
+      var o=Object.assign({},opts||{});
+      o.headers=Object.assign({},o.headers||{},{'Authorization':'Bearer '+authToken});
+      return _fetchOriginal(url,o);
+    });
+  });
+};
+function renovarSiHaceFalta(){ if(authToken&&jwtExp(authToken)-Date.now()<5*60000) refrescarSesion(); }
+setInterval(renovarSiHaceFalta,60000);
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) renovarSiHaceFalta(); });
+function sesionCaducada(){
+  KBS.clear('kb_admin');
+  authToken=null; authUser=null;
+  document.getElementById('adminScreen').style.display='none';
+  document.getElementById('deniedScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginError').textContent='La sesión ha caducado. Entra de nuevo.';
+}
+
+function H(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':'application/json'}; }
+function toast(msg,err){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(err?' error':'');
+  setTimeout(function(){t.className='toast'},3500);
+}
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function norm(s){
+  return String(s||'').toLowerCase().replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u').replace(/ñ/g,'n').replace(/[^a-z0-9]/g,'');
+}
+
+async function login(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPass').value;
+  var err=document.getElementById('loginError');
+  var btn=document.getElementById('loginBtn');
+  err.textContent='';btn.disabled=true;btn.textContent='...';
+  try{
+    var res=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{
+      method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,password:pass})
+    });
+    var data=await res.json();
+    if(!res.ok) throw new Error(data.error_description||'Error');
+    if(data.user.email!==ADMIN_EMAIL) throw new Error('Esta cuenta no tiene permisos de administrador');
+    authToken=data.access_token;
+    authUser=data.user;
+    KBS.setPersist(!!(document.getElementById('loginRecordar')||{checked:true}).checked,'kb_admin');
+    KBS.set('kb_admin_token',authToken);
+    KBS.set('kb_admin_user',JSON.stringify(authUser));
+    if(data.refresh_token) KBS.set('kb_admin_refresh',data.refresh_token);
+    mostrarAdmin();
+  }catch(e){
+    err.textContent=e.message;
+    btn.disabled=false;btn.textContent='Entrar';
+  }
+}
+function mostrarAdmin(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('deniedScreen').style.display='none';
+  document.getElementById('adminScreen').style.display='block';
+  cargarTodo();
+}
+function mostrarDenegado(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('adminScreen').style.display='none';
+  document.getElementById('deniedScreen').style.display='flex';
+}
+
+// ── DATOS ──
+let ANUN=[], BAN=[], COL=[], MUN=[], TIPOS=[], MET=[], TARIFAS=[], DIS=[], FAC=[], DISENADORES=[], SOLP=[];
+let faseC=true;   // false si aún no está aplicada la migración 2026-11-11 (zona de anunciantes)
+let faseB=true;   // false si aún no está aplicada la migración 2026-11-09 (diseños, diseñadores y facturas)
+let ANUN_BY={}, BAN_BY={}, COL_BY={}, MUN_BY={}, TIPO_BY={}, MET_BY={};
+let periodoDias=30;
+let tabActual='banners';
+
+// Supabase devuelve como mucho 1000 filas por petición: se pide por páginas
+async function getAll(path){
+  var out=[], from=0, paso=1000, sep=path.indexOf('?')>=0?'&':'?';
+  for(;;){
+    var res=await fetch(SB_URL+'/rest/v1/'+path+sep+'limit='+paso+'&offset='+from,{headers:H()});
+    var d=await res.json();
+    if(!res.ok||!Array.isArray(d)) throw new Error((d&&d.message)||'Error al cargar');
+    out=out.concat(d);
+    if(d.length<paso) break;
+    from+=paso;
+  }
+  return out;
+}
+function indexar(lista,clave){ var m={}; lista.forEach(function(x){m[x[clave]]=x}); return m; }
+
+async function cargarTodo(){
+  try{
+    var r=await Promise.all([
+      getAll('anunciantes?select=*&order=created_at.asc'),
+      getAll('banners?select=*&order=created_at.asc'),
+      getAll('colocaciones?select=*&order=created_at.desc'),
+      getAll('municipios?select=id,nombre,provincia&activo=eq.true&order=orden.asc'),
+      getAll('tipos_negocio?select=*&order=orden.asc'),
+      getAll('banner_metricas_diarias?select=*&order=fecha.asc'),
+      getAll('tarifas?select=id,plan,precio,periodo&order=precio.asc')
+    ]);
+    ANUN=r[0]; BAN=r[1]; COL=r[2]; MUN=r[3]; TIPOS=r[4]; MET=r[5]; TARIFAS=r[6];
+    try{
+      var rb=await Promise.all([getAll('banner_disenos?select=*&order=created_at.desc'),getAll('anunciante_facturas?select=*&order=fecha.desc,created_at.desc'),getAll('disenadores?select=*&order=nombre.asc')]);
+      DIS=rb[0]; FAC=rb[1]; DISENADORES=rb[2]; faseB=true;
+    }catch(e){ DIS=[]; FAC=[]; DISENADORES=[]; faseB=false; }
+    try{ SOLP=await getAll('anunciante_solicitudes?select=*&order=created_at.desc'); faseC=true; }catch(e){ SOLP=[]; faseC=false; }
+    ANUN_BY=indexar(ANUN,'id'); BAN_BY=indexar(BAN,'id'); COL_BY=indexar(COL,'id'); MUN_BY=indexar(MUN,'id'); TIPO_BY=indexar(TIPOS,'id');
+    MET_BY={}; MET.forEach(function(m){ (MET_BY[m.colocacion_id]=MET_BY[m.colocacion_id]||[]).push(m); });
+    rellenarFiltros();
+    renderTodo();
+  }catch(e){
+    document.getElementById('bannersList').innerHTML='<div class="empty-slot" style="color:#dc2626">Error al cargar: '+esc(e.message)+'</div>';
+  }
+}
+function renderTodo(){ renderBanners(); renderAnun(); renderMetricas(); renderDisenos(); renderFacturas(); renderSolicitudes(); }
+
+function cambiarTab(t){
+  tabActual=t;
+  [['banners','tabBanners','tabBtnBanners'],['anun','tabAnun','tabBtnAnun'],['met','tabMet','tabBtnMet'],['dis','tabDis','tabBtnDis'],['fac','tabFac','tabBtnFac'],['sol','tabSol','tabBtnSol']].forEach(function(x){
+    document.getElementById(x[1]).style.display=(x[0]===t?'block':'none');
+    document.getElementById(x[2]).classList.toggle('active',x[0]===t);
+  });
+}
+
+// ── UTILIDADES ──
+function hoyISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtF(iso){ if(!iso) return '—'; var p=String(iso).slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
+function nombrePueblo(c){ return c.municipio_id?(MUN_BY[c.municipio_id]?MUN_BY[c.municipio_id].nombre:'(pueblo borrado)'):'Todos los pueblos'; }
+
+const ESTADOS={
+  activa:{t:'Activa'}, programada:{t:'Programada'}, finalizada:{t:'Finalizada'}, pausada:{t:'Pausada'},
+  pendiente_pago:{t:'Pendiente de pago'}, revision:{t:'En revisión'}, borrador:{t:'Borrador'}, rechazada:{t:'Rechazada'}, cancelada:{t:'Cancelada'}, sin:{t:'Sin colocación'}
+};
+// Estados que se guardan (el visible de «confirmada» depende de las fechas)
+const ESTADOS_BD={borrador:'Borrador',revision:'En revisión',rechazada:'Rechazada',pendiente_pago:'Pendiente de pago',confirmada:'Confirmada (activa según fechas)',pausada:'Pausada',cancelada:'Cancelada'};
+const ORIGENES={pago:'Pago',cortesia:'Cortesía',acuerdo:'Acuerdo'};
+const RENOVACION={prepago:'Prepago',automatica:'Renovación automática'};
+
+// Estado que se muestra: «confirmada» se desglosa según las fechas
+function estadoVisible(c){
+  if(c.estado!=='confirmada') return c.estado;
+  var hoy=hoyISO();
+  if(c.fecha_inicio>hoy) return 'programada';
+  if(c.fecha_fin&&c.fecha_fin<hoy) return 'finalizada';
+  return 'activa';
+}
+function sumar(filas,desde){
+  var t={v:0,a:0,c:0};
+  (filas||[]).forEach(function(m){ if(!desde||m.fecha>=desde){ t.v+=m.vistas||0; t.a+=m.aperturas||0; t.c+=m.clics||0; } });
+  return t;
+}
+function ctr(t){ return t.v>0?(t.c*100/t.v).toFixed(1)+'%':'—'; }
+
+// ── BANNERS (una fila por banner y pueblo) ──
+function rellenarFiltros(){
+  var sa=document.getElementById('fb_anun'), pa=sa.value;
+  sa.innerHTML='<option value="">Todos los anunciantes</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'">'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  sa.value=pa;
+  var sm=document.getElementById('fb_mun'), pm=sm.value;
+  sm.innerHTML='<option value="">Todos los pueblos</option><option value="_todos">Todos los pueblos (colocación global)</option>'+MUN.map(function(m){return '<option value="'+esc(m.id)+'">'+esc(m.nombre)+'</option>'}).join('');
+  sm.value=pm;
+}
+
+function tagContenido(b){ return (b.estado_contenido&&b.estado_contenido!=='aprobado')?'<span class="tag" style="color:#7e22ce">Contenido: '+esc(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+'</span>':''; }
+function filasBanners(){
+  var filas=COL.map(function(c){ return {col:c, ban:BAN_BY[c.banner_id]}; }).filter(function(f){return f.ban});
+  BAN.forEach(function(b){ if(!COL.some(function(c){return c.banner_id===b.id})) filas.push({col:null,ban:b}); });
+  return filas;
+}
+
+function renderBanners(){
+  var q=document.getElementById('fb_q').value;
+  var fa=document.getElementById('fb_anun').value, fm=document.getElementById('fb_mun').value, fe=document.getElementById('fb_estado').value;
+  var palabras=String(q).split(/\s+/).map(norm).filter(Boolean);
+  var filas=filasBanners().filter(function(f){
+    var a=ANUN_BY[f.ban.anunciante_id];
+    if(fa&&f.ban.anunciante_id!==fa) return false;
+    if(fm==='_todos'&&!(f.col&&!f.col.municipio_id)) return false;
+    if(fm&&fm!=='_todos'&&!(f.col&&f.col.municipio_id===fm)) return false;
+    var est=f.col?estadoVisible(f.col):'sin';
+    if(fe&&est!==fe) return false;
+    if(palabras.length){
+      var texto=norm([f.ban.nombre,f.ban.descripcion,a?a.nombre:'',a?a.codigo:'',f.col?nombrePueblo(f.col):''].join(' '));
+      for(var i=0;i<palabras.length;i++) if(texto.indexOf(palabras[i])<0) return false;
+    }
+    return true;
+  });
+  var orden={activa:0,programada:1,pendiente_pago:2,revision:3,borrador:4,pausada:5,finalizada:6,cancelada:7,rechazada:8,sin:9};
+  filas.sort(function(x,y){
+    var ex=x.col?estadoVisible(x.col):'sin', ey=y.col?estadoVisible(y.col):'sin';
+    return (orden[ex]-orden[ey])||String(y.col?y.col.created_at:y.ban.created_at).localeCompare(String(x.col?x.col.created_at:x.ban.created_at));
+  });
+  var total=filasBanners().length;
+  document.getElementById('fb_count').textContent=(q||fa||fm||fe)?(filas.length+' de '+total+' filas'):(total+' fila'+(total===1?'':'s'));
+  var cont=document.getElementById('bannersList');
+  if(!total){cont.innerHTML='<div class="empty-slot">Aún no hay banners. Crea el primero con «Nuevo banner».</div>';return;}
+  if(!filas.length){cont.innerHTML='<div class="empty-slot">Ninguna fila coincide con el filtro</div>';return;}
+  cont.innerHTML=filas.map(function(f){
+    var b=f.ban, c=f.col, a=ANUN_BY[b.anunciante_id], est=c?estadoVisible(c):'sin';
+    var tn=a&&a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio].nombre:'';
+    var t=c?sumar(MET_BY[c.id]):{v:0,a:0,c:0};
+    var lineaFechas=c?('📍 '+esc(nombrePueblo(c))+' · 📅 '+(c.fecha_inicio?fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin'):'las fechas se fijan al aprobar')):'Este banner aún no tiene pueblos ni fechas';
+    var tags=c?((c.tarifa_id?'<span class="tag">'+esc(planNombre(c.tarifa_id))+'</span>':'')+'<span class="tag">'+esc(ORIGENES[c.origen]||c.origen)+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span>'+(b.activo?'':'<span class="tag">Banner oculto</span>')+tagContenido(b)):(b.activo?'':'<span class="tag">Banner oculto</span>')+tagContenido(b);
+    var acts='';
+    if(c){
+      acts+='<button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Editar</button>';
+      if(c.estado==='confirmada') acts+='<button data-act="pausar" data-id="'+esc(c.id)+'">⏸ Pausar</button>';
+      if(c.estado==='pausada') acts+='<button data-act="reanudar" data-id="'+esc(c.id)+'">▶ Reanudar</button>';
+      if(c.estado==='revision'&&!c.fecha_inicio) acts+='<button data-act="aprobar" data-id="'+esc(c.id)+'">✅ Aprobar…</button>';
+      else if(c.estado==='revision'||c.estado==='borrador'||c.estado==='pendiente_pago') acts+='<button data-act="confirmar" data-id="'+esc(c.id)+'">✅ Confirmar</button>';
+      acts+='<button data-act="metricas-col" data-id="'+esc(c.id)+'">📈 Métricas</button>';
+      acts+='<button data-act="dup-col" data-id="'+esc(c.id)+'">⧉ Otro pueblo / fechas</button>';
+      if(c.estado!=='cancelada') acts+='<button class="danger" data-act="cancelar" data-id="'+esc(c.id)+'">Cancelar</button>';
+    }else{
+      acts+='<button data-act="edit-banner" data-id="'+esc(b.id)+'">✏️ Editar banner</button>';
+      acts+='<button data-act="add-col" data-id="'+esc(b.id)+'">＋ Pueblos y fechas</button>';
+    }
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(b.nombre)+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'(sin anunciante)')+(tn?' · '+esc(tn):'')+'</div></div>'
+      +'<span class="badge st-'+est+'">'+esc(ESTADOS[est].t)+'</span></div>'
+      +'<div class="pc-line">'+lineaFechas+'</div>'+(tags?'<div class="pc-line">'+tags+'</div>':'')
+      +(c?'<div class="pc-metrics"><span>👁 <b>'+t.v+'</b></span><span>📖 <b>'+t.a+'</b></span><span>👆 <b>'+t.c+'</b></span><span>CTR <b>'+ctr(t)+'</b></span></div>':'')
+      +(c&&c.motivo_rechazo?'<div class="pc-line" style="color:#dc2626">Motivo: '+esc(c.motivo_rechazo)+'</div>':'')
+      +'<div class="pc-act">'+acts+'</div></div>';
+  }).join('');
+}
+
+// ── ANUNCIANTES ──
+function renderAnun(){
+  var palabras=String(document.getElementById('fa_q').value).split(/\s+/).map(norm).filter(Boolean);
+  var lista=ANUN.filter(function(a){
+    var texto=norm([a.nombre,a.razon_social,a.codigo,a.cif,a.municipio,a.email].join(' '));
+    for(var i=0;i<palabras.length;i++) if(texto.indexOf(palabras[i])<0) return false;
+    return true;
+  });
+  var cont=document.getElementById('anunList');
+  if(!ANUN.length){cont.innerHTML='<div class="empty-slot">Aún no hay anunciantes.</div>';return;}
+  if(!lista.length){cont.innerHTML='<div class="empty-slot">Ningún anunciante coincide</div>';return;}
+  cont.innerHTML=lista.map(function(a){
+    var bans=BAN.filter(function(b){return b.anunciante_id===a.id});
+    var cols=COL.filter(function(c){var b=BAN_BY[c.banner_id];return b&&b.anunciante_id===a.id});
+    var vigor=cols.filter(function(c){return estadoVisible(c)==='activa'}).length;
+    var t={v:0,a:0,c:0}; cols.forEach(function(c){var s=sumar(MET_BY[c.id]);t.v+=s.v;t.a+=s.a;t.c+=s.c});
+    var tn=a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio].nombre:'';
+    var ubic=[a.municipio,a.provincia].filter(Boolean).join(', ');
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(a.nombre)+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a.codigo)+'</span>'+(a.razon_social?' · '+esc(a.razon_social):'')+(a.cif?' · CIF '+esc(a.cif):'')+'</div></div>'
+      +'<span class="badge '+(a.estado==='activo'&&a.activo?'st-activa':'st-pausada')+'">'+esc(a.estado==='activo'&&a.activo?'Activo':(a.estado||'Inactivo'))+'</span></div>'
+      +(a.baja_solicitada_at?'<div class="pc-line" style="color:#dc2626;font-weight:700">⚠️ Baja solicitada el '+esc(String(a.baja_solicitada_at).slice(0,10).split('-').reverse().join('/'))+': sin accesos y banners confirmados pausados. Reactiva el acceso en 🔑 Acceso si es un error.</div>':'')
+      +'<div class="pc-line">'+esc(tn||'Sin tipo de negocio')+(ubic?' · 📍 '+esc(ubic):'')+'</div>'
+      +(a.email||a.telefono?'<div class="pc-line">'+esc([a.contacto_nombre,a.email,a.telefono].filter(Boolean).join(' · '))+'</div>':'')
+      +'<div class="pc-metrics"><span>Banners <b>'+bans.length+'</b></span><span>En vigor <b>'+vigor+'</b></span><span>👁 <b>'+t.v+'</b></span><span>👆 <b>'+t.c+'</b></span><span>CTR <b>'+ctr(t)+'</b></span></div>'
+      +'<div class="pc-act"><button data-act="edit-anun" data-id="'+esc(a.id)+'">✏️ Editar</button><button data-act="nuevo-banner-de" data-id="'+esc(a.id)+'">＋ Banner</button><button data-act="accesos" data-id="'+esc(a.id)+'">🔑 Acceso</button></div></div>';
+  }).join('');
+}
+
+// ── MÉTRICAS ──
+function desdePeriodo(){
+  if(!periodoDias) return '';
+  var d=new Date(); d.setDate(d.getDate()-(periodoDias-1));
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function filaRank(nombre,meta,t){
+  return '<div class="rank-row"><div><div class="rank-name">'+esc(nombre)+'</div><div class="rank-meta">'+esc(meta)+'</div></div><div class="rank-value">👆 '+t.c+' · CTR '+ctr(t)+'<div class="rank-meta">👁 '+t.v+' · 📖 '+t.a+'</div></div></div>';
+}
+function renderMetricas(){
+  var desde=desdePeriodo();
+  var cont=document.getElementById('metContent');
+  var tot=sumar(MET,desde);
+  var html='<div class="stats-grid">'
+    +'<div class="stat-card"><div class="stat-num">'+tot.v+'</div><div class="stat-label">Vistas</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+tot.a+'</div><div class="stat-label">Aperturas del panel</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+tot.c+'</div><div class="stat-label">Clics</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+ctr(tot)+'</div><div class="stat-label">CTR (clics / vistas)</div></div></div>';
+  html+='<div class="bar"><span></span><button class="btn-sec" data-act="csv">⬇ Descargar CSV</button></div>';
+
+  // Por banner y pueblo
+  var porCol=COL.map(function(c){var b=BAN_BY[c.banner_id],a=b?ANUN_BY[b.anunciante_id]:null;return {c:c,b:b,a:a,t:sumar(MET_BY[c.id],desde)}}).filter(function(x){return x.b&&(x.t.v||x.t.a||x.t.c)});
+  porCol.sort(function(x,y){return (y.t.c-x.t.c)||(y.t.v-x.t.v)});
+  html+='<div class="sec-title">Por banner y pueblo</div>';
+  html+=porCol.length?porCol.map(function(x){return filaRank(x.b.nombre+' · '+nombrePueblo(x.c),(x.a?x.a.nombre:'')+' · '+fmtF(x.c.fecha_inicio)+' → '+(x.c.fecha_fin?fmtF(x.c.fecha_fin):'sin fin'),x.t)}).join(''):'<div class="empty-slot">Sin datos en este periodo</div>';
+
+  // Por anunciante
+  var porAnun={};
+  porCol.forEach(function(x){ if(!x.a) return; var k=x.a.id; var p=porAnun[k]=porAnun[k]||{a:x.a,t:{v:0,a:0,c:0}}; p.t.v+=x.t.v;p.t.a+=x.t.a;p.t.c+=x.t.c; });
+  var la=Object.keys(porAnun).map(function(k){return porAnun[k]}).sort(function(x,y){return y.t.c-x.t.c});
+  html+='<div class="sec-title">Por anunciante</div>';
+  html+=la.length?la.map(function(x){return filaRank(x.a.nombre,x.a.codigo,x.t)}).join(''):'<div class="empty-slot">Sin datos en este periodo</div>';
+
+  // Por pueblo donde se ve
+  var porMun={};
+  MET.forEach(function(m){ if(desde&&m.fecha<desde) return; var k=m.municipio||'(sin pueblo)'; var p=porMun[k]=porMun[k]||{v:0,a:0,c:0}; p.v+=m.vistas||0;p.a+=m.aperturas||0;p.c+=m.clics||0; });
+  var lm=Object.keys(porMun).sort(function(x,y){return porMun[y].c-porMun[x].c||porMun[y].v-porMun[x].v});
+  html+='<div class="sec-title">Por pueblo donde se ha visto</div>';
+  html+=lm.length?lm.map(function(k){return filaRank(k,'',porMun[k])}).join(''):'<div class="empty-slot">Sin datos en este periodo</div>';
+
+  // Por día
+  if(periodoDias&&periodoDias<=30){
+    var porDia={};
+    MET.forEach(function(m){ if(m.fecha<desde) return; var p=porDia[m.fecha]=porDia[m.fecha]||{v:0,a:0,c:0}; p.v+=m.vistas||0;p.a+=m.aperturas||0;p.c+=m.clics||0; });
+    var dias=Object.keys(porDia).sort().reverse();
+    html+='<div class="sec-title">Por día</div>';
+    html+=dias.length?dias.map(function(d){return filaRank(fmtF(d),'',porDia[d])}).join(''):'<div class="empty-slot">Sin datos en este periodo</div>';
+  }
+  cont.innerHTML=html;
+}
+
+function descargarCSV(){
+  var desde=desdePeriodo();
+  var filas=[['anunciante_codigo','anunciante','banner','pueblo','estado','fecha_inicio','fecha_fin','vistas','aperturas','clics','ctr_%']];
+  COL.forEach(function(c){
+    var b=BAN_BY[c.banner_id]; if(!b) return; var a=ANUN_BY[b.anunciante_id]; var t=sumar(MET_BY[c.id],desde);
+    filas.push([a?a.codigo:'',a?a.nombre:'',b.nombre,nombrePueblo(c),estadoVisible(c),c.fecha_inicio||'',c.fecha_fin||'',t.v,t.a,t.c,t.v>0?(t.c*100/t.v).toFixed(2):'']);
+  });
+  var csv=filas.map(function(f){return f.map(function(x){var s=String(x==null?'':x);return /[",\n;]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(';')}).join('\n');
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download='kirolorik-publicidad-'+hoyISO()+(periodoDias?'-'+periodoDias+'d':'-todo')+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+}
+
+// ── MODALES ──
+function abrirModal(titulo,cuerpo){
+  document.getElementById('modalHost').innerHTML='<div class="sheet-bg" id="sheetBg"><div class="sheet"><div class="sheet-h"><div class="sheet-t">'+esc(titulo)+'</div><button class="sheet-x" data-act="cerrar">✕</button></div>'+cuerpo+'</div></div>';
+  document.getElementById('sheetBg').addEventListener('click',function(ev){ if(ev.target.id==='sheetBg') cerrarModal(); });
+}
+function cerrarModal(){ document.getElementById('modalHost').innerHTML=''; }
+function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+function optsTipos(sel){
+  return '<option value="">— Elige el tipo —</option>'+TIPOS.filter(function(t){return t.activo||t.id===sel}).map(function(t){return '<option value="'+esc(t.id)+'"'+(t.id===sel?' selected':'')+'>'+esc(t.nombre)+(t.exclusivo?'':' (sin exclusividad)')+'</option>'}).join('');
+}
+
+// ── Anunciante ──
+function modalAnunciante(a){
+  var n=a||{};
+  abrirModal(a?'Editar anunciante':'Nuevo anunciante',
+    (a?'<div class="sheet-note">Código <span class="cod">'+esc(a.codigo)+'</span></div>':'')
+    +'<div class="field"><label>Nombre comercial *</label><input type="text" id="an_nombre" value="'+esc(n.nombre||'')+'"></div>'
+    +'<div class="field"><label>Razón social</label><input type="text" id="an_razon" value="'+esc(n.razon_social||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>CIF</label><input type="text" id="an_cif" value="'+esc(n.cif||'')+'"></div>'
+    +'<div class="field"><label>Estado</label><select id="an_estado"><option value="activo"'+(n.estado==='activo'||!a?' selected':'')+'>Activo</option><option value="pendiente"'+(n.estado==='pendiente'?' selected':'')+'>Pendiente</option><option value="baja"'+(n.estado==='baja'?' selected':'')+'>Baja</option></select></div></div>'
+    +'<div class="field"><label>Tipo de negocio * <span style="font-weight:400;text-transform:none;letter-spacing:0">(define la exclusividad en cada pueblo)</span></label><select id="an_tipo">'+optsTipos(n.tipo_negocio)+'</select></div>'
+    +'<div class="row2"><div class="field"><label>Ciudad / pueblo</label><input type="text" id="an_mun" value="'+esc(n.municipio||'')+'"></div>'
+    +'<div class="field"><label>Provincia</label><input type="text" id="an_prov" value="'+esc(n.provincia||'')+'"></div></div>'
+    +'<div class="field"><label>Dirección fiscal</label><input type="text" id="an_dir" value="'+esc(n.direccion_fiscal||'')+'"></div>'
+    +'<div class="field"><label>Persona de contacto</label><input type="text" id="an_contacto" value="'+esc(n.contacto_nombre||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>Email</label><input type="email" id="an_email" value="'+esc(n.email||'')+'"></div>'
+    +'<div class="field"><label>Teléfono</label><input type="tel" id="an_tel" value="'+esc(n.telefono||'')+'"></div></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="an_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<button class="btn-main" style="width:100%" id="an_guardar" data-act="guardar-anun" data-id="'+esc(a?a.id:'')+'">Guardar anunciante</button>');
+}
+async function guardarAnunciante(id){
+  var nombre=val('an_nombre'), tipo=val('an_tipo');
+  if(!nombre){toast('El nombre es obligatorio',true);return;}
+  if(!tipo){toast('Elige el tipo de negocio',true);return;}
+  var estado=val('an_estado');
+  var datos={
+    nombre:nombre, razon_social:val('an_razon')||null, cif:(val('an_cif').toUpperCase()||null), tipo_negocio:tipo,
+    municipio:val('an_mun')||null, provincia:val('an_prov')||null, direccion_fiscal:val('an_dir')||null,
+    contacto_nombre:val('an_contacto')||null, email:val('an_email')||null, telefono:val('an_tel')||null,
+    estado:estado, activo:estado!=='baja', notas:val('an_notas')||null, categoria:tipo, updated_at:new Date().toISOString()
+  };
+  var btn=document.getElementById('an_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/anunciantes'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('anunciantes_cif_uq')>=0?'Ya existe un anunciante con ese CIF':t); }
+    cerrarModal(); toast('Anunciante guardado'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── Banner (creatividad) ──
+let bnImagen=null;      // URL guardada
+let bnQuitada=false;
+function modalBanner(b,anuncianteId,imgPrecargada){
+  var n=b||{};
+  window._disenoActual=null;
+  bnImagen=n.imagen_url||imgPrecargada||''; bnQuitada=false; window._bnVistaPrevia='';
+  var opts='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){var s=(b?b.anunciante_id:anuncianteId)===a.id;return '<option value="'+esc(a.id)+'"'+(s?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  abrirModal(b?'Editar banner':'Nuevo banner',
+    '<div class="field"><label>Anunciante *</label><select id="bn_anun">'+opts+'</select></div>'
+    +'<div class="field"><label>Nombre (título del banner) *</label><input type="text" id="bn_nombre" value="'+esc(n.nombre||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Descripción corta <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve en la barra, ~60 caracteres)</span></label><input type="text" id="bn_desc" value="'+esc(n.descripcion||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Texto largo <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve al abrir el banner)</span></label><textarea id="bn_texto" oninput="previewBanner()">'+esc(n.texto||'')+'</textarea></div>'
+    +'<div class="field"><label>Enlace <span style="font-weight:400;text-transform:none;letter-spacing:0">(https://…, mailto: o tel:; vacío = contacto con Kirolorik)</span></label><input type="text" id="bn_url" value="'+esc(n.url_destino||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0">(JPG, PNG, WebP o GIF · máx. 5 MB)</span></label><input type="file" id="bn_img" accept="image/*" onchange="elegirImagenBanner(this)">'
+    +'<button type="button" class="btn-sec" id="bn_quitar" style="margin-top:6px;'+(bnImagen?'':'display:none')+'" data-act="quitar-img">✕ Quitar imagen</button></div>'
+    +'<div class="prev" id="bn_prev"></div>'
+    +'<label class="chk" style="margin-bottom:14px"><input type="checkbox" id="bn_activo"'+(n.activo!==false?' checked':'')+'> Banner visible (si se desmarca, no sale en ningún pueblo)</label>'
+    +'<button class="btn-main" style="width:100%" id="bn_guardar" data-act="guardar-banner" data-id="'+esc(b?b.id:'')+'">'+(b?'Guardar banner':'Guardar y elegir pueblos')+'</button>');
+  previewBanner();
+}
+function previewBanner(){
+  var el=document.getElementById('bn_prev'); if(!el) return;
+  var d=val('bn_desc'), imgFile=document.getElementById('bn_img'), src=bnQuitada?'':(window._bnVistaPrevia||bnImagen||'');
+  el.innerHTML='<div class="prev-bar"><span class="t">Publicidad</span><span>📣</span><span style="min-width:0"><div class="n">'+esc(val('bn_nombre')||'Nombre del banner')+'</div><div class="s">'+esc(d.length>60?d.slice(0,60)+'...':d)+'</div></span></div>'
+    +(/^https?:\/\//i.test(src)||/^blob:/.test(src)?'<img src="'+esc(src)+'" alt="">':'')
+    +(val('bn_texto')||d?'<div class="l">'+esc(val('bn_texto')||d)+'</div>':'');
+}
+function elegirImagenBanner(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  window._bnVistaPrevia=URL.createObjectURL(f); bnQuitada=false;
+  document.getElementById('bn_quitar').style.display=''; previewBanner();
+}
+function quitarImagenBanner(){
+  var inp=document.getElementById('bn_img');
+  if(inp&&inp.files&&inp.files.length){ inp.value=''; window._bnVistaPrevia=''; if(!bnImagen) document.getElementById('bn_quitar').style.display='none'; }
+  else{ bnQuitada=true; window._bnVistaPrevia=''; document.getElementById('bn_quitar').style.display='none'; }
+  previewBanner();
+}
+async function subirImagenBanner(file){
+  var TIPOS_IMG={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+  var ext=TIPOS_IMG[file.type];
+  if(!ext) throw new Error('Formato no permitido (usa JPG, PNG, WEBP o GIF)');
+  if(file.size>5*1024*1024) throw new Error('Imagen demasiado grande (máx. 5 MB)');
+  var nombre='banner_'+Date.now()+'.'+ext;
+  var res=await fetch(SB_URL+'/storage/v1/object/banners/'+nombre,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(authToken||SB_KEY),'Content-Type':file.type},body:file});
+  if(!res.ok) throw new Error('Error al subir la imagen');
+  return SB_URL+'/storage/v1/object/public/banners/'+nombre;
+}
+async function guardarBanner(id){
+  var anun=val('bn_anun'), nombre=val('bn_nombre'), url=val('bn_url');
+  if(!anun){toast('Elige el anunciante',true);return;}
+  if(!nombre){toast('El nombre es obligatorio',true);return;}
+  if(url&&!/^(https?:\/\/|mailto:|tel:)/i.test(url)){toast('El enlace debe empezar por https://, mailto: o tel:',true);return;}
+  var btn=document.getElementById('bn_guardar'); btn.disabled=true;
+  try{
+    var datos={anunciante_id:anun,nombre:nombre,descripcion:val('bn_desc')||null,texto:val('bn_texto')||null,url_destino:url||null,activo:document.getElementById('bn_activo').checked};
+    if(!id) datos.estado_contenido='aprobado';   // lo crea Kirolorik: no necesita revisión
+    var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
+    if(f) datos.imagen_url=await subirImagenBanner(f);
+    else if(bnQuitada) datos.imagen_url=null;
+    else if(!id&&bnImagen) datos.imagen_url=bnImagen;   // imagen entregada en una solicitud de diseño
+    var res=await fetch(SB_URL+'/rest/v1/banners'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify(datos)});
+    var d=await res.json();
+    if(!res.ok) throw new Error((d&&d.message)||'Error al guardar');
+    var nuevoId=id||(d&&d[0]?d[0].id:null);
+    if(!id&&nuevoId&&window._disenoActual){
+      try{ await fetch(SB_URL+'/rest/v1/banner_disenos?id=eq.'+encodeURIComponent(window._disenoActual),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({banner_id:nuevoId})}); }catch(e){}
+      window._disenoActual=null;
+    }
+    toast('Banner guardado'); await cargarTodo();
+    if(!id&&nuevoId) modalColocacion(null,nuevoId); else cerrarModal();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── Colocaciones (banner + pueblos + fechas) ──
+function conflictos(bannerId,municipioIds,ini,fin,excluirId){
+  var b=BAN_BY[bannerId], a=b?ANUN_BY[b.anunciante_id]:null, tn=a&&a.tipo_negocio?TIPO_BY[a.tipo_negocio]:null;
+  if(!tn||!tn.exclusivo||!ini) return [];
+  var out=[], nfin=fin||'9999-12-31';
+  municipioIds.forEach(function(mid){
+    if(!mid) return;
+    COL.forEach(function(c){
+      if(c.id===excluirId||c.municipio_id!==mid||!c.exclusivo||c.tipo_negocio!==a.tipo_negocio) return;
+      if(['pendiente_pago','confirmada','pausada'].indexOf(c.estado)<0||!c.fecha_inicio) return;
+      var cfin=c.fecha_fin||'9999-12-31';
+      if(c.fecha_inicio<=nfin&&ini<=cfin) out.push({mid:mid,col:c});
+    });
+  });
+  return out;
+}
+function optsMunicipios(sel){
+  return '<option value="_todos"'+(sel==null||sel==='_todos'?' selected':'')+'>Todos los pueblos (se muestra siempre, sin exclusividad)</option>'
+    +MUN.map(function(m){return '<option value="'+esc(m.id)+'"'+(m.id===sel?' selected':'')+'>'+esc(m.nombre)+(m.provincia?' ('+esc(m.provincia)+')':'')+'</option>'}).join('');
+}
+function checksMunicipios(){
+  return MUN.map(function(m){return '<label><input type="checkbox" class="co_mun" value="'+esc(m.id)+'" onchange="avisoConflictos()"> '+esc(m.nombre)+'</label>'}).join('');
+}
+function bloqueNuevoPueblo(){
+  return '<button type="button" class="btn-sec" style="margin-top:8px" data-act="toggle-pueblo">＋ Añadir un pueblo que no está en la lista</button>'
+    +'<div id="np_box" style="display:none;margin-top:8px"><div class="row2"><div class="field"><label>Pueblo</label><input type="text" id="np_nombre"></div><div class="field"><label>Provincia</label><input type="text" id="np_prov"></div></div>'
+    +'<button type="button" class="btn-main" data-act="guardar-pueblo">Añadir pueblo</button><div class="sheet-note" style="margin-top:6px">Los pueblos nuevos salen en el selector de la portada cuando tengan eventos.</div></div>';
+}
+// Campos de fechas, origen, renovación, estado y notas (los usan el alta en pueblos y la edición de una fila)
+function camposColocacion(c,esNueva){
+  var hoy=hoyISO();
+  var tarifasOpts='<option value="">— Sin tarifa —</option>'+TARIFAS.map(function(t){return '<option value="'+esc(t.id)+'"'+(c.tarifa_id===t.id?' selected':'')+'>'+esc(t.plan)+'</option>'}).join('');
+  var estadosSel=['borrador','revision','rechazada','pendiente_pago','confirmada','pausada','cancelada'];
+  var estadoIni=c.estado||'confirmada';
+  return '<div class="row2"><div class="field"><label>Fecha inicio *</label><input type="date" id="co_ini" value="'+esc(c.fecha_inicio||hoy)+'" onchange="avisoConflictos()"></div>'
+    +'<div class="field"><label>Fecha fin</label><input type="date" id="co_fin" value="'+esc(c.fecha_fin||'')+'" onchange="avisoConflictos()"></div></div>'
+    +'<div class="sheet-note">Sin fecha de fin = continúa hasta que se pause o se cancele.</div>'
+    +'<div class="row2"><div class="field"><label>Origen</label><select id="co_origen"><option value="cortesia"'+(c.origen==='cortesia'?' selected':'')+'>Cortesía</option><option value="acuerdo"'+(c.origen==='acuerdo'?' selected':'')+'>Acuerdo</option><option value="pago"'+(c.origen==='pago'||esNueva&&!c.origen?' selected':'')+'>Pago</option></select></div>'
+    +'<div class="field"><label>Renovación</label><select id="co_ren"><option value="prepago"'+(c.modo_renovacion!=='automatica'?' selected':'')+'>Prepago por periodo</option><option value="automatica"'+(c.modo_renovacion==='automatica'?' selected':'')+'>Automática</option></select></div></div>'
+    +'<div class="row2"><div class="field"><label>Estado</label><select id="co_estado" onchange="avisoConflictos()">'+estadosSel.map(function(e){return '<option value="'+e+'"'+(e===estadoIni?' selected':'')+'>'+esc(ESTADOS_BD[e])+'</option>'}).join('')+'</select></div>'
+    +'<div class="field"><label>Plan</label><select id="co_tarifa">'+tarifasOpts+'</select></div></div>'
+    +'<div class="field"><label>Motivo de rechazo</label><input type="text" id="co_motivo" value="'+esc(c.motivo_rechazo||'')+'"></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="co_notas">'+esc(c.notas||'')+'</textarea></div>'
+    +'<div id="co_aviso"></div>';
+}
+function datosColocacion(){
+  return {estado:val('co_estado'), fecha_inicio:val('co_ini'), fecha_fin:val('co_fin')||null, origen:val('co_origen'), modo_renovacion:val('co_ren'),
+          tarifa_id:val('co_tarifa')||null, motivo_rechazo:val('co_motivo')||null, notas:val('co_notas')||null};
+}
+
+// Alta de una o varias filas (banner + pueblo); «base» precarga origen, renovación y fechas desde otra fila
+function modalColocacion(col,bannerId,base){
+  var bid=bannerId, b=BAN_BY[bid], a=b?ANUN_BY[b.anunciante_id]:null, c=base||{};
+  var tn=a&&a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio]:null;
+  abrirModal(base?'Mismo banner en otro pueblo o fechas':'Colocar banner en pueblos',
+    '<div class="sheet-note"><b>'+esc(b?b.nombre:'')+'</b> · '+esc(a?a.nombre:'')+(tn?' · '+esc(tn.nombre)+(tn.exclusivo?' (exclusivo por pueblo)':' (sin exclusividad)'):'')+'</div>'
+    +(base?'<div class="sheet-note">Se crean filas nuevas con el mismo contenido. Cambia los pueblos y las fechas como necesites; la fila original no se toca.</div>':'')
+    +'<div class="field"><label>Pueblos</label><div class="towns">'
+    +'<label style="grid-column:1/-1"><input type="checkbox" id="co_todos" onchange="alternarTodos()"> <b>Todos los pueblos</b> (se muestra siempre, sin exclusividad)</label>'
+    +'<div id="co_mun_list" style="display:contents">'+checksMunicipios()+'</div></div>'+bloqueNuevoPueblo()+'</div>'
+    +camposColocacion(Object.assign({},c,{estado:c.estado||'confirmada'}),!base)
+    +'<button class="btn-main" style="width:100%" id="co_guardar" data-act="guardar-col" data-id="" data-banner="'+esc(bid)+'">Crear filas</button>');
+  avisoConflictos();
+}
+function alternarTodos(){
+  var t=document.getElementById('co_todos').checked;
+  document.querySelectorAll('.co_mun').forEach(function(x){ x.disabled=t; if(t) x.checked=false; });
+  avisoConflictos();
+}
+function leerPueblos(){
+  var todos=document.getElementById('co_todos');
+  if(todos&&todos.checked) return [null];
+  return Array.prototype.slice.call(document.querySelectorAll('.co_mun:checked')).map(function(x){return x.value});
+}
+// Aviso de hueco ocupado (alta de filas o edición de una fila)
+function avisoConflictos(){
+  var ln=document.getElementById('ln_guardar'), co=document.getElementById('co_guardar'), btn=ln||co; if(!btn) return;
+  var id=btn.getAttribute('data-id'), bid=btn.getAttribute('data-banner');
+  var mids=ln?[val('ln_mun')==='_todos'?null:val('ln_mun')]:leerPueblos();
+  var aplica=['pendiente_pago','confirmada','pausada'].indexOf(val('co_estado'))>=0;
+  var cs=aplica?conflictos(bid,mids,val('co_ini'),val('co_fin'),id||null):[];
+  var cont=document.getElementById('co_aviso'); if(!cont) return;
+  cont.innerHTML=cs.length?'<div class="warn">⚠️ Hueco ocupado (mismo tipo de negocio, mismo pueblo y fechas que se solapan):<ul>'+cs.map(function(x){
+    var b=BAN_BY[x.col.banner_id], a=b?ANUN_BY[b.anunciante_id]:null;
+    return '<li><b>'+esc(MUN_BY[x.mid]?MUN_BY[x.mid].nombre:'')+'</b>: '+esc(a?a.nombre:'')+' ('+fmtF(x.col.fecha_inicio)+' → '+(x.col.fecha_fin?fmtF(x.col.fecha_fin):'sin fin')+')</li>';
+  }).join('')+'</ul></div>':'';
+}
+function errorColocacion(t){ return t.indexOf('colocaciones_exclusividad')>=0?'Ese hueco ya está ocupado por otro anunciante del mismo tipo (no se ha guardado nada)':t; }
+async function guardarColocacion(id,bid){
+  var comun=datosColocacion();
+  if(!comun.fecha_inicio){toast('Indica la fecha de inicio',true);return;}
+  if(comun.fecha_fin&&comun.fecha_fin<comun.fecha_inicio){toast('La fecha de fin no puede ser anterior a la de inicio',true);return;}
+  var btn=document.getElementById('co_guardar');
+  var mids=leerPueblos();
+  if(!mids.length){toast('Elige al menos un pueblo (o «Todos los pueblos»)',true);return;}
+  var cs=(['pendiente_pago','confirmada','pausada'].indexOf(comun.estado)>=0)?conflictos(bid,mids,comun.fecha_inicio,comun.fecha_fin,null):[];
+  if(cs.length){toast('Hay huecos ocupados: revisa el aviso',true);return;}
+  btn.disabled=true;
+  try{
+    var filas=mids.map(function(m){return Object.assign({banner_id:bid,municipio_id:m},comun)});
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(filas)});
+    if(!res.ok) throw new Error(errorColocacion(await res.text()));
+    cerrarModal(); toast(mids.length>1?mids.length+' filas creadas':'Fila creada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── Editar una fila (banner + pueblo): contenido, pueblo, fechas y estado en un único formulario ──
+function modalLinea(c){
+  var b=BAN_BY[c.banner_id]; if(!b) return;
+  var a=ANUN_BY[b.anunciante_id], tn=a&&a.tipo_negocio&&TIPO_BY[a.tipo_negocio]?TIPO_BY[a.tipo_negocio]:null;
+  bnImagen=b.imagen_url||''; bnQuitada=false; window._bnVistaPrevia=''; window._disenoActual=null;
+  var otras=COL.filter(function(x){return x.banner_id===b.id&&x.id!==c.id}).length;
+  abrirModal('Editar · '+b.nombre+' · '+nombrePueblo(c),
+    '<div class="sheet-note"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+(tn?' · '+esc(tn.nombre)+(tn.exclusivo?' (exclusivo por pueblo)':' (sin exclusividad)'):'')+'</div>'
+    +'<div class="sec-title" style="margin-top:0">Contenido del banner</div>'
+    +'<div class="field"><label>Nombre (título) *</label><input type="text" id="bn_nombre" value="'+esc(b.nombre||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Descripción corta <span style="font-weight:400;text-transform:none;letter-spacing:0">(se ve en la barra, ~60 caracteres)</span></label><input type="text" id="bn_desc" value="'+esc(b.descripcion||'')+'" oninput="previewBanner()"></div>'
+    +'<div class="field"><label>Texto largo</label><textarea id="bn_texto" oninput="previewBanner()">'+esc(b.texto||'')+'</textarea></div>'
+    +'<div class="field"><label>Enlace <span style="font-weight:400;text-transform:none;letter-spacing:0">(https://…, mailto: o tel:)</span></label><input type="text" id="bn_url" value="'+esc(b.url_destino||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Imagen</label><input type="file" id="bn_img" accept="image/*" onchange="elegirImagenBanner(this)">'
+    +'<button type="button" class="btn-sec" id="bn_quitar" style="margin-top:6px;'+(bnImagen?'':'display:none')+'" data-act="quitar-img">✕ Quitar imagen</button></div>'
+    +'<div class="prev" id="bn_prev"></div>'
+    +'<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="bn_activo"'+(b.activo!==false?' checked':'')+'> Banner visible (si se desmarca, no sale en ningún pueblo)</label>'
+    +(otras>0?'<div class="warn" style="background:rgba(37,99,235,.08);color:inherit"><b>Este contenido se usa en '+(otras+1)+' filas (pueblos o fechas).</b> Si lo cambias:'
+      +'<label class="chk" style="margin-top:6px"><input type="radio" name="ln_alcance" value="todos" checked> Aplicar el cambio a todas las filas</label>'
+      +'<label class="chk" style="margin-top:4px"><input type="radio" name="ln_alcance" value="esta"> Solo en esta fila (se crea una copia del banner)</label></div>':'')
+    +'<div class="sec-title">Pueblo y fechas</div>'
+    +'<div class="field"><label>Pueblo</label><select id="ln_mun" onchange="avisoConflictos()">'+optsMunicipios(c.municipio_id||'_todos')+'</select>'+bloqueNuevoPueblo()+'</div>'
+    +camposColocacion(c,false)
+    +'<button class="btn-main" style="width:100%" id="ln_guardar" data-act="guardar-linea" data-id="'+esc(c.id)+'" data-banner="'+esc(b.id)+'">Guardar cambios</button>');
+  previewBanner(); avisoConflictos();
+}
+async function guardarLinea(id){
+  var c=COL_BY[id], b=BAN_BY[c.banner_id]; if(!c||!b) return;
+  var nombre=val('bn_nombre'), url=val('bn_url');
+  if(!nombre){toast('El nombre es obligatorio',true);return;}
+  if(url&&!/^(https?:\/\/|mailto:|tel:)/i.test(url)){toast('El enlace debe empezar por https://, mailto: o tel:',true);return;}
+  var comun=datosColocacion();
+  if(!comun.fecha_inicio){toast('Indica la fecha de inicio',true);return;}
+  if(comun.fecha_fin&&comun.fecha_fin<comun.fecha_inicio){toast('La fecha de fin no puede ser anterior a la de inicio',true);return;}
+  var mun=val('ln_mun'); comun.municipio_id=(mun==='_todos'||!mun)?null:mun;
+  var cs=(['pendiente_pago','confirmada','pausada'].indexOf(comun.estado)>=0)?conflictos(b.id,[comun.municipio_id],comun.fecha_inicio,comun.fecha_fin,id):[];
+  if(cs.length){toast('Hay huecos ocupados: revisa el aviso',true);return;}
+  var btn=document.getElementById('ln_guardar'); btn.disabled=true;
+  var copiaId=null;
+  try{
+    var f=document.getElementById('bn_img'); f=f&&f.files&&f.files[0];
+    var contenido={nombre:nombre,descripcion:val('bn_desc')||null,texto:val('bn_texto')||null,url_destino:url||null,activo:document.getElementById('bn_activo').checked};
+    var imagen=b.imagen_url||null;
+    if(f) imagen=await subirImagenBanner(f); else if(bnQuitada) imagen=null;
+    var cambio=contenido.nombre!==b.nombre||contenido.descripcion!==(b.descripcion||null)||contenido.texto!==(b.texto||null)||contenido.url_destino!==(b.url_destino||null)||contenido.activo!==(b.activo!==false)||imagen!==(b.imagen_url||null);
+    var otras=COL.filter(function(x){return x.banner_id===b.id&&x.id!==id}).length;
+    var radio=document.querySelector('input[name=ln_alcance]:checked'); var soloEsta=otras>0&&radio&&radio.value==='esta';
+    if(cambio&&soloEsta){
+      // Copia del banner solo para esta fila
+      var rc=await fetch(SB_URL+'/rest/v1/banners',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify(Object.assign({anunciante_id:b.anunciante_id,imagen_url:imagen},contenido))});
+      var dc=await rc.json(); if(!rc.ok) throw new Error((dc&&dc.message)||'Error al copiar el banner');
+      copiaId=dc[0].id; comun.banner_id=copiaId;
+    }
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(comun)});
+    if(!res.ok) throw new Error(errorColocacion(await res.text()));
+    if(cambio&&!soloEsta){
+      var rb=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(b.id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(Object.assign({imagen_url:imagen},contenido))});
+      if(!rb.ok) throw new Error(await rb.text());
+    }
+    cerrarModal(); toast('Cambios guardados'); await cargarTodo();
+  }catch(e){
+    if(copiaId){ try{ await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(copiaId),{method:'DELETE',headers:H()}); }catch(x){} }
+    btn.disabled=false; toast('Error: '+e.message,true);
+  }
+}
+
+// ── Añadir un pueblo que no está en la lista ──
+function toggleNuevoPueblo(){ var bx=document.getElementById('np_box'); if(bx) bx.style.display=bx.style.display==='none'?'block':'none'; }
+async function guardarPueblo(){
+  var nombre=val('np_nombre'), prov=val('np_prov');
+  if(!nombre){toast('Escribe el nombre del pueblo',true);return;}
+  if(MUN.some(function(m){return norm(m.nombre)===norm(nombre)})){toast('Ese pueblo ya está en la lista',true);return;}
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/municipios',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=representation'}),body:JSON.stringify({nombre:nombre,provincia:prov||null,activo:true,orden:MUN.length+1})});
+    var d=await res.json(); if(!res.ok) throw new Error((d&&d.message)||'Error al añadir el pueblo');
+    MUN.push(d[0]); MUN_BY[d[0].id]=d[0];
+    refrescarPueblos(d[0].id); rellenarFiltros(); toast('Pueblo añadido');
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+function refrescarPueblos(nuevoId){
+  var sel=document.getElementById('ln_mun');
+  if(sel){ sel.innerHTML=optsMunicipios(nuevoId||sel.value); sel.value=nuevoId||sel.value; }
+  var lista=document.getElementById('co_mun_list');
+  if(lista){
+    var marcados={}; lista.querySelectorAll('.co_mun:checked').forEach(function(x){marcados[x.value]=true});
+    if(nuevoId) marcados[nuevoId]=true;
+    var t=document.getElementById('co_todos'); var todos=t&&t.checked;
+    lista.innerHTML=checksMunicipios();
+    lista.querySelectorAll('.co_mun').forEach(function(x){ x.checked=!todos&&!!marcados[x.value]; x.disabled=!!todos; });
+  }
+  ['np_nombre','np_prov'].forEach(function(i){var e=document.getElementById(i); if(e) e.value='';});
+  var bx=document.getElementById('np_box'); if(bx) bx.style.display='none';
+  avisoConflictos();
+}
+async function cambiarEstadoCol(id,estado,pregunta){
+  if(pregunta&&!confirm(pregunta)) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado})});
+    if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('colocaciones_exclusividad')>=0?'Ese hueco ya está ocupado por otro anunciante del mismo tipo':t); }
+    toast('Estado actualizado'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── Métricas de una colocación ──
+function modalMetricasCol(id){
+  var c=COL_BY[id], b=c?BAN_BY[c.banner_id]:null; if(!c||!b) return;
+  var filas=(MET_BY[id]||[]).slice().sort(function(x,y){return String(y.fecha).localeCompare(String(x.fecha))});
+  var t=sumar(filas);
+  var porMun={}; filas.forEach(function(m){var k=m.municipio||'(sin pueblo)';var p=porMun[k]=porMun[k]||{v:0,a:0,c:0};p.v+=m.vistas;p.a+=m.aperturas;p.c+=m.clics});
+  abrirModal('Métricas · '+b.nombre,
+    '<div class="sheet-note">'+esc(nombrePueblo(c))+' · '+fmtF(c.fecha_inicio)+' → '+(c.fecha_fin?fmtF(c.fecha_fin):'sin fin')+'</div>'
+    +'<div class="stats-grid"><div class="stat-card"><div class="stat-num">'+t.v+'</div><div class="stat-label">Vistas</div></div><div class="stat-card"><div class="stat-num">'+t.a+'</div><div class="stat-label">Aperturas</div></div><div class="stat-card"><div class="stat-num">'+t.c+'</div><div class="stat-label">Clics</div></div><div class="stat-card"><div class="stat-num">'+ctr(t)+'</div><div class="stat-label">CTR</div></div></div>'
+    +(Object.keys(porMun).length>1||!c.municipio_id?'<div class="sec-title" style="margin-top:6px">Por pueblo donde se ha visto</div>'+Object.keys(porMun).map(function(k){return filaRank(k,'',porMun[k])}).join(''):'')
+    +'<div class="sec-title">Por día</div>'+(filas.length?filas.map(function(m){return filaRank(fmtF(m.fecha)+(m.municipio?' · '+m.municipio:''),'',{v:m.vistas,a:m.aperturas,c:m.clics})}).join(''):'<div class="empty-slot">Aún sin datos</div>'));
+}
+
+// ── DISEÑOS DE BANNER ──
+const ESTADOS_DIS={solicitado:'Solicitado',en_curso:'En curso',entregado:'Entregado',aprobado:'Aprobado',cancelado:'Cancelado'};
+function enlaceHttps(u){ return /^https:\/\//i.test(String(u||''))?String(u):''; }
+function avisoFaseB(){ return '<div class="empty-slot">Esta sección necesita aplicar la migración <b>2026-11-09_publi_faq_facturas_disenos.sql</b> en Supabase.</div>'; }
+function nombreDisenador(d){ var x=d.disenador_id?DISENADORES.filter(function(y){return y.id===d.disenador_id})[0]:null; return x?x.nombre:''; }
+
+function renderDisenos(){
+  var cont=document.getElementById('disList'); if(!cont) return;
+  if(!faseB){cont.innerHTML=avisoFaseB();return;}
+  var fe=document.getElementById('fd_estado').value;
+  var lista=DIS.filter(function(d){return !fe||d.estado===fe});
+  if(!DIS.length){cont.innerHTML='<div class="empty-slot">Aún no hay solicitudes de diseño.</div>';return;}
+  if(!lista.length){cont.innerHTML='<div class="empty-slot">Ninguna solicitud con ese estado</div>';return;}
+  cont.innerHTML=lista.map(function(d){
+    var a=ANUN_BY[d.anunciante_id], b=d.banner_id?BAN_BY[d.banner_id]:null, img=enlaceHttps(d.entrega_url), dis=nombreDisenador(d);
+    var acts='<button data-act="edit-dis" data-id="'+esc(d.id)+'">✏️ Editar</button>';
+    if(d.estado==='solicitado') acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="en_curso">▶ Empezar</button>';
+    if(d.estado==='en_curso'&&img) acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="entregado">📦 Marcar entregado</button>';
+    if(d.estado==='entregado') acts+='<button data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="aprobado">✅ Aprobado</button>';
+    if(img&&!d.banner_id&&d.estado!=='cancelado') acts+='<button data-act="banner-de-dis" data-id="'+esc(d.id)+'">🖼 Crear banner con la entrega</button>';
+    if(d.estado!=='cancelado'&&d.estado!=='aprobado') acts+='<button class="danger" data-act="dis-estado" data-id="'+esc(d.id)+'" data-estado="cancelado">Cancelar</button>';
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(a?a.nombre:'(anunciante borrado)')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> · '+fmtF(d.created_at)+(d.precio!=null?' · '+esc(d.precio)+' €':'')+'</div></div>'
+      +'<span class="badge st-'+esc(d.estado)+'">'+esc(ESTADOS_DIS[d.estado]||d.estado)+'</span></div>'
+      +'<div class="pc-line" style="white-space:pre-line">'+esc(String(d.briefing||'').slice(0,240))+'</div>'
+      +'<div class="pc-line"><span class="tag">'+(d.origen==='disenador'?'Diseñador: '+esc(dis||'sin asignar'):'Kirolorik')+'</span>'+(b?'<span class="tag">Banner: '+esc(b.nombre)+'</span>':'')+'</div>'
+      +'<div class="pc-act">'+acts+'</div></div>';
+  }).join('');
+}
+function modalDiseno(d){
+  var n=d||{};
+  var opAn='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'"'+(a.id===n.anunciante_id?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  var activos=DISENADORES.filter(function(x){return x.activo||x.id===n.disenador_id});
+  var opDis='<option value="">— Sin asignar —</option>'+activos.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===n.disenador_id?' selected':'')+'>'+esc(x.nombre)+'</option>'}).join('');
+  var estados=Object.keys(ESTADOS_DIS).map(function(e){return '<option value="'+e+'"'+((n.estado||'solicitado')===e?' selected':'')+'>'+esc(ESTADOS_DIS[e])+'</option>'}).join('');
+  abrirModal(d?'Editar solicitud de diseño':'Nueva solicitud de diseño',
+    '<div class="field"><label>Anunciante *</label><select id="ds_anun">'+opAn+'</select></div>'
+    +'<div class="field"><label>Qué quiere anunciar *</label><textarea id="ds_briefing" placeholder="Oferta, mensaje, tono, a quién va dirigido…">'+esc(n.briefing||'')+'</textarea></div>'
+    +'<div class="field"><label>Referencias <span style="font-weight:400;text-transform:none;letter-spacing:0">(logotipo, colores, enlaces, ejemplos)</span></label><textarea id="ds_ref">'+esc(n.referencias||'')+'</textarea></div>'
+    +'<div class="row2"><div class="field"><label>Lo hace</label><select id="ds_origen"><option value="kirolorik"'+(n.origen!=='disenador'?' selected':'')+'>Kirolorik</option><option value="disenador"'+(n.origen==='disenador'?' selected':'')+(activos.length?'':' disabled')+'>Diseñador colaborador'+(activos.length?'':' (aún no hay)')+'</option></select></div>'
+    +'<div class="field"><label>Diseñador</label><select id="ds_disenador">'+opDis+'</select></div></div>'
+    +'<div class="row2"><div class="field"><label>Estado</label><select id="ds_estado">'+estados+'</select></div>'
+    +'<div class="field"><label>Precio (€)</label><input type="number" step="0.01" min="0" id="ds_precio" value="'+esc(n.precio!=null?n.precio:'')+'"></div></div>'
+    +'<div class="field"><label>Entrega (imagen final)</label><input type="file" id="ds_img" accept="image/*"><div class="sheet-note" style="margin:4px 0 0">'+(enlaceHttps(n.entrega_url)?'Entrega actual: <a href="'+esc(enlaceHttps(n.entrega_url))+'" target="_blank" rel="noopener noreferrer">ver imagen</a>. Si subes otra, la sustituye.':'Sube aquí la imagen cuando esté lista.')+'</div></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="ds_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<button class="btn-main" style="width:100%" id="ds_guardar" data-act="guardar-dis" data-id="'+esc(d?d.id:'')+'">Guardar solicitud</button>');
+}
+async function guardarDiseno(id){
+  var anun=val('ds_anun'), brief=val('ds_briefing');
+  if(!anun){toast('Elige el anunciante',true);return;}
+  if(!brief){toast('Cuenta qué quiere anunciar',true);return;}
+  var origen=val('ds_origen'), dis=val('ds_disenador');
+  if(origen==='disenador'&&!dis&&val('ds_estado')!=='solicitado'){toast('Asigna un diseñador o deja el estado en «Solicitado»',true);return;}
+  var btn=document.getElementById('ds_guardar'); btn.disabled=true;
+  try{
+    var datos={anunciante_id:anun,briefing:brief,referencias:val('ds_ref')||null,origen:origen,disenador_id:origen==='disenador'?(dis||null):null,estado:val('ds_estado'),precio:val('ds_precio')!==''?parseFloat(val('ds_precio')):null,notas:val('ds_notas')||null};
+    var f=document.getElementById('ds_img'); f=f&&f.files&&f.files[0];
+    if(f) datos.entrega_url=await subirImagenBanner(f);
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Solicitud guardada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function estadoDiseno(id,estado){
+  if(estado==='cancelado'&&!confirm('¿Cancelar esta solicitud de diseño?')) return;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banner_disenos?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado})});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Estado actualizado'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+// Crear el banner a partir de la imagen entregada
+function bannerDeDiseno(id){
+  var d=DIS.filter(function(x){return x.id===id})[0]; if(!d) return;
+  modalBanner(null,d.anunciante_id,enlaceHttps(d.entrega_url));
+  window._disenoActual=id;
+}
+
+// Diseñadores colaboradores (por ahora los das de alta tú; más adelante podrán apuntarse ellos)
+function modalDisenadores(){
+  var lista=DISENADORES.length?DISENADORES.map(function(x){
+    return '<div class="rank-row"><div><div class="rank-name">'+esc(x.nombre)+(x.activo?'':' (inactivo)')+'</div><div class="rank-meta">'+esc([x.email,x.municipio].filter(Boolean).join(' · '))+'</div></div><button class="btn-sec" data-act="edit-disenador" data-id="'+esc(x.id)+'">Editar</button></div>';
+  }).join(''):'<div class="empty-slot">Aún no hay diseñadores.</div>';
+  abrirModal('Diseñadores colaboradores',lista+'<div style="margin-top:12px"><button class="btn-main" data-act="nuevo-disenador">＋ Añadir diseñador</button></div>');
+}
+function modalDisenador(x){
+  var n=x||{};
+  abrirModal(x?'Editar diseñador':'Nuevo diseñador',
+    '<div class="field"><label>Nombre *</label><input type="text" id="dn_nombre" value="'+esc(n.nombre||'')+'"></div>'
+    +'<div class="row2"><div class="field"><label>Email</label><input type="email" id="dn_email" value="'+esc(n.email||'')+'"></div><div class="field"><label>Pueblo</label><input type="text" id="dn_mun" value="'+esc(n.municipio||'')+'"></div></div>'
+    +'<div class="field"><label>Web</label><input type="text" id="dn_web" value="'+esc(n.web||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Portfolio (enlace)</label><input type="text" id="dn_port" value="'+esc(n.portfolio_url||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Descripción</label><textarea id="dn_desc">'+esc(n.descripcion||'')+'</textarea></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="dn_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<label class="chk" style="margin-bottom:14px"><input type="checkbox" id="dn_activo"'+(n.activo?' checked':'')+'> Aceptado (se le pueden asignar trabajos)</label>'
+    +'<button class="btn-main" style="width:100%" id="dn_guardar" data-act="guardar-disenador" data-id="'+esc(x?x.id:'')+'">Guardar diseñador</button>');
+}
+async function guardarDisenador(id){
+  var nombre=val('dn_nombre'); if(!nombre){toast('El nombre es obligatorio',true);return;}
+  var web=val('dn_web'), port=val('dn_port');
+  if((web&&!/^https?:\/\//i.test(web))||(port&&!/^https?:\/\//i.test(port))){toast('Los enlaces deben empezar por https://',true);return;}
+  var btn=document.getElementById('dn_guardar'); btn.disabled=true;
+  try{
+    var datos={nombre:nombre,email:val('dn_email')||null,municipio:val('dn_mun')||null,web:web||null,portfolio_url:port||null,descripcion:val('dn_desc')||null,notas:val('dn_notas')||null,activo:document.getElementById('dn_activo').checked};
+    var res=await fetch(SB_URL+'/rest/v1/disenadores'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Diseñador guardado'); await cargarTodo(); modalDisenadores();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── FACTURAS ──
+const ESTADOS_FAC={emitida:'Emitida',pagada:'Pagada',anulada:'Anulada'};
+function eur(n){ return (n==null||n==='')?'—':Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function renderFacturas(){
+  var cont=document.getElementById('facList'); if(!cont) return;
+  var sa=document.getElementById('ff_anun'), prev=sa.value;
+  sa.innerHTML='<option value="">Todos los anunciantes</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'">'+esc(a.codigo+' · '+a.nombre)+'</option>'}).join('');
+  sa.value=prev;
+  if(!faseB){cont.innerHTML=avisoFaseB();document.getElementById('ff_count').textContent='';return;}
+  var fa=sa.value, fe=document.getElementById('ff_estado').value;
+  var lista=FAC.filter(function(x){return (!fa||x.anunciante_id===fa)&&(!fe||x.estado===fe)});
+  var total=0; lista.forEach(function(x){ if(x.estado!=='anulada') total+=Number(x.importe_total)||0; });
+  document.getElementById('ff_count').textContent=lista.length+' factura'+(lista.length===1?'':'s')+(lista.length?' · total sin anuladas: '+eur(total):'');
+  if(!FAC.length){cont.innerHTML='<div class="empty-slot">Aún no hay facturas registradas.</div>';return;}
+  if(!lista.length){cont.innerHTML='<div class="empty-slot">Ninguna factura con ese filtro</div>';return;}
+  cont.innerHTML=lista.map(function(x){
+    var a=ANUN_BY[x.anunciante_id], doc=enlaceHttps(x.url_documento);
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(x.numero||'Sin número')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(x.fecha)+'</div></div>'
+      +'<span class="badge st-'+esc(x.estado)+'">'+esc(ESTADOS_FAC[x.estado]||x.estado)+'</span></div>'
+      +(x.concepto?'<div class="pc-line">'+esc(x.concepto)+'</div>':'')
+      +'<div class="pc-metrics"><span>Base <b>'+eur(x.base_imponible)+'</b></span><span>IVA <b>'+eur(x.iva_importe)+'</b></span><span>Total <b>'+eur(x.importe_total)+'</b></span></div>'
+      +'<div class="pc-line"><span class="tag">'+(x.origen==='stripe'?'Stripe':'Manual')+'</span>'+(doc?'<a href="'+esc(doc)+'" target="_blank" rel="noopener noreferrer">📄 Ver documento</a>':'<span class="tag">Sin documento</span>')+'</div>'
+      +'<div class="pc-act"><button data-act="edit-fac" data-id="'+esc(x.id)+'">✏️ Editar</button></div></div>';
+  }).join('');
+}
+function modalFactura(x){
+  var n=x||{};
+  var op='<option value="">— Elige el anunciante —</option>'+ANUN.map(function(a){return '<option value="'+esc(a.id)+'"'+(a.id===n.anunciante_id?' selected':'')+'>'+esc(a.codigo+' · '+a.nombre+(a.cif?' ('+a.cif+')':''))+'</option>'}).join('');
+  abrirModal(x?'Editar factura':'Nueva factura',
+    '<div class="field"><label>Anunciante *</label><select id="fc_anun">'+op+'</select></div>'
+    +'<div class="row2"><div class="field"><label>Número</label><input type="text" id="fc_num" value="'+esc(n.numero||'')+'" placeholder="El de tu programa de facturación"></div>'
+    +'<div class="field"><label>Fecha *</label><input type="date" id="fc_fecha" value="'+esc(n.fecha||hoyISO())+'"></div></div>'
+    +'<div class="field"><label>Concepto</label><input type="text" id="fc_concepto" value="'+esc(n.concepto||'')+'" placeholder="Banner mensual · Eibar · noviembre"></div>'
+    +'<div class="row2"><div class="field"><label>Base imponible (€)</label><input type="number" step="0.01" min="0" id="fc_base" value="'+esc(n.base_imponible!=null?n.base_imponible:'')+'"></div>'
+    +'<div class="field"><label>IVA (€)</label><input type="number" step="0.01" min="0" id="fc_iva" value="'+esc(n.iva_importe!=null?n.iva_importe:'')+'"></div></div>'
+    +'<div class="row2"><div class="field"><label>Total (€) *</label><input type="number" step="0.01" min="0" id="fc_total" value="'+esc(n.importe_total!=null?n.importe_total:'')+'"></div>'
+    +'<div class="field"><label>Estado</label><select id="fc_estado">'+Object.keys(ESTADOS_FAC).map(function(e){return '<option value="'+e+'"'+((n.estado||'emitida')===e?' selected':'')+'>'+esc(ESTADOS_FAC[e])+'</option>'}).join('')+'</select></div></div>'
+    +'<button type="button" class="btn-sec" style="margin:-4px 0 12px" data-act="calc-iva">Calcular IVA 21 % desde la base</button>'
+    +'<div class="field"><label>Enlace al documento <span style="font-weight:400;text-transform:none;letter-spacing:0">(https://, PDF o carpeta privada)</span></label><input type="text" id="fc_url" value="'+esc(n.url_documento||'')+'" placeholder="https://"></div>'
+    +'<div class="field"><label>Notas internas</label><textarea id="fc_notas">'+esc(n.notas||'')+'</textarea></div>'
+    +'<button class="btn-main" style="width:100%" id="fc_guardar" data-act="guardar-fac" data-id="'+esc(x?x.id:'')+'">Guardar factura</button>');
+}
+function calcularIVA(){
+  var b=parseFloat(val('fc_base')); if(isNaN(b)){toast('Escribe primero la base imponible',true);return;}
+  var iva=Math.round(b*21)/100;
+  document.getElementById('fc_iva').value=iva.toFixed(2); document.getElementById('fc_total').value=(Math.round((b+iva)*100)/100).toFixed(2);
+}
+async function guardarFactura(id){
+  var anun=val('fc_anun'), total=val('fc_total'), url=val('fc_url');
+  if(!anun){toast('Elige el anunciante',true);return;}
+  if(total===''||isNaN(parseFloat(total))||parseFloat(total)<0){toast('Indica el total (0 o más)',true);return;}
+  if(url&&!/^https:\/\//i.test(url)){toast('El enlace debe empezar por https://',true);return;}
+  var num=function(i){return val(i)!==''?parseFloat(val(i)):null};
+  var btn=document.getElementById('fc_guardar'); btn.disabled=true;
+  try{
+    var datos={anunciante_id:anun,numero:val('fc_num')||null,fecha:val('fc_fecha')||hoyISO(),concepto:val('fc_concepto')||null,base_imponible:num('fc_base'),iva_importe:num('fc_iva'),importe_total:parseFloat(total),estado:val('fc_estado'),url_documento:url||null,notas:val('fc_notas')||null};
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_facturas'+(id?'?id=eq.'+encodeURIComponent(id):''),{method:id?'PATCH':'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify(datos)});
+    if(!res.ok){ var t=await res.text(); throw new Error(t.indexOf('facturas_numero_uq')>=0?'Ya existe una factura con ese número':t); }
+    cerrarModal(); toast('Factura guardada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+
+// ── SOLICITUDES DE LOS ANUNCIANTES ──
+const MESES_PLAN={mes:1,trimestre:3,'año':12};
+function planInfo(id){ return TARIFAS.filter(function(t){return t.id===id})[0]||null; }
+function planNombre(id){ var p=planInfo(id); return p?p.plan:''; }
+function sumarMeses(iso,n){
+  var p=String(iso).split('-'), y=+p[0], m=+p[1]-1, d=+p[2];
+  var t=new Date(y,m+n,1), ult=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();
+  var f=new Date(t.getFullYear(),t.getMonth(),Math.min(d,ult)); f.setDate(f.getDate()-1);   // el último día incluido
+  return f.getFullYear()+'-'+String(f.getMonth()+1).padStart(2,'0')+'-'+String(f.getDate()).padStart(2,'0');
+}
+function pendientesSol(){ return COL.filter(function(c){return c.estado==='revision'&&!c.fecha_inicio}); }
+function renderSolicitudes(){
+  var cont=document.getElementById('solList'); if(!cont) return;
+  var sc=pendientesSol(), sp=SOLP.filter(function(x){return x.estado==='pendiente'}), br=BAN.filter(function(x){return x.estado_contenido==='revision'});
+  var cuenta=document.getElementById('cuentaSol'), n=sc.length+sp.length+br.length;
+  if(cuenta){ cuenta.textContent=n; cuenta.style.display=n?'':'none'; }
+  if(!faseC){ cont.innerHTML='<div class="empty-slot">Esta sección necesita aplicar la migración <b>2026-11-11_zona_anunciantes.sql</b> en Supabase.</div>'; return; }
+  var html='<div class="sec-title" style="margin-top:0">Banners por revisar ('+br.length+')</div>';
+  html+=br.length?br.map(function(b){
+    var a=ANUN_BY[b.anunciante_id], img=enlaceHttps(b.imagen_url);
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(b.nombre)+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+'</div></div><span class="badge st-revision">En revisión</span></div>'
+      +'<div class="pc-line">'+esc(b.descripcion||'(sin descripción)')+'</div>'+(b.texto?'<div class="pc-line" style="white-space:pre-line;color:var(--muted)">'+esc(String(b.texto).slice(0,300))+'</div>':'')
+      +'<div class="pc-line">Enlace: '+esc(b.url_destino||'(contacto con Kirolorik)')+'</div>'
+      +'<div class="pc-act"><button data-act="aprobar-contenido" data-id="'+esc(b.id)+'">✅ Aprobar contenido</button><button class="danger" data-act="rechazar-contenido" data-id="'+esc(b.id)+'">✖ Rechazar</button><button data-act="edit-banner" data-id="'+esc(b.id)+'">✏️ Editar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay banners por revisar.</div>';
+  html+='<div class="sec-title">Solicitudes de visibilidad ('+sc.length+')</div>';
+  html+=sc.length?sc.map(function(c){
+    var b=BAN_BY[c.banner_id], a=b?ANUN_BY[b.anunciante_id]:null, img=b?enlaceHttps(b.imagen_url):'';
+    var p=planInfo(c.tarifa_id), cs=b&&c.municipio_id?conflictos(b.id,[c.municipio_id],hoyISO(),null,c.id):[];
+    return '<div class="pc-card"><div class="pc-top">'+(img?'<img class="thumb" src="'+esc(img)+'" alt="">':'')+'<div class="pc-main"><div class="pc-title">'+esc(b?b.nombre:'(banner borrado)')+'</div>'
+      +'<div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(c.solicitada_at||c.created_at)+'</div></div><span class="badge st-revision">En revisión</span></div>'
+      +'<div class="pc-line">📍 '+esc(nombrePueblo(c))+' · <span class="tag">'+esc(p?(PERIODOS_ADMIN[p.periodo]||p.plan):'Sin plan')+'</span><span class="tag">'+esc(RENOVACION[c.modo_renovacion]||c.modo_renovacion)+'</span></div>'
+      +(b&&b.estado_contenido!=='aprobado'?'<div class="warn" style="margin-top:8px">⚠️ El contenido del banner no está aprobado ('+esc(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+'): apruébalo antes de aprobar la solicitud.</div>':'')
+      +(cs.length?'<div class="warn" style="margin-top:8px">⚠️ Hueco ocupado hoy en ese pueblo por otro anunciante del mismo tipo: podrás aprobarla para después.</div>':'')
+      +'<div class="pc-act"><button data-act="aprobar" data-id="'+esc(c.id)+'">✅ Aprobar…</button><button class="danger" data-act="rechazar" data-id="'+esc(c.id)+'">✖ Rechazar</button><button data-act="edit-linea" data-id="'+esc(c.id)+'">✏️ Ver y editar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay solicitudes pendientes.</div>';
+  html+='<div class="sec-title">Pueblos nuevos que piden ('+sp.length+')</div>';
+  html+=sp.length?sp.map(function(x){
+    var a=ANUN_BY[x.anunciante_id];
+    return '<div class="pc-card"><div class="pc-top"><div class="pc-main"><div class="pc-title">'+esc(x.nombre)+(x.provincia?' ('+esc(x.provincia)+')':'')+'</div><div class="pc-sub"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · '+fmtF(x.created_at)+'</div></div></div>'
+      +'<div class="pc-act"><button data-act="pueblo-ok" data-id="'+esc(x.id)+'">➕ Añadir pueblo</button><button class="danger" data-act="pueblo-no" data-id="'+esc(x.id)+'">✖ Rechazar</button></div></div>';
+  }).join(''):'<div class="empty-slot">No hay pueblos pendientes.</div>';
+  cont.innerHTML=html;
+}
+const ESTADOS_CONT_ADMIN={borrador:'borrador',revision:'en revisión',aprobado:'aprobado',rechazado:'rechazado'};
+const PERIODOS_ADMIN={mes:'Mensual · 1 mes',trimestre:'Trimestral · 3 meses','año':'Anual · 12 meses'};
+
+function modalAprobar(id){
+  var c=COL_BY[id], b=c?BAN_BY[c.banner_id]:null; if(!c||!b) return;
+  if(b.estado_contenido!=='aprobado'){ toast('Primero hay que aprobar el contenido del banner (estado actual: '+(ESTADOS_CONT_ADMIN[b.estado_contenido]||b.estado_contenido)+')',true); return; }
+  var a=ANUN_BY[b.anunciante_id], p=planInfo(c.tarifa_id), n=p?MESES_PLAN[p.periodo]:0, ini=hoyISO();
+  var img=enlaceHttps(b.imagen_url);
+  abrirModal('Aprobar solicitud',
+    '<div class="prev"><div class="prev-bar"><span class="t">Publicidad</span><span>📣</span><span style="min-width:0"><div class="n">'+esc(b.nombre)+'</div><div class="s">'+esc(b.descripcion||'')+'</div></span></div>'
+      +(img?'<img src="'+esc(img)+'" alt="">':'<div class="pc-sub" style="margin-top:6px">Sin imagen</div>')+(b.texto?'<div class="l">'+esc(b.texto)+'</div>':'')
+      +'<div class="pc-sub" style="margin-top:6px">Enlace: '+esc(b.url_destino||'(contacto con Kirolorik)')+'</div></div>'
+    +'<div class="sheet-note"><span class="cod">'+esc(a?a.codigo:'')+'</span> '+esc(a?a.nombre:'')+' · 📍 '+esc(nombrePueblo(c))+' · '+esc(p?(PERIODOS_ADMIN[p.periodo]||p.plan):'sin plan')+' · '+esc(RENOVACION[c.modo_renovacion]||'')+'</div>'
+    +'<div class="row2"><div class="field"><label>Empieza el *</label><input type="date" id="ap_ini" value="'+esc(ini)+'" oninput="recalcularFin()"></div>'
+    +'<div class="field"><label>Termina el</label><input type="date" id="ap_fin" value="'+esc(n?sumarMeses(ini,n):'')+'" oninput="avisoAprobar()"></div></div>'
+    +'<div class="sheet-note">La fecha de fin se calcula según el plan ('+(n?n+(n===1?' mes':' meses'):'sin plan')+'); puedes cambiarla.</div>'
+    +'<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="ap_pagada"> Ya está pagada: confirmar directamente (si no, queda «pendiente de pago» y reserva el hueco)</label>'
+    +'<div id="ap_aviso"></div>'
+    +'<button class="btn-main" style="width:100%" id="ap_guardar" data-act="guardar-aprobar" data-id="'+esc(c.id)+'" data-n="'+(n||0)+'">Aprobar solicitud</button>');
+  avisoAprobar();
+}
+function recalcularFin(){
+  var b=document.getElementById('ap_guardar'), n=parseInt(b.getAttribute('data-n'),10)||0, ini=val('ap_ini');
+  if(n&&ini) document.getElementById('ap_fin').value=sumarMeses(ini,n);
+  avisoAprobar();
+}
+function avisoAprobar(){
+  var b=document.getElementById('ap_guardar'); if(!b) return;
+  var c=COL_BY[b.getAttribute('data-id')], bn=BAN_BY[c.banner_id];
+  var cs=conflictos(bn.id,[c.municipio_id],val('ap_ini'),val('ap_fin'),c.id);
+  document.getElementById('ap_aviso').innerHTML=cs.length?'<div class="warn">⚠️ Hueco ocupado en esas fechas:<ul>'+cs.map(function(x){var b2=BAN_BY[x.col.banner_id],a2=b2?ANUN_BY[b2.anunciante_id]:null;return '<li>'+esc(a2?a2.nombre:'')+' ('+fmtF(x.col.fecha_inicio)+' → '+(x.col.fecha_fin?fmtF(x.col.fecha_fin):'sin fin')+')</li>'}).join('')+'</ul>Cambia las fechas o rechaza la solicitud.</div>':'';
+}
+async function guardarAprobar(id){
+  var c=COL_BY[id], ini=val('ap_ini'), fin=val('ap_fin');
+  if(!ini){toast('Indica la fecha de inicio',true);return;}
+  if(fin&&fin<ini){toast('La fecha de fin no puede ser anterior a la de inicio',true);return;}
+  if(conflictos(c.banner_id,[c.municipio_id],ini,fin,id).length){toast('Hay un hueco ocupado en esas fechas',true);return;}
+  var btn=document.getElementById('ap_guardar'); btn.disabled=true;
+  try{
+    var estado=document.getElementById('ap_pagada').checked?'confirmada':'pendiente_pago';
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:estado,fecha_inicio:ini,fecha_fin:fin||null})});
+    if(!res.ok) throw new Error(errorColocacion(await res.text()));
+    // el banner pasa a ser visible (solo sale en portada con una colocación confirmada en vigor)
+    var rb=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(c.banner_id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({activo:true})});
+    if(!rb.ok) throw new Error(await rb.text());
+    cerrarModal(); toast(estado==='confirmada'?'Aprobada y confirmada':'Aprobada: pendiente de pago'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function aprobarContenido(id){
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado_contenido:'aprobado',motivo_rechazo:null})});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Contenido aprobado: el anunciante ya puede solicitar visibilidad'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+function modalRechazarContenido(id){
+  abrirModal('Rechazar el contenido del banner','<div class="field"><label>Motivo (lo verá el anunciante)</label><textarea id="rcc_motivo" placeholder="Por ejemplo: la imagen no es legible o el texto no es válido…"></textarea></div><button class="btn-main" style="width:100%" id="rcc_guardar" data-act="guardar-rechazo-contenido" data-id="'+esc(id)+'">Rechazar contenido</button>');
+}
+async function guardarRechazoContenido(id){
+  var m=val('rcc_motivo'); if(!m){toast('Indica el motivo',true);return;}
+  var btn=document.getElementById('rcc_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/banners?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado_contenido:'rechazado',motivo_rechazo:m})});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Contenido rechazado'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+function modalRechazar(id){
+  abrirModal('Rechazar solicitud','<div class="field"><label>Motivo (lo verá el anunciante)</label><textarea id="rc_motivo" placeholder="Por ejemplo: la imagen no cumple…"></textarea></div><button class="btn-main" style="width:100%" id="rc_guardar" data-act="guardar-rechazo" data-id="'+esc(id)+'">Rechazar solicitud</button>');
+}
+async function guardarRechazo(id){
+  var m=val('rc_motivo'); if(!m){toast('Indica el motivo',true);return;}
+  var btn=document.getElementById('rc_guardar'); btn.disabled=true;
+  try{
+    var res=await fetch(SB_URL+'/rest/v1/colocaciones?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:'rechazada',motivo_rechazo:m})});
+    if(!res.ok) throw new Error(await res.text());
+    cerrarModal(); toast('Solicitud rechazada'); await cargarTodo();
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function resolverPueblo(id,aceptar){
+  var x=SOLP.filter(function(y){return y.id===id})[0]; if(!x) return;
+  try{
+    if(aceptar){
+      if(MUN.some(function(m){return norm(m.nombre)===norm(x.nombre)})){ /* ya existe: solo se marca */ }
+      else{
+        var r=await fetch(SB_URL+'/rest/v1/municipios',{method:'POST',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({nombre:x.nombre,provincia:x.provincia||null,activo:true,orden:MUN.length+1})});
+        if(!r.ok) throw new Error(await r.text());
+      }
+    }
+    var res=await fetch(SB_URL+'/rest/v1/anunciante_solicitudes?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:Object.assign(H(),{'Prefer':'return=minimal'}),body:JSON.stringify({estado:aceptar?'anadido':'rechazado'})});
+    if(!res.ok) throw new Error(await res.text());
+    toast(aceptar?'Pueblo añadido':'Solicitud rechazada'); await cargarTodo();
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── ACCESOS DE ANUNCIANTES (función admin-users v1.1) ──
+async function llamarAdmin(body){
+  var res=await fetch(SB_URL+'/functions/v1/admin-users',{method:'POST',headers:{'Authorization':'Bearer '+authToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var d={}; try{ d=await res.json(); }catch(e){}
+  if(!res.ok){
+    if(d.error==='Acción no reconocida') throw new Error('La función admin-users aún no está actualizada a la v1.1 (docs/edge-functions/admin-users.ts)');
+    throw new Error(d.error||'Error');
+  }
+  return d;
+}
+async function modalAccesos(id,credencial){
+  var a=ANUN_BY[id]; if(!a) return;
+  var lista='<div class="empty-slot">Cargando...</div>';
+  abrirModal('Acceso · '+a.nombre,'<div id="ac_lista">'+lista+'</div><div id="ac_cred">'+(credencial||'')+'</div>'
+    +'<div class="sec-title">Crear un acceso nuevo</div>'
+    +'<div class="field"><label>Email *</label><input type="email" id="ac_email"></div>'
+    +'<div class="field"><label>Contraseña inicial <span style="font-weight:400;text-transform:none;letter-spacing:0">(mín. 8; vacío = se genera una)</span></label><input type="text" id="ac_pass" autocomplete="off"></div>'
+    +'<button class="btn-main" style="width:100%" id="ac_crear" data-act="crear-acceso" data-id="'+esc(id)+'">Crear acceso</button>'
+    +'<div class="sec-title">…o vincular un usuario que ya existe</div>'
+    +'<div class="field"><label>Email del usuario</label><input type="email" id="ac_email2"></div>'
+    +'<button class="btn-sec" id="ac_vincular" data-act="vincular-acceso" data-id="'+esc(id)+'">Vincular a este anunciante</button>'
+    +'<div class="sheet-note" style="margin-top:12px">El anunciante entra en <b>/pages/anunciantes.html</b> con su email y esa contraseña, y puede cambiarla desde su perfil o con «¿Has olvidado la contraseña?».</div>');
+  try{
+    var d=await llamarAdmin({action:'accesos',anunciante_id:id}), el=document.getElementById('ac_lista'); if(!el) return;
+    el.innerHTML=d.accesos.length?d.accesos.map(function(x){
+      return '<div class="rank-row"><div><div class="rank-name">'+esc(x.email||x.user_id)+'</div><div class="rank-meta">'+esc(x.rol)+(x.ultimo_acceso?' · último acceso '+fmtF(x.ultimo_acceso):' · aún no ha entrado')+'</div></div><button class="btn-sec" data-act="quitar-acceso" data-id="'+esc(id)+'" data-user="'+esc(x.user_id)+'">Quitar</button></div>';
+    }).join(''):'<div class="empty-slot">Este anunciante aún no tiene accesos.</div>';
+  }catch(e){ var el2=document.getElementById('ac_lista'); if(el2) el2.innerHTML='<div class="warn">'+esc(e.message)+'</div>'; }
+}
+async function crearAcceso(id){
+  var email=val('ac_email'), pass=val('ac_pass');
+  if(!email){toast('Escribe el email',true);return;}
+  var btn=document.getElementById('ac_crear'); btn.disabled=true;
+  try{
+    var d=await llamarAdmin({action:'create_user',email:email,password:pass||null,anunciante_id:id});
+    var cred='<div class="cred">✅ Acceso creado.<br>Usuario: <code>'+esc(d.email)+'</code><br>Contraseña: <code>'+esc(d.password||pass)+'</code>'+(d.password?'<br><b>Cópiala ahora: no se vuelve a mostrar.</b>':'')+'<br>Dirección: <code>'+esc(location.origin)+'/pages/anunciantes.html</code></div>';
+    toast('Acceso creado'); await modalAccesos(id,cred);
+  }catch(e){ btn.disabled=false; toast('Error: '+e.message,true); }
+}
+async function vincularAcceso(id){
+  var email=val('ac_email2'); if(!email){toast('Escribe el email del usuario',true);return;}
+  try{ await llamarAdmin({action:'link_user',email:email,anunciante_id:id}); toast('Usuario vinculado'); await modalAccesos(id); }
+  catch(e){ toast('Error: '+e.message,true); }
+}
+async function quitarAcceso(id,userId){
+  if(!confirm('¿Quitar este acceso? El usuario no se borra, solo deja de ver este anunciante.')) return;
+  try{ await llamarAdmin({action:'unlink_user',target_user_id:userId,anunciante_id:id}); toast('Acceso quitado'); await modalAccesos(id); }
+  catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── ACCIONES (un único listener; los datos viajan en data-*) ──
+document.addEventListener('click',function(ev){
+  var per=ev.target.closest?ev.target.closest('#periodoBtns button'):null;
+  if(per){ periodoDias=parseInt(per.getAttribute('data-per'),10)||0; document.querySelectorAll('#periodoBtns button').forEach(function(x){x.classList.toggle('on',x===per)}); renderMetricas(); return; }
+  var b=ev.target.closest?ev.target.closest('[data-act]'):null; if(!b) return;
+  var act=b.getAttribute('data-act'), id=b.getAttribute('data-id');
+  if(act==='cerrar') cerrarModal();
+  else if(act==='nuevo-banner') modalBanner(null,'');
+  else if(act==='nuevo-banner-de') modalBanner(null,id);
+  else if(act==='nuevo-anun') modalAnunciante(null);
+  else if(act==='edit-anun') modalAnunciante(ANUN_BY[id]);
+  else if(act==='guardar-anun') guardarAnunciante(id);
+  else if(act==='edit-banner') modalBanner(BAN_BY[id],'');
+  else if(act==='guardar-banner') guardarBanner(id);
+  else if(act==='quitar-img') quitarImagenBanner();
+  else if(act==='add-col') modalColocacion(null,id);
+  else if(act==='edit-col'||act==='edit-linea') modalLinea(COL_BY[id]);
+  else if(act==='guardar-linea') guardarLinea(id);
+  else if(act==='dup-col') modalColocacion(null,COL_BY[id].banner_id,COL_BY[id]);
+  else if(act==='toggle-pueblo') toggleNuevoPueblo();
+  else if(act==='guardar-pueblo') guardarPueblo();
+  else if(act==='guardar-col') guardarColocacion(id,b.getAttribute('data-banner'));
+  else if(act==='pausar') cambiarEstadoCol(id,'pausada');
+  else if(act==='reanudar'||act==='confirmar') cambiarEstadoCol(id,'confirmada');
+  else if(act==='cancelar') cambiarEstadoCol(id,'cancelada','¿Cancelar esta colocación? Dejará de mostrarse y liberará el hueco (las métricas se conservan).');
+  else if(act==='metricas-col') modalMetricasCol(id);
+  else if(act==='csv') descargarCSV();
+  else if(act==='nuevo-dis') modalDiseno(null);
+  else if(act==='edit-dis') modalDiseno(DIS.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-dis') guardarDiseno(id);
+  else if(act==='dis-estado') estadoDiseno(id,b.getAttribute('data-estado'));
+  else if(act==='banner-de-dis') bannerDeDiseno(id);
+  else if(act==='disenadores') modalDisenadores();
+  else if(act==='nuevo-disenador') modalDisenador(null);
+  else if(act==='edit-disenador') modalDisenador(DISENADORES.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-disenador') guardarDisenador(id);
+  else if(act==='nueva-fac') modalFactura(null);
+  else if(act==='edit-fac') modalFactura(FAC.filter(function(x){return x.id===id})[0]);
+  else if(act==='guardar-fac') guardarFactura(id);
+  else if(act==='calc-iva') calcularIVA();
+  else if(act==='aprobar') modalAprobar(id);
+  else if(act==='aprobar-contenido') aprobarContenido(id);
+  else if(act==='rechazar-contenido') modalRechazarContenido(id);
+  else if(act==='guardar-rechazo-contenido') guardarRechazoContenido(id);
+  else if(act==='guardar-aprobar') guardarAprobar(id);
+  else if(act==='rechazar') modalRechazar(id);
+  else if(act==='guardar-rechazo') guardarRechazo(id);
+  else if(act==='pueblo-ok') resolverPueblo(id,true);
+  else if(act==='pueblo-no') resolverPueblo(id,false);
+  else if(act==='accesos') modalAccesos(id);
+  else if(act==='crear-acceso') crearAcceso(id);
+  else if(act==='vincular-acceso') vincularAcceso(id);
+  else if(act==='quitar-acceso') quitarAcceso(id,b.getAttribute('data-user'));
+});
+
+// ── INIT ──
+var savedToken=KBS.get('kb_admin_token');
+var savedUser=KBS.get('kb_admin_user');
+if(savedToken&&savedUser){
+  authToken=savedToken;
+  try{ authUser=JSON.parse(savedUser); }catch(e){ authUser=null; }
+  if(authUser&&authUser.email===ADMIN_EMAIL){
+    if(jwtExp(savedToken)-Date.now()<60000){
+      refrescarSesion().then(function(ok){ if(ok) mostrarAdmin(); else sesionCaducada(); });
+    }else mostrarAdmin();
+  }else{
+    mostrarDenegado();
+  }
+}else{
+  document.getElementById('loginScreen').style.display='flex';
+}
+</script>
+
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">publicidad v1.06</div>
+<script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" · "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
+</body>
+</html>
