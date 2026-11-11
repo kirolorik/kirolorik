@@ -1,8 +1,8 @@
 <!--
 Proyecto: Kirolorik
 Archivo: index.html
-Versión: v6.49
-Fecha: 2026-11-14
+Versión: v6.50
+Fecha: 2026-11-15
 Descripción: Parrilla principal. v6.27: el botón del banner abre webs externas en pestaña nueva
 (los mailto: y tel: no) y registra cada clic en la tabla banner_clicks de Supabase.
 v6.28: eliminado un </div> sobrante antes de la barra inferior.
@@ -25,6 +25,7 @@ cartel arriba.
 v6.39: las filas con lugar o nombres largos ya no ensanchan la lista (la palabra Gratis quedaba fuera de la pantalla).
 v6.40: sin conexión (p. ej. bloqueo de IPs de Cloudflare en días de partido) la portada muestra los últimos eventos guardados en el
 móvil con un aviso; el service worker guarda también las hojas de estilo y los scripts.
+v6.50: los enlaces del pie pasan de «Para clubes» y «Para anunciantes» a «Clubes» y «Anunciantes».
 v6.49: la portada ya no tiene opción de usuario (sin botón ni panel de inicio de sesión); el pie enlaza a «Para clubes» (/pages/clubes.html) y «Para anunciantes» (/pages/anunciantes.html); se borra cualquier sesión antigua guardada en el dispositivo.
 v6.48: tablas con nombres normalizados (equipos, analitica_visitas, analitica_eventos, banner_disenos, anunciante_facturas, anunciante_solicitudes, anunciante_gestores).
 v6.47: con «Todos los municipios» (sin pueblo elegido) solo salen los banners de «todos los pueblos»: ni los de pueblos concretos ni los de los visitantes (así se respeta la exclusividad). Se recargan al cambiar de modo.
@@ -271,8 +272,8 @@ body{background:var(--surface)}
     <a href="/pages/legal.html#rgpd" data-i18n="footer.rgpd">RGPD</a>
     <a href="/pages/legal.html#terminos" data-i18n="footer.terminos">Términos</a>
     <a href="/pages/legal.html#publicidad" data-i18n="footer.publicidad">Publicidad</a>
-    <a href="/pages/clubes.html">Para clubes</a>
-    <a href="/pages/anunciantes.html">Para anunciantes</a>
+    <a href="/pages/clubes.html">Clubes</a>
+    <a href="/pages/anunciantes.html">Anunciantes</a>
   </div>
 </div>
 <div class="overlay" id="ov" onclick="closeAll()"></div>
@@ -799,7 +800,7 @@ try{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js')}c
 // ANALYTICS PROPIOS — registro de visita anónima a la parrilla
 try{if(!KBS.sinEstadisticas())fetch(SB+'/rest/v1/analitica_visitas',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({})}).catch(function(){});}catch(e){}
 </script>
-<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.49</div>
+<div id="verTag" style="position:fixed;right:6px;bottom:3px;z-index:9999;font:10px/1 monospace;color:#888;opacity:.65;pointer-events:none">index v6.50</div>
 <script>(function(){var el=document.getElementById("verTag");try{if(window.caches)caches.keys().then(function(k){var s=k.filter(function(n){return n.indexOf("kirolorik")===0});if(s.length)el.textContent+=" \u00b7 "+s.map(function(n){return n.replace("kirolorik-","#")}).join(",")}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>
